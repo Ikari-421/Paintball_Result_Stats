@@ -5,41 +5,55 @@ import { TeamCard } from "@/components/team/TeamCard";
 import { Colors, Spacing } from "@/constants/theme";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useSearch } from "@/hooks/useSearch";
-import { useTeamSelection } from "@/hooks/useTeamSelection";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { getAvatarColor } from "@/utils/avatarUtils";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
 export default function TeamsListScreen() {
   const router = useRouter();
-  const { teams, loadTeams, createTeam, deleteTeam } = useCoreStore();
-  const { selectedTeamId, selectTeam, clearSelection, isSelected } =
-    useTeamSelection();
+  const { teams, fields, loadTeams, loadFields, createTeam, deleteTeam } =
+    useCoreStore();
   const { query, setQuery, filteredItems } = useSearch(teams, "name");
   const { showConfirm } = useConfirmDialog();
 
   useEffect(() => {
     loadTeams();
+    loadFields();
   }, []);
 
+  const handleEdit = (teamId: string) => {
+    router.push(`/edit-team?id=${teamId}`);
+  };
+
   const handleDelete = (teamId: string, teamName: string) => {
+    const isUsedInMatchups = fields.some((field) =>
+      field.matchups.some(
+        (m: { teamA: string; teamB: string }) =>
+          m.teamA === teamId || m.teamB === teamId,
+      ),
+    );
+
+    if (isUsedInMatchups) {
+      Alert.alert(
+        "Cannot Delete Team",
+        `"${teamName}" is used in active matchups. Please remove the team from all matchups first.`,
+      );
+      return;
+    }
     showConfirm(
       "Delete Team",
       `Are you sure you want to delete "${teamName}"?`,
       async () => {
         await deleteTeam(teamId);
-        if (isSelected(teamId)) {
-          clearSelection();
-        }
       },
     );
   };
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Select Team" onBack={() => router.back()} />
+      <ScreenHeader title="Select Team" onBack={() => router.push("/menu")} />
 
       <ScrollView style={styles.content}>
         <SearchInput
@@ -52,6 +66,7 @@ export default function TeamsListScreen() {
           <TeamCard
             key={team.id}
             team={team}
+            onEdit={() => handleEdit(team.id)}
             onDelete={() => handleDelete(team.id, team.name)}
             avatarColor={getAvatarColor(index)}
           />
