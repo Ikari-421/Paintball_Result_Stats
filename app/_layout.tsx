@@ -72,6 +72,8 @@ export default function RootLayout() {
 
         {/* Game Session */}
         <Stack.Screen name="game" options={{ headerShown: false }} />
+        <Stack.Screen name="start-match" options={{ headerShown: false }} />
+        <Stack.Screen name="match/[gameId]" options={{ headerShown: false }} />
 
         {/* Other */}
         <Stack.Screen name="history" options={{ headerShown: false }} />

@@ -1,22 +1,30 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useCoreStore } from '@/src/presentation/state/useCoreStore';
+import { useCoreStore } from "@/src/presentation/state/useCoreStore";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function CreateGameModeScreen() {
   const router = useRouter();
   const { createGameMode, error } = useCoreStore();
-  
-  const [name, setName] = useState('');
-  const [gameTimeMinutes, setGameTimeMinutes] = useState('10');
-  const [breakTimeSeconds, setBreakTimeSeconds] = useState('30');
-  const [overtimeMinutes, setOvertimeMinutes] = useState('5');
-  const [timeOutsPerTeam, setTimeOutsPerTeam] = useState('2');
-  const [raceTo, setRaceTo] = useState('5');
+
+  const [name, setName] = useState("");
+  const [gameTimeMinutes, setGameTimeMinutes] = useState("10");
+  const [breakTimeSeconds, setBreakTimeSeconds] = useState("30");
+  const [overtimeMinutes, setOvertimeMinutes] = useState("5");
+  const [timeOutsPerTeam, setTimeOutsPerTeam] = useState("2");
+  const [raceTo, setRaceTo] = useState("5");
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert('Erreur', 'Le nom du mode de jeu est requis');
+      Alert.alert("Erreur", "Le nom du mode de jeu est requis");
       return;
     }
 
@@ -27,22 +35,28 @@ export default function CreateGameModeScreen() {
     const scoreLimit = parseInt(raceTo);
 
     if (isNaN(gameTime) || gameTime <= 0) {
-      Alert.alert('Erreur', 'La durée du jeu doit être un nombre positif');
+      Alert.alert("Erreur", "La durée du jeu doit être un nombre positif");
       return;
     }
 
     if (isNaN(breakTime) || breakTime < 0) {
-      Alert.alert('Erreur', 'La durée du break doit être un nombre positif ou zéro');
+      Alert.alert(
+        "Erreur",
+        "La durée du break doit être un nombre positif ou zéro",
+      );
       return;
     }
 
     if (isNaN(timeouts) || timeouts < 0) {
-      Alert.alert('Erreur', 'Le nombre de timeouts doit être un nombre positif ou zéro');
+      Alert.alert(
+        "Erreur",
+        "Le nombre de timeouts doit être un nombre positif ou zéro",
+      );
       return;
     }
 
     if (isNaN(scoreLimit) || scoreLimit <= 0) {
-      Alert.alert('Erreur', 'La limite de score doit être un nombre positif');
+      Alert.alert("Erreur", "La limite de score doit être un nombre positif");
       return;
     }
 
@@ -53,25 +67,32 @@ export default function CreateGameModeScreen() {
         breakTimeSeconds: breakTime,
         timeOutsPerTeam: timeouts,
         raceTo: scoreLimit,
-        overtimeMinutes: !isNaN(overtime) && overtime > 0 ? overtime : undefined,
+        overtimeMinutes:
+          !isNaN(overtime) && overtime > 0 ? overtime : undefined,
       });
       router.back();
     } catch (err) {
-      Alert.alert('Erreur', error || 'Impossible de créer le mode de jeu');
+      Alert.alert("Erreur", error || "Impossible de créer le mode de jeu");
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Text style={styles.backText}>← Annuler</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Nouveau Mode</Text>
         <View style={{ width: 80 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.card}>
           <Text style={styles.label}>Nom du mode</Text>
           <TextInput
@@ -162,7 +183,10 @@ export default function CreateGameModeScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, !name.trim() && styles.submitButtonDisabled]}
+          style={[
+            styles.submitButton,
+            !name.trim() && styles.submitButtonDisabled,
+          ]}
           onPress={handleSubmit}
           disabled={!name.trim()}
         >
@@ -176,28 +200,28 @@ export default function CreateGameModeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EBF2FA',
+    backgroundColor: "#EBF2FA",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 20,
-    backgroundColor: '#2c4b5c',
+    backgroundColor: "#2c4b5c",
   },
   backButton: {
     padding: 8,
   },
   backText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   content: {
     flex: 1,
@@ -206,11 +230,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -218,62 +242,62 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#152b42',
+    fontWeight: "600",
+    color: "#152b42",
   },
   sublabel: {
     fontSize: 12,
-    color: '#2c4b5c',
+    color: "#2c4b5c",
     marginTop: 4,
   },
   input: {
-    backgroundColor: '#EBF2FA',
+    backgroundColor: "#EBF2FA",
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#152b42',
+    color: "#152b42",
     marginTop: 8,
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#EBF2FA',
+    borderBottomColor: "#EBF2FA",
   },
   inputColumn: {
     flex: 1,
   },
   numberInput: {
-    backgroundColor: '#EBF2FA',
+    backgroundColor: "#EBF2FA",
     borderRadius: 12,
     padding: 12,
     fontSize: 18,
-    fontWeight: '700',
-    color: '#152b42',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "#152b42",
+    textAlign: "center",
     width: 80,
   },
   submitButton: {
-    backgroundColor: '#2c4b5c',
+    backgroundColor: "#2c4b5c",
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 4,
   },
   submitButtonDisabled: {
-    backgroundColor: '#95cbbc',
+    backgroundColor: "#95cbbc",
     opacity: 0.5,
   },
   submitButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
