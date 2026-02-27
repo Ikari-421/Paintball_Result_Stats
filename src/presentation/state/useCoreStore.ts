@@ -19,6 +19,12 @@ import {
   CreateGame,
   CreateGameMode,
   CreateTeam,
+  DeleteField,
+  DeleteGameMode,
+  DeleteTeam,
+  UpdateField,
+  UpdateGameMode,
+  UpdateTeam,
 } from "../../core/useCases";
 
 // Initialize repositories and event store
@@ -30,8 +36,20 @@ const eventStore = new EventStore();
 
 // Initialize use cases
 const createTeamUseCase = new CreateTeam(teamRepository, eventStore);
+const updateTeamUseCase = new UpdateTeam(teamRepository, eventStore);
+const deleteTeamUseCase = new DeleteTeam(teamRepository, eventStore);
 const createFieldUseCase = new CreateField(fieldRepository, eventStore);
+const updateFieldUseCase = new UpdateField(fieldRepository, eventStore);
+const deleteFieldUseCase = new DeleteField(fieldRepository, eventStore);
 const createGameModeUseCase = new CreateGameMode(
+  gameModeRepository,
+  eventStore,
+);
+const updateGameModeUseCase = new UpdateGameMode(
+  gameModeRepository,
+  eventStore,
+);
+const deleteGameModeUseCase = new DeleteGameMode(
   gameModeRepository,
   eventStore,
 );
@@ -54,11 +72,13 @@ interface CoreState {
   // Team Actions
   loadTeams: () => Promise<void>;
   createTeam: (name: string, isGuest?: boolean) => Promise<void>;
+  updateTeam: (id: string, name: string, isGuest: boolean) => Promise<void>;
   deleteTeam: (id: string) => Promise<void>;
 
   // Field Actions
   loadFields: () => Promise<void>;
   createField: (name: string) => Promise<void>;
+  updateField: (id: string, name: string) => Promise<void>;
   deleteField: (id: string) => Promise<void>;
   addMatchupToField: (
     fieldId: string,
@@ -70,6 +90,15 @@ interface CoreState {
   // GameMode Actions
   loadGameModes: () => Promise<void>;
   createGameMode: (params: {
+    name: string;
+    gameTimeMinutes: number;
+    breakTimeSeconds: number;
+    timeOutsPerTeam: number;
+    raceTo: number;
+    overtimeMinutes?: number;
+  }) => Promise<void>;
+  updateGameMode: (params: {
+    id: string;
     name: string;
     gameTimeMinutes: number;
     breakTimeSeconds: number;
@@ -125,10 +154,20 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     }
   },
 
+  updateTeam: async (id: string, name: string, isGuest: boolean) => {
+    try {
+      set({ isLoading: true, error: null });
+      await updateTeamUseCase.execute(id, name, isGuest);
+      await get().loadTeams();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
   deleteTeam: async (id: string) => {
     try {
       set({ isLoading: true, error: null });
-      await teamRepository.delete(id);
+      await deleteTeamUseCase.execute(id);
       await get().loadTeams();
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
@@ -157,10 +196,20 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     }
   },
 
+  updateField: async (id: string, name: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      await updateFieldUseCase.execute(id, name);
+      await get().loadFields();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
   deleteField: async (id: string) => {
     try {
       set({ isLoading: true, error: null });
-      await fieldRepository.delete(id);
+      await deleteFieldUseCase.execute(id);
       await get().loadFields();
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
@@ -225,10 +274,20 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     }
   },
 
+  updateGameMode: async (params) => {
+    try {
+      set({ isLoading: true, error: null });
+      await updateGameModeUseCase.execute(params);
+      await get().loadGameModes();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
   deleteGameMode: async (id: string) => {
     try {
       set({ isLoading: true, error: null });
-      await gameModeRepository.delete(id);
+      await deleteGameModeUseCase.execute(id);
       await get().loadGameModes();
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
