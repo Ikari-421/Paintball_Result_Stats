@@ -13,7 +13,7 @@ export default function CreateMatchupScreen() {
     returnTo?: string;
     fieldId?: string;
   }>();
-  const { teamA, teamB, gameMode, addTempMatchup, reset } =
+  const { teamA, teamB, gameMode, tempMatchups, addTempMatchup, reset } =
     useMatchupCreation();
 
   const handleSelectTeamA = () => {
@@ -51,8 +51,7 @@ export default function CreateMatchupScreen() {
       teamAName: teamA.name,
       teamBName: teamB.name,
       gameModeId: gameMode.id,
-      gameModeName: gameMode.name,
-      order: 0,
+      order: tempMatchups.length + 1,
     };
 
     addTempMatchup(newMatchup);

@@ -4,10 +4,11 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { MatchupList } from "@/components/field/MatchupList";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
+import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   ScrollView,
@@ -28,11 +29,6 @@ export default function EditFieldScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     id: string;
-    matchup?: string;
-    teamAName?: string;
-    teamBName?: string;
-    gameModeId?: string;
-    gameModeName?: string;
   }>();
   const { id } = params;
   const {
@@ -44,10 +40,11 @@ export default function EditFieldScreen() {
     loadTeams,
     error,
   } = useCoreStore();
+  const { tempMatchups, clearTempMatchups, addTempMatchup } =
+    useMatchupCreation();
 
   const [name, setName] = useState("");
   const [matchups, setMatchups] = useState<MatchupWithDetails[]>([]);
-  const lastProcessedMatchup = useRef<string | null>(null);
 
   const field = fields.find((f) => f.id === id);
 
@@ -73,22 +70,6 @@ export default function EditFieldScreen() {
     }
   }, [field, teams]);
 
-  useEffect(() => {
-    if (
-      params.matchup &&
-      field &&
-      params.matchup !== lastProcessedMatchup.current
-    ) {
-      try {
-        const matchup = JSON.parse(params.matchup) as Matchup;
-        addMatchupToField(field.id, matchup.teamA, matchup.teamB);
-        lastProcessedMatchup.current = params.matchup;
-      } catch (err) {
-        console.error("Error parsing matchup:", err);
-      }
-    }
-  }, [params.matchup, field]);
-
   const handleSubmit = async () => {
     if (!name.trim()) {
       Alert.alert("Error", "Field name is required");
@@ -108,18 +89,32 @@ export default function EditFieldScreen() {
     }
   };
 
-  const handleAddMatchup = () => {
+  const handleAddMatchup = async () => {
+    if (!field) return;
+
     router.push(
       `/field/matchup/create-matchup?returnTo=/field/edit-field&fieldId=${id}`,
     );
   };
+
+  useEffect(() => {
+    const addTempMatchups = async () => {
+      if (field && tempMatchups.length > 0) {
+        for (const matchup of tempMatchups) {
+          await addMatchupToField(field.id, matchup.teamA, matchup.teamB);
+        }
+        // Don't clear here - let the user manage tempMatchups lifecycle
+        // clearTempMatchups();
+      }
+    };
+    addTempMatchups();
+  }, [tempMatchups.length]);
 
   const handleDeleteMatchup = async (matchupId: string) => {
     if (!field) return;
 
     try {
       await removeMatchupFromField(field.id, matchupId);
-      setMatchups(matchups.filter((m) => m.id !== matchupId));
     } catch (err) {
       Alert.alert("Error", "Unable to delete matchup");
     }
@@ -134,6 +129,7 @@ export default function EditFieldScreen() {
         newMatchups[index - 1],
       ];
       setMatchups(newMatchups);
+      // TODO: Persister l'ordre en base de données
     }
   };
 
@@ -146,6 +142,7 @@ export default function EditFieldScreen() {
         newMatchups[index],
       ];
       setMatchups(newMatchups);
+      // TODO: Persister l'ordre en base de données
     }
   };
 

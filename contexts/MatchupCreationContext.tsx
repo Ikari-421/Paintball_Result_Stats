@@ -10,14 +10,13 @@ interface GameModeSelection {
   name: string;
 }
 
-interface TempMatchup {
+export interface TempMatchup {
   id: string;
   teamA: string;
   teamB: string;
   teamAName: string;
   teamBName: string;
   gameModeId: string;
-  gameModeName: string;
   order: number;
 }
 
@@ -31,6 +30,7 @@ interface MatchupCreationContextType {
   setGameMode: (mode: GameModeSelection | null) => void;
   addTempMatchup: (matchup: TempMatchup) => void;
   removeTempMatchup: (matchupId: string) => void;
+  reorderTempMatchups: (matchups: TempMatchup[]) => void;
   clearTempMatchups: () => void;
   reset: () => void;
 }
@@ -59,6 +59,10 @@ export const MatchupCreationProvider = ({
     setTempMatchups((prev) => prev.filter((m) => m.id !== matchupId));
   };
 
+  const reorderTempMatchups = (matchups: TempMatchup[]) => {
+    setTempMatchups(matchups);
+  };
+
   const clearTempMatchups = () => {
     setTempMatchups([]);
   };
@@ -81,6 +85,7 @@ export const MatchupCreationProvider = ({
         setGameMode,
         addTempMatchup,
         removeTempMatchup,
+        reorderTempMatchups,
         clearTempMatchups,
         reset,
       }}

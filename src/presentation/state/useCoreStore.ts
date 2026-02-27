@@ -77,7 +77,7 @@ interface CoreState {
 
   // Field Actions
   loadFields: () => Promise<void>;
-  createField: (name: string) => Promise<void>;
+  createField: (name: string) => Promise<string>;
   updateField: (id: string, name: string) => Promise<void>;
   deleteField: (id: string) => Promise<void>;
   addMatchupToField: (
@@ -191,8 +191,10 @@ export const useCoreStore = create<CoreState>((set, get) => ({
       const id = `field-${Date.now()}`;
       await createFieldUseCase.execute(id, name);
       await get().loadFields();
+      return id;
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
+      throw error;
     }
   },
 

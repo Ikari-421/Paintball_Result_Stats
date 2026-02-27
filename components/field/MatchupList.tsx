@@ -1,10 +1,11 @@
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
+import { TempMatchup } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
 import { Team } from "@/src/core/domain/Team";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface MatchupListProps {
-  matchups: Matchup[];
+  matchups: (Matchup | TempMatchup)[];
   teams: Team[];
   onDelete: (matchupId: string) => void;
   onMoveUp?: (matchupId: string) => void;
@@ -18,7 +19,8 @@ export const MatchupList = ({
   onMoveUp,
   onMoveDown,
 }: MatchupListProps) => {
-  const getTeamName = (teamId: string) => {
+  const getTeamName = (teamId: string, cachedName?: string) => {
+    if (cachedName) return cachedName;
     return teams.find((t) => t.id === teamId)?.name || "Unknown";
   };
 
@@ -32,41 +34,52 @@ export const MatchupList = ({
 
   return (
     <>
-      {matchups.map((matchup, index) => (
-        <View key={matchup.id} style={styles.matchupCard}>
-          <View style={styles.matchupContent}>
-            <Text style={styles.teamName}>{getTeamName(matchup.teamA)}</Text>
-            <View style={styles.vsBadge}>
-              <Text style={styles.vsText}>VS</Text>
+      {matchups.map((matchup, index) => {
+        const teamAName =
+          "teamAName" in matchup ? matchup.teamAName : undefined;
+        const teamBName =
+          "teamBName" in matchup ? matchup.teamBName : undefined;
+
+        return (
+          <View key={matchup.id} style={styles.matchupCard}>
+            <View style={styles.matchupContent}>
+              <Text style={styles.teamName}>
+                {getTeamName(matchup.teamA, teamAName)}
+              </Text>
+              <View style={styles.vsBadge}>
+                <Text style={styles.vsText}>VS</Text>
+              </View>
+              <Text style={styles.teamName}>
+                {getTeamName(matchup.teamB, teamBName)}
+              </Text>
             </View>
-            <Text style={styles.teamName}>{getTeamName(matchup.teamB)}</Text>
-          </View>
-          <View style={styles.actionsContainer}>
-            {onMoveUp && index > 0 && (
+            <View style={styles.actionsContainer}>
+              {onMoveUp && index > 0 && (
+                <TouchableOpacity
+                  style={styles.reorderButton}
+                  onPress={() => onMoveUp(matchup.id)}
+                >
+                  <Text style={styles.reorderIcon}>⬆️</Text>
+                </TouchableOpacity>
+              )}
+              {onMoveDown && index < matchups.length - 1 && (
+                <TouchableOpacity
+                  style={styles.reorderButton}
+                  onPress={() => onMoveDown(matchup.id)}
+                >
+                  <Text style={styles.reorderIcon}>⬇️</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
-                style={styles.reorderButton}
-                onPress={() => onMoveUp(matchup.id)}
+                style={styles.deleteMatchupButton}
+                onPress={() => onDelete(matchup.id)}
               >
-                <Text style={styles.reorderIcon}>⬆️</Text>
+                <Text style={styles.deleteIcon}>🗑️</Text>
               </TouchableOpacity>
-            )}
-            {onMoveDown && index < matchups.length - 1 && (
-              <TouchableOpacity
-                style={styles.reorderButton}
-                onPress={() => onMoveDown(matchup.id)}
-              >
-                <Text style={styles.reorderIcon}>⬇️</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={styles.deleteMatchupButton}
-              onPress={() => onDelete(matchup.id)}
-            >
-              <Text style={styles.deleteIcon}>🗑️</Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
     </>
   );
 };

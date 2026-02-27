@@ -19,21 +19,19 @@ import {
 
 export default function CreateFieldScreen() {
   const router = useRouter();
+  const { teams, loadTeams, createField, addMatchupToField, error } =
+    useCoreStore();
   const {
-    teams,
-    fields,
-    loadTeams,
-    loadFields,
-    createField,
-    addMatchupToField,
-    error,
-  } = useCoreStore();
-  const { tempMatchups, removeTempMatchup, clearTempMatchups } =
-    useMatchupCreation();
+    tempMatchups,
+    removeTempMatchup,
+    reorderTempMatchups,
+    clearTempMatchups,
+  } = useMatchupCreation();
   const [name, setName] = useState("");
 
   useEffect(() => {
     loadTeams();
+    clearTempMatchups();
   }, []);
 
   const handleSubmit = async () => {
@@ -43,21 +41,13 @@ export default function CreateFieldScreen() {
     }
 
     try {
-      const fieldId = `field-${Date.now()}`;
-      await createField(name.trim());
-
-      // Recharger les fields pour obtenir le field créé
-      await loadFields();
+      // Créer le field et récupérer son ID
+      const fieldId = await createField(name.trim());
 
       // Ajouter les matchups au field créé
-      const createdField = fields.find((f) => f.name === name.trim());
-      if (createdField && tempMatchups.length > 0) {
+      if (tempMatchups.length > 0) {
         for (const matchup of tempMatchups) {
-          await addMatchupToField(
-            createdField.id,
-            matchup.teamA,
-            matchup.teamB,
-          );
+          await addMatchupToField(fieldId, matchup.teamA, matchup.teamB);
         }
       }
 
@@ -76,13 +66,42 @@ export default function CreateFieldScreen() {
     removeTempMatchup(matchupId);
   };
 
+  const handleMoveUp = (matchupId: string) => {
+    const index = tempMatchups.findIndex((m) => m.id === matchupId);
+    if (index > 0) {
+      const newMatchups = [...tempMatchups];
+      [newMatchups[index - 1], newMatchups[index]] = [
+        newMatchups[index],
+        newMatchups[index - 1],
+      ];
+      reorderTempMatchups(newMatchups);
+    }
+  };
+
+  const handleMoveDown = (matchupId: string) => {
+    const index = tempMatchups.findIndex((m) => m.id === matchupId);
+    if (index < tempMatchups.length - 1) {
+      const newMatchups = [...tempMatchups];
+      [newMatchups[index], newMatchups[index + 1]] = [
+        newMatchups[index + 1],
+        newMatchups[index],
+      ];
+      reorderTempMatchups(newMatchups);
+    }
+  };
+
   const handleModSetup = () => {
     router.push("/gamemode/game-modes-list");
   };
 
+  const handleBack = () => {
+    clearTempMatchups();
+    router.push("/menu");
+  };
+
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Create Field" onBack={() => router.push("/menu")} />
+      <ScreenHeader title="Create Field" onBack={handleBack} />
 
       <ScrollView style={styles.content}>
         <Text style={styles.label}>Field Name</Text>
@@ -106,6 +125,8 @@ export default function CreateFieldScreen() {
           matchups={tempMatchups}
           teams={teams}
           onDelete={handleDeleteMatchup}
+          onMoveUp={handleMoveUp}
+          onMoveDown={handleMoveDown}
         />
       </ScrollView>
 
