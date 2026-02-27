@@ -52,54 +52,26 @@ export default function RootLayout() {
   return (
     <MatchupCreationProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="menu" options={{ headerShown: false }} />
-
-          {/* Team Management */}
-          <Stack.Screen name="teams-list" options={{ headerShown: false }} />
-          <Stack.Screen name="create-team" options={{ headerShown: false }} />
-          <Stack.Screen name="edit-team" options={{ headerShown: false }} />
-
-          {/* Matchup Creation */}
-          <Stack.Screen
-            name="create-matchup"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="select-team" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="select-game-mode"
-            options={{ headerShown: false }}
-          />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="menu" />
 
           {/* Field Management */}
-          <Stack.Screen name="fields-list" options={{ headerShown: false }} />
-          <Stack.Screen name="create-field" options={{ headerShown: false }} />
-          <Stack.Screen name="edit-field" options={{ headerShown: false }} />
-          <Stack.Screen name="field/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="field" />
+
+          {/* Team Management */}
+          <Stack.Screen name="team" />
 
           {/* Game Mode Management */}
-          <Stack.Screen name="game-mods" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="create-game-mode"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="edit-game-mode"
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="gamemode" />
 
           {/* Game Session */}
-          <Stack.Screen name="game" options={{ headerShown: false }} />
-          <Stack.Screen name="start-match" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="match/[gameId]"
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="start-match" />
+          <Stack.Screen name="match" />
 
           {/* Other */}
-          <Stack.Screen name="history" options={{ headerShown: false }} />
-          <Stack.Screen name="profile" options={{ headerShown: false }} />
+          <Stack.Screen name="history" />
+          <Stack.Screen name="profile" />
           <Stack.Screen
             name="modal"
             options={{ presentation: "modal", title: "Modal" }}

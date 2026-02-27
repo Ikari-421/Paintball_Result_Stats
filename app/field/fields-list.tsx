@@ -42,7 +42,7 @@ export default function FieldsListScreen() {
       <View style={styles.footer}>
         <PrimaryButton
           title="+ Create New Field"
-          onPress={() => router.push("/create-field")}
+          onPress={() => router.push("/field/create-field")}
         />
       </View>
     </View>

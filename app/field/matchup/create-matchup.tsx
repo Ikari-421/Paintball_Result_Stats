@@ -3,7 +3,6 @@ import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
-import { Matchup } from "@/src/core/domain/Field";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, StyleSheet, Text, View } from "react-native";
@@ -14,18 +13,19 @@ export default function CreateMatchupScreen() {
     returnTo?: string;
     fieldId?: string;
   }>();
-  const { teamA, teamB, gameMode, reset } = useMatchupCreation();
+  const { teamA, teamB, gameMode, addTempMatchup, reset } =
+    useMatchupCreation();
 
   const handleSelectTeamA = () => {
-    router.push("/select-team?role=teamA");
+    router.push("/team/select-team?role=teamA");
   };
 
   const handleSelectTeamB = () => {
-    router.push("/select-team?role=teamB");
+    router.push("/team/select-team?role=teamB");
   };
 
   const handleSelectGameMode = () => {
-    router.push("/select-game-mode");
+    router.push("/gamemode/select-game-mode");
   };
 
   const handleAddMatchup = () => {
@@ -44,33 +44,20 @@ export default function CreateMatchupScreen() {
       return;
     }
 
-    const newMatchup: Matchup = {
+    const newMatchup = {
       id: `matchup-${Date.now()}`,
       teamA: teamA.id,
       teamB: teamB.id,
-      order: 0,
-    };
-
-    const returnPath = params.returnTo || "/create-field";
-
-    const returnParams: any = {
-      matchup: JSON.stringify(newMatchup),
       teamAName: teamA.name,
       teamBName: teamB.name,
       gameModeId: gameMode.id,
       gameModeName: gameMode.name,
+      order: 0,
     };
 
-    if (params.fieldId) {
-      returnParams.id = params.fieldId;
-    }
-
-    router.push({
-      pathname: returnPath as any,
-      params: returnParams,
-    });
-
+    addTempMatchup(newMatchup);
     reset();
+    router.back();
   };
 
   return (

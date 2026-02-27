@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, ReactNode, useContext, useState } from "react";
 
 interface TeamSelection {
   id: string;
@@ -10,13 +10,28 @@ interface GameModeSelection {
   name: string;
 }
 
+interface TempMatchup {
+  id: string;
+  teamA: string;
+  teamB: string;
+  teamAName: string;
+  teamBName: string;
+  gameModeId: string;
+  gameModeName: string;
+  order: number;
+}
+
 interface MatchupCreationContextType {
   teamA: TeamSelection | null;
   teamB: TeamSelection | null;
   gameMode: GameModeSelection | null;
+  tempMatchups: TempMatchup[];
   setTeamA: (team: TeamSelection | null) => void;
   setTeamB: (team: TeamSelection | null) => void;
   setGameMode: (mode: GameModeSelection | null) => void;
+  addTempMatchup: (matchup: TempMatchup) => void;
+  removeTempMatchup: (matchupId: string) => void;
+  clearTempMatchups: () => void;
   reset: () => void;
 }
 
@@ -34,6 +49,19 @@ export const MatchupCreationProvider = ({
   const [teamA, setTeamA] = useState<TeamSelection | null>(null);
   const [teamB, setTeamB] = useState<TeamSelection | null>(null);
   const [gameMode, setGameMode] = useState<GameModeSelection | null>(null);
+  const [tempMatchups, setTempMatchups] = useState<TempMatchup[]>([]);
+
+  const addTempMatchup = (matchup: TempMatchup) => {
+    setTempMatchups((prev) => [...prev, matchup]);
+  };
+
+  const removeTempMatchup = (matchupId: string) => {
+    setTempMatchups((prev) => prev.filter((m) => m.id !== matchupId));
+  };
+
+  const clearTempMatchups = () => {
+    setTempMatchups([]);
+  };
 
   const reset = () => {
     setTeamA(null);
@@ -47,9 +75,13 @@ export const MatchupCreationProvider = ({
         teamA,
         teamB,
         gameMode,
+        tempMatchups,
         setTeamA,
         setTeamB,
         setGameMode,
+        addTempMatchup,
+        removeTempMatchup,
+        clearTempMatchups,
         reset,
       }}
     >
@@ -62,7 +94,7 @@ export const useMatchupCreation = () => {
   const context = useContext(MatchupCreationContext);
   if (context === undefined) {
     throw new Error(
-      "useMatchupCreation must be used within a MatchupCreationProvider"
+      "useMatchupCreation must be used within a MatchupCreationProvider",
     );
   }
   return context;

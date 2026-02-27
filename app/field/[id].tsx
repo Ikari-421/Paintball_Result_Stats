@@ -34,7 +34,7 @@ export default function FieldDetailScreen() {
   };
 
   const handleEditField = () => {
-    router.push(`/edit-field?id=${field.id}`);
+    router.push(`/field/edit-field?id=${field.id}`);
   };
 
   const handleDeleteField = () => {
@@ -56,7 +56,7 @@ export default function FieldDetailScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteField(field.id);
-            router.push("/fields-list");
+            router.push("/field/fields-list");
           },
         },
       ],
@@ -68,7 +68,7 @@ export default function FieldDetailScreen() {
       <FieldDetailHeader
         fieldName={field.name}
         matchupsCount={field.matchups.length}
-        onBack={() => router.push("/fields-list")}
+        onBack={() => router.push("/field/fields-list")}
       />
 
       <ScrollView style={styles.content}>

@@ -9,10 +9,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { NumberInput } from "../components/common/NumberInput";
-import { PrimaryButton } from "../components/common/PrimaryButton";
-import { ScreenHeader } from "../components/common/ScreenHeader";
-import { BorderRadius, Colors, Shadows, Spacing } from "../constants/theme";
+import { NumberInput } from "../../components/common/NumberInput";
+import { PrimaryButton } from "../../components/common/PrimaryButton";
+import { ScreenHeader } from "../../components/common/ScreenHeader";
+import { BorderRadius, Colors, Shadows, Spacing } from "../../constants/theme";
 
 export default function CreateGameModeScreen() {
   const router = useRouter();

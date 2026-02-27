@@ -24,44 +24,70 @@ interface MatchupWithDetails extends Matchup {
   gameModeName?: string;
 }
 
-export default function CreateFieldScreen() {
+export default function EditFieldScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
+    id: string;
     matchup?: string;
     teamAName?: string;
     teamBName?: string;
     gameModeId?: string;
     gameModeName?: string;
   }>();
-  const { teams, fields, loadTeams, createField, addMatchupToField, error } =
-    useCoreStore();
+  const { id } = params;
+  const {
+    fields,
+    teams,
+    updateField,
+    addMatchupToField,
+    removeMatchupFromField,
+    loadTeams,
+    error,
+  } = useCoreStore();
+
   const [name, setName] = useState("");
   const [matchups, setMatchups] = useState<MatchupWithDetails[]>([]);
   const lastProcessedMatchup = useRef<string | null>(null);
+
+  const field = fields.find((f) => f.id === id);
 
   useEffect(() => {
     loadTeams();
   }, []);
 
   useEffect(() => {
-    if (params.matchup && params.matchup !== lastProcessedMatchup.current) {
+    if (field) {
+      setName(field.name);
+      const matchupsWithDetails: MatchupWithDetails[] = field.matchups.map(
+        (m) => {
+          const teamA = teams.find((t) => t.id === m.teamA);
+          const teamB = teams.find((t) => t.id === m.teamB);
+          return {
+            ...m,
+            teamAName: teamA?.name,
+            teamBName: teamB?.name,
+          };
+        },
+      );
+      setMatchups(matchupsWithDetails);
+    }
+  }, [field, teams]);
+
+  useEffect(() => {
+    if (
+      params.matchup &&
+      field &&
+      params.matchup !== lastProcessedMatchup.current
+    ) {
       try {
         const matchup = JSON.parse(params.matchup) as Matchup;
-        const matchupWithDetails: MatchupWithDetails = {
-          ...matchup,
-          teamAName: params.teamAName,
-          teamBName: params.teamBName,
-          gameModeId: params.gameModeId,
-          gameModeName: params.gameModeName,
-          order: matchups.length + 1,
-        };
-        setMatchups([...matchups, matchupWithDetails]);
+        addMatchupToField(field.id, matchup.teamA, matchup.teamB);
         lastProcessedMatchup.current = params.matchup;
       } catch (err) {
         console.error("Error parsing matchup:", err);
       }
     }
-  }, [params.matchup]);
+  }, [params.matchup, field]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -69,34 +95,34 @@ export default function CreateFieldScreen() {
       return;
     }
 
+    if (!field) {
+      Alert.alert("Error", "Field not found");
+      return;
+    }
+
     try {
-      const fieldId = `field-${Date.now()}`;
-      await createField(name.trim());
-
-      // Ajouter les matchups au field créé
-      const createdField = fields.find((f) => f.name === name.trim());
-      if (createdField && matchups.length > 0) {
-        for (const matchup of matchups) {
-          await addMatchupToField(
-            createdField.id,
-            matchup.teamA,
-            matchup.teamB,
-          );
-        }
-      }
-
-      router.push("/fields-list");
+      await updateField(field.id, name.trim());
+      router.push(`/field/${field.id}`);
     } catch (err) {
-      Alert.alert("Error", error || "Unable to create field");
+      Alert.alert("Error", error || "Unable to update field");
     }
   };
 
   const handleAddMatchup = () => {
-    router.push("/create-matchup?returnTo=/create-field");
+    router.push(
+      `/field/matchup/create-matchup?returnTo=/field/edit-field&fieldId=${id}`,
+    );
   };
 
-  const handleDeleteMatchup = (matchupId: string) => {
-    setMatchups(matchups.filter((m) => m.id !== matchupId));
+  const handleDeleteMatchup = async (matchupId: string) => {
+    if (!field) return;
+
+    try {
+      await removeMatchupFromField(field.id, matchupId);
+      setMatchups(matchups.filter((m) => m.id !== matchupId));
+    } catch (err) {
+      Alert.alert("Error", "Unable to delete matchup");
+    }
   };
 
   const handleMoveUp = (matchupId: string) => {
@@ -124,12 +150,27 @@ export default function CreateFieldScreen() {
   };
 
   const handleModSetup = () => {
-    router.push("/game-mods");
+    router.push("/gamemode/game-modes-list");
   };
+
+  if (!field) {
+    return (
+      <View style={styles.container}>
+        <ScreenHeader title="Edit Field" onBack={() => router.back()} />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Field not found</Text>
+          <PrimaryButton title="Go Back" onPress={() => router.back()} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Create Field" onBack={() => router.push("/menu")} />
+      <ScreenHeader
+        title="Edit Field"
+        onBack={() => router.push(`/field/${field.id}`)}
+      />
 
       <ScrollView style={styles.content}>
         <Text style={styles.label}>Field Name</Text>
@@ -170,7 +211,7 @@ export default function CreateFieldScreen() {
           />
         </View>
         <PrimaryButton
-          title="Create Field"
+          title="Update Field"
           onPress={handleSubmit}
           disabled={!name.trim()}
         />
@@ -183,6 +224,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+    gap: Spacing.lg,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: Colors.text,
   },
   content: {
     flex: 1,

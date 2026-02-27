@@ -24,7 +24,7 @@ export default function TeamsListScreen() {
   }, []);
 
   const handleEdit = (teamId: string) => {
-    router.push(`/edit-team?id=${teamId}`);
+    router.push(`/team/edit-team?id=${teamId}`);
   };
 
   const handleDelete = (teamId: string, teamName: string) => {

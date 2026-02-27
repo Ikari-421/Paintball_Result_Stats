@@ -3,8 +3,8 @@ import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { GameModeCard } from "@/components/gamemode/GameModeCard";
-import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { Colors, Spacing } from "@/constants/theme";
+import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { GameMode } from "@/src/core/domain/GameMode";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useRouter } from "expo-router";
@@ -88,7 +88,7 @@ export default function SelectGameModeScreen() {
       <View style={styles.footer}>
         <SecondaryButton
           title="+ Create Game Mod"
-          onPress={() => router.push("/create-game-mode")}
+          onPress={() => router.push("/gamemode/create-game-mode")}
         />
         <PrimaryButton
           title="Select & Continue"

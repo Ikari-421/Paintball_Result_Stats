@@ -18,7 +18,7 @@ export default function MenuScreen() {
           subtitle="Manage and monitor active fields"
           icon="🏟️"
           iconColor={Colors.primary}
-          onPress={() => router.push("/fields-list")}
+          onPress={() => router.push("/field/fields-list")}
         />
 
         <MenuCard
@@ -26,7 +26,7 @@ export default function MenuScreen() {
           subtitle="Setup a new field with matchups"
           icon="➕"
           iconColor={Colors.secondary}
-          onPress={() => router.push("/create-field")}
+          onPress={() => router.push("/field/create-field")}
         />
 
         <MenuCard
@@ -34,7 +34,7 @@ export default function MenuScreen() {
           subtitle="Manage roster and guest teams"
           icon="👥"
           iconColor={Colors.accent}
-          onPress={() => router.push("/teams-list")}
+          onPress={() => router.push("/team/teams-list")}
         />
 
         <MenuCard
@@ -42,7 +42,7 @@ export default function MenuScreen() {
           subtitle="Configure match rules & timers"
           icon="⚙️"
           iconColor={Colors.primary}
-          onPress={() => router.push("/game-mods")}
+          onPress={() => router.push("/gamemode/game-modes-list")}
         />
 
         <MenuCard
