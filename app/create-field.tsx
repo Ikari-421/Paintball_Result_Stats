@@ -1,70 +1,137 @@
+import { OutlineButton } from "@/components/common/OutlineButton";
+import { PrimaryButton } from "@/components/common/PrimaryButton";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { SecondaryButton } from "@/components/common/SecondaryButton";
+import { MatchupList } from "@/components/field/MatchupList";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
+import { Matchup } from "@/src/core/domain/Field";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Alert,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 
+interface MatchupWithDetails extends Matchup {
+  teamAName?: string;
+  teamBName?: string;
+  gameModeId?: string;
+  gameModeName?: string;
+}
+
 export default function CreateFieldScreen() {
   const router = useRouter();
-  const { createField, error } = useCoreStore();
+  const params = useLocalSearchParams<{
+    matchup?: string;
+    teamAName?: string;
+    teamBName?: string;
+    gameModeId?: string;
+    gameModeName?: string;
+  }>();
+  const { createField, teams, loadTeams, error } = useCoreStore();
   const [name, setName] = useState("");
+  const [matchups, setMatchups] = useState<MatchupWithDetails[]>([]);
+
+  useEffect(() => {
+    loadTeams();
+  }, []);
+
+  useEffect(() => {
+    if (params.matchup) {
+      try {
+        const matchup = JSON.parse(params.matchup) as Matchup;
+        const matchupWithDetails: MatchupWithDetails = {
+          ...matchup,
+          teamAName: params.teamAName,
+          teamBName: params.teamBName,
+          gameModeId: params.gameModeId,
+          gameModeName: params.gameModeName,
+          order: matchups.length + 1,
+        };
+        setMatchups([...matchups, matchupWithDetails]);
+      } catch (err) {
+        console.error("Error parsing matchup:", err);
+      }
+    }
+  }, [params.matchup]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert("Erreur", "Le nom du terrain est requis");
+      Alert.alert("Error", "Field name is required");
       return;
     }
 
     try {
+      const fieldId = `field-${Date.now()}`;
       await createField(name.trim());
       router.back();
     } catch (err) {
-      Alert.alert("Erreur", error || "Impossible de créer le terrain");
+      Alert.alert("Error", error || "Unable to create field");
     }
+  };
+
+  const handleAddMatchup = () => {
+    router.push("/create-matchup");
+  };
+
+  const handleDeleteMatchup = (matchupId: string) => {
+    setMatchups(matchups.filter((m) => m.id !== matchupId));
+  };
+
+  const handleModSetup = () => {
+    router.push("/game-mods");
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Text style={styles.backText}>← Annuler</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Nouveau Terrain</Text>
-        <View style={{ width: 80 }} />
-      </View>
+      <ScreenHeader title="Create Field" onBack={() => router.back()} />
 
-      <View style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.label}>Nom du terrain</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Ex: Court Central"
-            placeholderTextColor="#95cbbc"
-            autoFocus
-          />
+      <ScrollView style={styles.content}>
+        <Text style={styles.label}>Field Name</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder="e.g. Main Arena"
+          placeholderTextColor={Colors.secondary}
+          autoFocus
+        />
+
+        <View style={styles.matchupsHeader}>
+          <Text style={styles.matchupsTitle}>MatchUps</Text>
+          <Text style={styles.matchupsCount}>{matchups.length} Scheduled</Text>
         </View>
 
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            !name.trim() && styles.submitButtonDisabled,
-          ]}
+        <MatchupList
+          matchups={matchups}
+          teams={teams}
+          onDelete={handleDeleteMatchup}
+        />
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <View style={styles.actionButtons}>
+          <OutlineButton
+            title="+ MatchUp"
+            onPress={handleAddMatchup}
+            style={styles.actionButton}
+          />
+          <SecondaryButton
+            title="Mod Setup"
+            onPress={handleModSetup}
+            style={styles.actionButton}
+          />
+        </View>
+        <PrimaryButton
+          title="Create Field"
           onPress={handleSubmit}
           disabled={!name.trim()}
-        >
-          <Text style={styles.submitButtonText}>Créer le terrain</Text>
-        </TouchableOpacity>
+        />
       </View>
     </View>
   );
@@ -73,75 +140,54 @@ export default function CreateFieldScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EBF2FA",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: "#2c4b5c",
-  },
-  backButton: {
-    padding: 8,
-  },
-  backText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#fff",
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
-    padding: 16,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: Spacing.lg,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
-    color: "#152b42",
-    marginBottom: 8,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
   },
   input: {
-    backgroundColor: "#EBF2FA",
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
     fontSize: 16,
-    color: "#152b42",
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.05)",
+    marginBottom: Spacing.xl,
   },
-  submitButton: {
-    backgroundColor: "#2c4b5c",
-    borderRadius: 12,
-    padding: 16,
+  matchupsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.md,
   },
-  submitButtonDisabled: {
-    backgroundColor: "#95cbbc",
-    opacity: 0.5,
+  matchupsTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.primary,
   },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
+  matchupsCount: {
+    fontSize: 13,
+    color: Colors.secondary,
+  },
+  footer: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+    gap: Spacing.lg,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  actionButton: {
+    flex: 1,
   },
 });

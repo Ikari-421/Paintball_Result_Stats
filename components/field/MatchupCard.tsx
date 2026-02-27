@@ -1,5 +1,11 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/theme';
+import {
+  BorderRadius,
+  Colors,
+  Shadows,
+  Spacing,
+  Typography,
+} from "@/constants/theme";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface MatchupCardProps {
   teamAName: string;
@@ -9,12 +15,12 @@ interface MatchupCardProps {
   onDelete?: () => void;
 }
 
-export const MatchupCard = ({ 
-  teamAName, 
-  teamBName, 
-  isActive = false, 
+export const MatchupCard = ({
+  teamAName,
+  teamBName,
+  isActive = false,
   onPress,
-  onDelete 
+  onDelete,
 }: MatchupCardProps) => {
   return (
     <View style={[styles.card, isActive && styles.cardActive]}>
@@ -24,15 +30,15 @@ export const MatchupCard = ({
             {teamAName}
           </Text>
           <View style={[styles.vsBadge, isActive && styles.vsBadgeActive]}>
-            <Text style={[styles.vsText, isActive && styles.vsTextActive]}>VS</Text>
+            <Text style={[styles.vsText, isActive && styles.vsTextActive]}>
+              VS
+            </Text>
           </View>
           <Text style={[styles.teamName, isActive && styles.teamNameActive]}>
             {teamBName}
           </Text>
         </View>
-        <Text style={styles.icon}>
-          {isActive ? '▶️' : '🕐'}
-        </Text>
+        <Text style={styles.icon}>{isActive ? "▶️" : "🕐"}</Text>
       </TouchableOpacity>
       {onDelete && (
         <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
@@ -48,8 +54,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     ...Shadows.card,
     opacity: 0.6,
   },
@@ -60,23 +66,23 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: Spacing.lg,
   },
   teamsContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   teamName: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     ...Typography.subtitle,
     color: Colors.text,
   },
   teamNameActive: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
   vsBadge: {
     backgroundColor: Colors.background,
@@ -90,12 +96,12 @@ const styles = StyleSheet.create({
   },
   vsText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
     color: Colors.text,
   },
   vsTextActive: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   icon: {
     fontSize: 24,
@@ -103,10 +109,9 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     width: 50,
-    height: '100%',
-    backgroundColor: Colors.danger,
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   deleteIcon: {
     fontSize: 20,
