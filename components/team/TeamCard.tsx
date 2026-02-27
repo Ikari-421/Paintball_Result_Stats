@@ -13,6 +13,7 @@ interface TeamCardProps {
   team: { id: string; name: string };
   isSelected?: boolean;
   onSelect?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
   avatarColor: string;
 }
@@ -21,6 +22,7 @@ export const TeamCard = ({
   team,
   isSelected,
   onSelect,
+  onEdit,
   onDelete,
   avatarColor,
 }: TeamCardProps) => {
@@ -33,9 +35,16 @@ export const TeamCard = ({
         </View>
         {isSelected && <Text style={styles.checkIcon}>✓</Text>}
       </TouchableOpacity>
-      <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-        <Text style={styles.deleteIcon}>🗑️</Text>
-      </TouchableOpacity>
+      {onEdit && (
+        <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
+          <Text style={styles.actionIcon}>✏️</Text>
+        </TouchableOpacity>
+      )}
+      {onDelete && (
+        <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
+          <Text style={styles.actionIcon}>🗑️</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -73,12 +82,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: Colors.primary,
   },
-  deleteButton: {
+  actionButton: {
     width: 40,
     alignItems: "center",
     justifyContent: "center",
   },
-  deleteIcon: {
+  actionIcon: {
     fontSize: 16,
   },
 });
