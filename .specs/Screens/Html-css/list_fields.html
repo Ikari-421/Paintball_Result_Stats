@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Fields List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <h2 class="header-title">Fields</h2>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+            <div class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--accent);">stadium</i>
+                <div class="card-text">
+                    <h3 style="font-size: 18px;">Main Arena</h3>
+                    <p>3 Matchups • In Progress</p>
+                </div>
+                <a href="field_details.html" class="icon-btn"
+                    style="margin-left: auto; background: var(--bg-color); border-radius: 50%; padding: 8px;"><i
+                        class="material-icons">chevron_right</i></a>
+            </div>
+
+            <div class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--secondary);">stadium</i>
+                <div class="card-text">
+                    <h3 style="font-size: 18px;">Court 2</h3>
+                    <p>Empty</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bottom-fixed">
+            <a href="create_field.html" class="btn">
+                <i class="material-icons">add</i> Create New Field
+            </a>
+        </footer>
+
+    </div>
+</body>
+
+</html>

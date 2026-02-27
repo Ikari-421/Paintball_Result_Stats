@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Main Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1 class="header-title">Dashboard</h1>
+            <i class="material-icons" style="color: var(--primary);">account_circle</i>
+        </header>
+
+        <main class="content">
+            <a href="list_fields.html" class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--primary);">stadium</i>
+                <div class="card-text">
+                    <h3>Fields List</h3>
+                    <p>Manage and monitor active fields</p>
+                </div>
+            </a>
+
+            <a href="create_field.html" class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--secondary);">add_circle</i>
+                <div class="card-text">
+                    <h3>Create Field</h3>
+                    <p>Setup a new field with matchups</p>
+                </div>
+            </a>
+
+            <a href="list_teams.html" class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--accent);">groups</i>
+                <div class="card-text">
+                    <h3>Teams</h3>
+                    <p>Manage roster and guest teams</p>
+                </div>
+            </a>
+
+            <a href="list_game_modes.html" class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--primary);">settings_applications</i>
+                <div class="card-text">
+                    <h3>Game Mods</h3>
+                    <p>Configure match rules & timers</p>
+                </div>
+            </a>
+
+            <a href="#" class="card action-card disabled">
+                <i class="material-icons card-icon" style="color: #ccc;">history</i>
+                <div class="card-text">
+                    <h3>History</h3>
+                    <p>View past match results</p>
+                </div>
+            </a>
+        </main>
+
+        <footer class="bottom-fixed">
+            <a href="#" class="btn btn-outline">
+                <i class="material-icons">person</i> My Profile
+            </a>
+        </footer>
+    </div>
+</body>
+
+</html>
