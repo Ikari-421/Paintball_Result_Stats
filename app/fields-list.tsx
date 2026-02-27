@@ -1,108 +1,180 @@
-import { AppButton } from "@/components/common/AppButton";
-import { ScreenContainer } from "@/components/common/ScreenContainer";
-import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { FieldListItem } from "@/components/field/FieldListItem";
-import { ThemedText } from "@/components/themed-text";
-import { AppBorderRadius, AppSpacing } from "@/constants/AppSpacing";
-import { Field } from "@/types";
-import { router } from "expo-router";
-import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
-
-const MOCK_FIELDS: Field[] = [
-  { id: "1", name: "Name field 1" },
-  { id: "2", name: "Name field 2" },
-  { id: "3", name: "Name field 3" },
-];
+import { useCoreStore } from "@/src/presentation/state/useCoreStore";
+import { useRouter } from "expo-router";
+import {
+    Alert,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function FieldsListScreen() {
-  const handleFieldPress = (fieldId: string) => {
-    router.push(`/field/${fieldId}`);
-  };
+  const router = useRouter();
+  const { fields, deleteField } = useCoreStore();
 
-  const handleLogin = () => {
-    console.log("Login");
-  };
-
-  const handleMenu = () => {
-    router.back();
+  const handleDelete = (id: string, name: string) => {
+    Alert.alert(
+      "Supprimer le terrain",
+      `Voulez-vous vraiment supprimer "${name}" ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => deleteField(id),
+        },
+      ],
+    );
   };
 
   return (
-    <ScreenContainer>
-      <ScreenHeader title="Main" />
-
-      <View style={styles.loginSection}>
-        <AppButton
-          title="Login"
-          onPress={handleLogin}
-          variant="primary"
-          style={styles.loginButton}
-        />
-        <TouchableOpacity style={styles.iconButton} onPress={handleMenu}>
-          <ThemedText style={styles.iconText}>☰</ThemedText>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Text style={styles.backText}>← Retour</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Terrains</Text>
+        <TouchableOpacity
+          onPress={() => router.push("/create-field")}
+          style={styles.addButton}
+        >
+          <Text style={styles.addButtonText}>+ Ajouter</Text>
         </TouchableOpacity>
       </View>
 
-      <ThemedText type="subtitle" style={styles.subtitle}>
-        Field List
-      </ThemedText>
-
-      <FlatList
-        data={MOCK_FIELDS}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <FieldListItem
-            field={item}
-            onPress={() => handleFieldPress(item.id)}
-          />
-        )}
-        contentContainerStyle={styles.listContainer}
-      />
-
-      <ThemedText style={styles.footerText}>Or No fields available</ThemedText>
-    </ScreenContainer>
+      {fields.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>Aucun terrain</Text>
+          <Text style={styles.emptySubtext}>
+            Créez votre premier terrain pour commencer
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={fields}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.fieldCard}
+              onPress={() => router.push(`/field/${item.id}`)}
+            >
+              <View style={styles.fieldInfo}>
+                <Text style={styles.fieldName}>{item.name}</Text>
+                <Text style={styles.matchupCount}>
+                  {item.matchups.length} confrontation
+                  {item.matchups.length > 1 ? "s" : ""}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleDelete(item.id, item.name);
+                }}
+                style={styles.deleteButton}
+              >
+                <Text style={styles.deleteText}>🗑️</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loginSection: {
+  container: {
+    flex: 1,
+    backgroundColor: "#EBF2FA",
+  },
+  header: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
-    gap: AppSpacing.md,
-    marginBottom: AppSpacing.xxl,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: "#2c4b5c",
   },
-  loginButton: {
-    paddingVertical: AppSpacing.md,
-    paddingHorizontal: AppSpacing.xxl,
+  backButton: {
+    padding: 8,
   },
-  iconButton: {
-    backgroundColor: "#A1CEDC",
-    width: 40,
-    height: 40,
-    borderRadius: AppBorderRadius.md,
-    justifyContent: "center",
+  backText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  addButton: {
+    backgroundColor: "#5FC2BA",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  listContent: {
+    padding: 16,
+  },
+  fieldCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  iconText: {
-    fontSize: 20,
-    color: "#000",
+  fieldInfo: {
+    flex: 1,
   },
-  subtitle: {
+  fieldName: {
     fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: AppSpacing.xl,
+    fontWeight: "600",
+    color: "#152b42",
+    marginBottom: 4,
   },
-  listContainer: {
-    paddingHorizontal: AppSpacing.xl,
-    gap: AppSpacing.md,
-  },
-  footerText: {
-    textAlign: "center",
-    marginTop: AppSpacing.xl,
-    marginBottom: AppSpacing.xl,
+  matchupCount: {
     fontSize: 14,
-    fontStyle: "italic",
+    color: "#2c4b5c",
+  },
+  deleteButton: {
+    padding: 8,
+  },
+  deleteText: {
+    fontSize: 20,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#152b42",
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 16,
+    color: "#2c4b5c",
+    textAlign: "center",
   },
 });

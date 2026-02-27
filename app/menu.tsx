@@ -7,30 +7,10 @@ import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
 export default function MenuScreen() {
-  const handleNavigateToFieldsList = () => {
-    router.push("/fields-list");
-  };
-
-  const handleNavigateToCreateField = () => {
-    router.push("/create-field");
-  };
-
-  const handleNavigateToGameMods = () => {
-    router.push("/game-mods");
-  };
-
-  const handleNavigateToHistory = () => {
-    router.push("/history");
-  };
-
-  const handleNavigateToProfile = () => {
-    router.push("/profile");
-  };
-
   return (
     <ScreenContainer>
       <ThemedText type="title" style={styles.menuText}>
-        Menu
+        Menu Principal
       </ThemedText>
 
       <View style={styles.logoContainer}>
@@ -42,32 +22,44 @@ export default function MenuScreen() {
       </View>
 
       <View style={styles.buttonsContainer}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Configuration
+        </ThemedText>
+
         <AppButton
-          title="Fields List"
-          onPress={handleNavigateToFieldsList}
+          title="Équipes"
+          onPress={() => router.push("/teams-list")}
           variant="secondary"
         />
         <AppButton
-          title="Create Field"
-          onPress={handleNavigateToCreateField}
+          title="Terrains"
+          onPress={() => router.push("/fields-list")}
           variant="secondary"
         />
         <AppButton
-          title="Game Mods"
-          onPress={handleNavigateToGameMods}
+          title="Modes de Jeu"
+          onPress={() => router.push("/game-mods")}
           variant="secondary"
         />
+
+        <ThemedText
+          type="subtitle"
+          style={[styles.sectionTitle, { marginTop: 24 }]}
+        >
+          Autres
+        </ThemedText>
+
         <AppButton
-          title="History"
-          onPress={handleNavigateToHistory}
+          title="Historique"
+          onPress={() => router.push("/history")}
           variant="secondary"
         />
       </View>
 
       <View style={styles.footer}>
         <AppButton
-          title="My profile"
-          onPress={handleNavigateToProfile}
+          title="Mon Profil"
+          onPress={() => router.push("/profile")}
           variant="accent"
           style={styles.profileButton}
         />
@@ -99,6 +91,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: AppSpacing.lg,
     paddingHorizontal: AppSpacing.xl,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: AppSpacing.sm,
   },
   footer: {
     marginTop: AppSpacing.xl,

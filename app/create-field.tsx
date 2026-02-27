@@ -1,172 +1,147 @@
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { router } from "expo-router";
+import { useCoreStore } from "@/src/presentation/state/useCoreStore";
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import {
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function CreateFieldScreen() {
-  const [fieldName, setFieldName] = useState("");
+  const router = useRouter();
+  const { createField, error } = useCoreStore();
+  const [name, setName] = useState("");
 
-  const handleBack = () => {
-    router.back();
-  };
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      Alert.alert("Erreur", "Le nom du terrain est requis");
+      return;
+    }
 
-  const handleCreate = () => {
-    console.log("Create field:", fieldName);
-    router.back();
+    try {
+      await createField(name.trim());
+      router.back();
+    } catch (err) {
+      Alert.alert("Erreur", error || "Impossible de créer le terrain");
+    }
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <ThemedText style={styles.backText}>←</ThemedText>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Text style={styles.backText}>← Annuler</Text>
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.title}>
-          Create field
-        </ThemedText>
-        <View style={styles.placeholder} />
+        <Text style={styles.title}>Nouveau Terrain</Text>
+        <View style={{ width: 80 }} />
       </View>
 
       <View style={styles.content}>
-        <ThemedText type="subtitle" style={styles.subtitle}>
-          Create field
-        </ThemedText>
-
-        <View style={styles.inputSection}>
-          <ThemedText style={styles.label}>Field name</ThemedText>
+        <View style={styles.card}>
+          <Text style={styles.label}>Nom du terrain</Text>
           <TextInput
             style={styles.input}
-            value={fieldName}
-            onChangeText={setFieldName}
-            placeholder="Enter field name"
-            placeholderTextColor="#999"
+            value={name}
+            onChangeText={setName}
+            placeholder="Ex: Court Central"
+            placeholderTextColor="#95cbbc"
+            autoFocus
           />
         </View>
 
-        <View style={styles.vsSection}>
-          <View style={styles.vsRow}>
-            <TextInput
-              style={styles.vsInput}
-              placeholder="Team"
-              placeholderTextColor="#999"
-            />
-            <ThemedText style={styles.vsText}>VS</ThemedText>
-            <TextInput
-              style={styles.vsInput}
-              placeholder="Team"
-              placeholderTextColor="#999"
-            />
-            <TouchableOpacity style={styles.addButton}>
-              <ThemedText style={styles.addButtonText}>+</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
-          <ThemedText style={styles.createButtonText}>Create</ThemedText>
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            !name.trim() && styles.submitButtonDisabled,
+          ]}
+          onPress={handleSubmit}
+          disabled={!name.trim()}
+        >
+          <Text style={styles.submitButtonText}>Créer le terrain</Text>
         </TouchableOpacity>
       </View>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 40,
+    backgroundColor: "#EBF2FA",
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: "#2c4b5c",
   },
   backButton: {
-    padding: 5,
+    padding: 8,
   },
   backText: {
-    fontSize: 24,
-    fontWeight: "bold",
+    color: "#fff",
+    fontSize: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-  },
-  placeholder: {
-    width: 34,
+    fontWeight: "700",
+    color: "#fff",
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    padding: 16,
   },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  inputSection: {
-    marginBottom: 30,
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 10,
+    color: "#152b42",
+    marginBottom: 8,
   },
   input: {
-    backgroundColor: "#F0F0F0",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 8,
+    backgroundColor: "#EBF2FA",
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
-    color: "#000",
+    color: "#152b42",
   },
-  vsSection: {
-    marginBottom: 30,
-  },
-  vsRow: {
-    flexDirection: "row",
+  submitButton: {
+    backgroundColor: "#2c4b5c",
+    borderRadius: 12,
+    padding: 16,
     alignItems: "center",
-    gap: 10,
-    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  vsInput: {
-    flex: 1,
-    backgroundColor: "#A1CEDC",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    fontSize: 14,
-    color: "#000",
+  submitButtonDisabled: {
+    backgroundColor: "#95cbbc",
+    opacity: 0.5,
   },
-  vsText: {
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  addButton: {
-    backgroundColor: "#FFD700",
-    width: 35,
-    height: 35,
-    borderRadius: 17.5,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  addButtonText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  createButton: {
-    backgroundColor: "#FFB8A0",
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  createButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
   },
 });
