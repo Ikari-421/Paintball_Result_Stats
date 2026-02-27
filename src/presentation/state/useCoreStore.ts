@@ -6,19 +6,19 @@ import { Team } from "../../core/domain/Team";
 
 // Repositories
 import {
-    FieldRepository,
-    GameModeRepository,
-    GameRepository,
-    TeamRepository,
+  FieldRepository,
+  GameModeRepository,
+  GameRepository,
+  TeamRepository,
 } from "../../infrastructure/database";
 import { EventStore } from "../../infrastructure/eventStore";
 
 // Use Cases
 import {
-    CreateField,
-    CreateGame,
-    CreateGameMode,
-    CreateTeam,
+  CreateField,
+  CreateGame,
+  CreateGameMode,
+  CreateTeam,
 } from "../../core/useCases";
 
 // Initialize repositories and event store

@@ -14,7 +14,7 @@ Cette feuille de route définit les étapes de développement de l'application m
 ## Phase 2 : Configuration (Gestion et UI)
 **Objectif :** Développer les écrans permettant de paramétrer tout ce qui précède un match.
 - [ ] **Gestion des Terrains (Field Management)** : Écrans pour créer, lister et supprimer des terrains.
-- [ ] **Gestion des Équipes (Team Management)** : Écrans pour créer les équipes régulières ou inviter des équipes (Guest).
+- [ ] **Gestion des Équipes (Team Management)** : Écrans pour créer et supprimer les équipes régulières ou inviter des équipes (Guest).
 - [ ] **Gestion des Modes de Jeu (Game Mode)** : Configuration des durées, des pauses et des limites de score.
 - [ ] **Gestion des Confrontations (MatchUp)** : Assigner les équipes sur les terrains et définir l'ordre de passage.
 

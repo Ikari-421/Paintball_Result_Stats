@@ -1,73 +1,74 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useCoreStore } from '@/src/presentation/state/useCoreStore';
+import { PrimaryButton } from "@/components/common/PrimaryButton";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { SearchInput } from "@/components/common/SearchInput";
+import { GuestTeamForm } from "@/components/team/GuestTeamForm";
+import { TeamCard } from "@/components/team/TeamCard";
+import { Colors, Spacing } from "@/constants/theme";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { useSearch } from "@/hooks/useSearch";
+import { useTeamSelection } from "@/hooks/useTeamSelection";
+import { useCoreStore } from "@/src/presentation/state/useCoreStore";
+import { getAvatarColor } from "@/utils/avatarUtils";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function TeamsListScreen() {
   const router = useRouter();
-  const { teams, deleteTeam, isLoading } = useCoreStore();
+  const { teams, loadTeams, createTeam, deleteTeam } = useCoreStore();
+  const { selectedTeamId, selectTeam, clearSelection, isSelected } =
+    useTeamSelection();
+  const { query, setQuery, filteredItems } = useSearch(teams, "name");
+  const { showConfirm } = useConfirmDialog();
 
-  const handleDelete = (id: string, name: string) => {
-    Alert.alert(
-      'Supprimer l\'équipe',
-      `Voulez-vous vraiment supprimer "${name}" ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: () => deleteTeam(id),
-        },
-      ]
+  useEffect(() => {
+    loadTeams();
+  }, []);
+
+  const handleDelete = (teamId: string, teamName: string) => {
+    showConfirm(
+      "Delete Team",
+      `Are you sure you want to delete "${teamName}"?`,
+      async () => {
+        await deleteTeam(teamId);
+        if (isSelected(teamId)) {
+          clearSelection();
+        }
+      },
     );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Retour</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Équipes</Text>
-        <TouchableOpacity
-          onPress={() => router.push('/create-team')}
-          style={styles.addButton}
-        >
-          <Text style={styles.addButtonText}>+ Ajouter</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title="Select Team" onBack={() => router.back()} />
 
-      {teams.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Aucune équipe</Text>
-          <Text style={styles.emptySubtext}>
-            Créez votre première équipe pour commencer
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={teams}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.teamCard}>
-              <View style={styles.teamInfo}>
-                <Text style={styles.teamName}>{item.name}</Text>
-                {item.isGuest && (
-                  <View style={styles.guestBadge}>
-                    <Text style={styles.guestText}>Invité</Text>
-                  </View>
-                )}
-              </View>
-              <TouchableOpacity
-                onPress={() => handleDelete(item.id, item.name)}
-                style={styles.deleteButton}
-              >
-                <Text style={styles.deleteText}>🗑️</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          contentContainerStyle={styles.listContent}
+      <ScrollView style={styles.content}>
+        <SearchInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Filter teams..."
         />
-      )}
+
+        {filteredItems.map((team, index) => (
+          <TeamCard
+            key={team.id}
+            team={team}
+            isSelected={isSelected(team.id)}
+            onSelect={() => selectTeam(team.id)}
+            onDelete={() => handleDelete(team.id, team.name)}
+            avatarColor={getAvatarColor(index)}
+          />
+        ))}
+
+        <GuestTeamForm onSubmit={createTeam} />
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <PrimaryButton
+          title="Select & Continue"
+          onPress={() => router.back()}
+        />
+      </View>
     </View>
   );
 }
@@ -75,100 +76,14 @@ export default function TeamsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EBF2FA',
+    backgroundColor: Colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#2c4b5c',
-  },
-  backButton: {
-    padding: 8,
-  },
-  backText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  addButton: {
-    backgroundColor: '#5FC2BA',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  listContent: {
-    padding: 16,
-  },
-  teamCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  teamInfo: {
+  content: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    padding: Spacing.lg,
   },
-  teamName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#152b42',
-  },
-  guestBadge: {
-    backgroundColor: '#95cbbc',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  guestText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  deleteText: {
-    fontSize: 20,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#152b42',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: '#2c4b5c',
-    textAlign: 'center',
+  footer: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
 });
