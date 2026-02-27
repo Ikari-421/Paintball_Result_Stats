@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Create Field</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <h2 class="header-title">Create Field</h2>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+
+            <label class="input-label">Field Name</label>
+            <input type="text" class="input" placeholder="e.g. Main Arena">
+
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
+                <h3 style="font-size: 16px; color: var(--primary);">MatchUps</h3>
+                <span style="font-size: 13px; color: var(--secondary);">3 Scheduled</span>
+            </div>
+
+            <!-- Matchup items -->
+            <div class="card" style="display: flex; align-items: center; padding: 12px;">
+                <div style="flex: 1; display: flex; align-items: center;">
+                    <div style="flex: 1; text-align: center; font-weight: 600;">Team A</div>
+                    <span style="font-size: 12px; font-weight: 800; color: var(--secondary); margin: 0 12px;">VS</span>
+                    <div style="flex: 1; text-align: center; font-weight: 600;">Team B</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-left: 12px;">
+                    <button class="icon-btn" style="font-size: 20px;"><i
+                            class="material-icons">keyboard_arrow_up</i></button>
+                    <button class="icon-btn" style="font-size: 20px;"><i
+                            class="material-icons">keyboard_arrow_down</i></button>
+                </div>
+            </div>
+
+            <div class="card" style="display: flex; align-items: center; padding: 12px;">
+                <div style="flex: 1; display: flex; align-items: center;">
+                    <div style="flex: 1; text-align: center; font-weight: 600;">Team C</div>
+                    <span style="font-size: 12px; font-weight: 800; color: var(--secondary); margin: 0 12px;">VS</span>
+                    <div style="flex: 1; text-align: center; font-weight: 600;">Team D</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-left: 12px;">
+                    <button class="icon-btn" style="font-size: 20px;"><i
+                            class="material-icons">keyboard_arrow_up</i></button>
+                    <button class="icon-btn" style="font-size: 20px;"><i
+                            class="material-icons">keyboard_arrow_down</i></button>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="bottom-fixed" style="gap: 16px;">
+            <div style="display: flex; gap: 12px;">
+                <a href="create_matchup.html" class="btn btn-outline" style="flex: 1;">
+                    <i class="material-icons">add</i> MatchUp
+                </a>
+                <a href="select_game_mode.html" class="btn btn-secondary" style="flex: 1;">
+                    <i class="material-icons">settings</i> Mod Setup
+                </a>
+            </div>
+            <a href="list_fields.html" class="btn">Create Field</a>
+        </footer>
+
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,227 @@
+/* Colors */
+:root {
+  --text: #152b42;
+  --bg-color: #EBF2FA;
+  --primary: #2c4b5c;
+  --secondary: #95cbbc;
+  --accent: #5FC2BA;
+
+  --font-family: 'Inter', sans-serif;
+  --radius: 12px;
+  --spacing: 16px;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Layout Container */
+.app-container {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    height: 90vh;
+    min-height: auto;
+    margin-top: 5vh;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
+/* Shared structural elements */
+.header {
+  padding: var(--spacing);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.header-subtitle {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.content {
+  padding: var(--spacing);
+  flex: 1;
+}
+
+.card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: var(--spacing);
+  box-shadow: var(--shadow);
+  margin-bottom: var(--spacing);
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+}
+
+.action-card .card-icon {
+  font-size: 32px;
+  background: var(--bg-color);
+  padding: 12px;
+  border-radius: var(--radius);
+}
+
+.action-card h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.action-card p {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.action-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Components */
+.btn {
+  background-color: var(--primary);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: var(--spacing);
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  width: 100%;
+  transition: opacity 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--text);
+}
+
+.btn-accent {
+  background-color: var(--accent);
+  color: #fff;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  box-shadow: none;
+}
+
+.btn-danger {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.input {
+  background-color: #fff;
+  border-radius: var(--radius);
+  padding: var(--spacing);
+  font-size: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow);
+  width: 100%;
+  margin-bottom: var(--spacing);
+}
+
+.input:focus {
+  outline: 2px solid var(--primary);
+  border-color: transparent;
+}
+
+/* Utilities */
+.bottom-fixed {
+  position: sticky;
+  bottom: 0;
+  padding: var(--spacing);
+  background: linear-gradient(to top, var(--bg-color) 80%, transparent);
+  z-index: 10;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Material Icons Setup */
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

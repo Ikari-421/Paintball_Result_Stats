@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Select Game Mode</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <h2 class="header-title">Select Mod</h2>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+
+            <button class="btn btn-outline" style="margin-bottom: 24px;">
+                <i class="material-icons">verified</i> Use Field's Default Mod
+            </button>
+
+            <h3
+                style="font-size: 14px; margin-bottom: 16px; color: var(--text); opacity: 0.8; text-transform: uppercase;">
+                Saved Game Modes</h3>
+
+            <div class="card action-card" style="border: 2px solid var(--primary);">
+                <div class="card-text" style="flex: 1;">
+                    <h3 style="font-size: 16px; font-weight: 700;">Standard FIBA</h3>
+                    <p>10m • 5 TO • Race to 21</p>
+                </div>
+                <i class="material-icons" style="color: var(--primary);">radio_button_checked</i>
+            </div>
+
+            <div class="card action-card">
+                <div class="card-text" style="flex: 1;">
+                    <h3 style="font-size: 16px; font-weight: 700;">Quick Match</h3>
+                    <p>5m • 2 TO • Race to 10</p>
+                </div>
+                <i class="material-icons" style="color: var(--text); opacity: 0.3;">radio_button_unchecked</i>
+            </div>
+
+            <div class="card action-card">
+                <div class="card-text" style="flex: 1;">
+                    <h3 style="font-size: 16px; font-weight: 700;">Training Session</h3>
+                    <p>No time limit • 100 TO</p>
+                </div>
+                <i class="material-icons" style="color: var(--text); opacity: 0.3;">radio_button_unchecked</i>
+            </div>
+
+        </main>
+
+        <footer class="bottom-fixed" style="gap: 12px;">
+            <a href="create_game_mode.html" class="btn btn-secondary">
+                <i class="material-icons">add</i> Create Game Mod
+            </a>
+            <button class="btn" onclick="history.back()">Select & Continue</button>
+        </footer>
+
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Create Matchup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <h2 class="header-title">Create Matchup</h2>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+
+            <div class="card" style="text-align: center; padding: 24px 16px;">
+                <h3 style="font-size: 18px; color: var(--text); margin-bottom: 16px;">Team A</h3>
+                <a href="list_teams.html" class="btn">Select Team</a>
+            </div>
+
+            <div style="text-align: center; margin: 16px 0;">
+                <span
+                    style="font-size: 16px; font-weight: 800; background: #fff; padding: 8px 16px; border-radius: 20px; box-shadow: var(--shadow);">VS</span>
+            </div>
+
+            <div class="card" style="text-align: center; padding: 24px 16px;">
+                <h3 style="font-size: 18px; color: var(--text); margin-bottom: 16px;">Team B</h3>
+                <a href="list_teams.html" class="btn btn-secondary">Select Team</a>
+            </div>
+
+            <div class="card" style="text-align: center; padding: 24px 16px; margin-top: 24px;">
+                <h3 style="font-size: 18px; color: var(--text); margin-bottom: 16px;">Game Mod</h3>
+                <a href="select_game_mode.html" class="btn btn-outline"><i class="material-icons">settings</i> Select
+                    Mod</a>
+            </div>
+
+        </main>
+
+        <footer class="bottom-fixed">
+            <a href="create_field.html" class="btn"><i class="material-icons">check</i> Add MatchUp</a>
+        </footer>
+
+    </div>
+</body>
+
+</html>

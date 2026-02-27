@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Field Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <div style="text-align: center;">
+                <h2 class="header-title">Main Arena</h2>
+                <p class="header-subtitle">3 MatchUps Scheduled</p>
+            </div>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+
+            <a href="game_session.html" class="card"
+                style="display: flex; align-items: center; padding: 16px; border-left: 4px solid var(--accent); text-decoration: none; color: inherit;">
+                <div style="flex: 1; display: flex; align-items: center;">
+                    <div style="flex: 1; text-align: center; font-weight: 700;">Team A</div>
+                    <span
+                        style="font-size: 14px; font-weight: 800; background: var(--bg-color); padding: 4px 8px; border-radius: 12px; margin: 0 12px;">VS</span>
+                    <div style="flex: 1; text-align: center; font-weight: 700;">Team B</div>
+                </div>
+                <i class="material-icons" style="color: var(--accent); margin-left: 12px;">play_circle_filled</i>
+            </a>
+
+            <div class="card" style="display: flex; align-items: center; padding: 16px; opacity: 0.6;">
+                <div style="flex: 1; display: flex; align-items: center;">
+                    <div style="flex: 1; text-align: center; font-weight: 600;">Team C</div>
+                    <span style="font-size: 12px; font-weight: 800; margin: 0 12px;">VS</span>
+                    <div style="flex: 1; text-align: center; font-weight: 600;">Team D</div>
+                </div>
+                <i class="material-icons" style="margin-left: 12px;">schedule</i>
+            </div>
+
+        </main>
+
+        <footer class="bottom-fixed" style="gap: 16px;">
+            <a href="game_session.html" class="btn btn-accent"><i class="material-icons">play_arrow</i> Start Games</a>
+            <a href="create_field.html" class="btn btn-outline"><i class="material-icons">edit</i> Edit Field</a>
+        </footer>
+
+    </div>
+</body>
+
+</html>
