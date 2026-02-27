@@ -59,11 +59,7 @@ export default function RootLayout() {
           {/* Team Management */}
           <Stack.Screen name="teams-list" options={{ headerShown: false }} />
           <Stack.Screen name="create-team" options={{ headerShown: false }} />
-
-          {/* Field Management */}
-          <Stack.Screen name="fields-list" options={{ headerShown: false }} />
-          <Stack.Screen name="create-field" options={{ headerShown: false }} />
-          <Stack.Screen name="field/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="edit-team" options={{ headerShown: false }} />
 
           {/* Matchup Creation */}
           <Stack.Screen
@@ -71,11 +67,25 @@ export default function RootLayout() {
             options={{ headerShown: false }}
           />
           <Stack.Screen name="select-team" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="select-game-mode"
+            options={{ headerShown: false }}
+          />
+
+          {/* Field Management */}
+          <Stack.Screen name="fields-list" options={{ headerShown: false }} />
+          <Stack.Screen name="create-field" options={{ headerShown: false }} />
+          <Stack.Screen name="edit-field" options={{ headerShown: false }} />
+          <Stack.Screen name="field/[id]" options={{ headerShown: false }} />
 
           {/* Game Mode Management */}
           <Stack.Screen name="game-mods" options={{ headerShown: false }} />
           <Stack.Screen
             name="create-game-mode"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="edit-game-mode"
             options={{ headerShown: false }}
           />
 

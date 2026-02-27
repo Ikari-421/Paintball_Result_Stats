@@ -22,7 +22,7 @@ export default function FieldsListScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Fields" onBack={() => router.back()} />
+      <ScreenHeader title="Fields" onBack={() => router.push("/menu")} />
 
       <ScrollView style={styles.content}>
         {fields.map((field, index) => (

@@ -1,43 +1,31 @@
 import { EmptyState } from "@/components/common/EmptyState";
-import { IconButton } from "@/components/common/IconButton";
+import { OutlineButton } from "@/components/common/OutlineButton";
+import { PrimaryButton } from "@/components/common/PrimaryButton";
+import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { FieldDetailHeader } from "@/components/field/FieldDetailHeader";
 import { MatchupCard } from "@/components/field/MatchupCard";
 import { Colors, Spacing } from "@/constants/theme";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
 export default function FieldDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { fields, teams, removeMatchupFromField } = useCoreStore();
-  const { showConfirm } = useConfirmDialog();
+  const { fields, teams, deleteField } = useCoreStore();
 
   const field = fields.find((f) => f.id === id);
 
   if (!field) {
     return (
       <View style={styles.container}>
-        <EmptyState message="Field not found" />
-        <IconButton title="Go Back" icon="←" onPress={() => router.back()} />
+        <View style={styles.emptyContainer}>
+          <EmptyState message="Field not found" />
+          <PrimaryButton title="Go Back" onPress={() => router.back()} />
+        </View>
       </View>
     );
   }
-
-  const handleDeleteMatchup = (
-    matchupId: string,
-    teamAName: string,
-    teamBName: string,
-  ) => {
-    showConfirm(
-      "Delete Matchup",
-      `Remove ${teamAName} vs ${teamBName}?`,
-      async () => {
-        await removeMatchupFromField(field.id, matchupId);
-      },
-    );
-  };
 
   const handleStartGames = () => {
     if (field.matchups.length === 0) return;
@@ -46,7 +34,33 @@ export default function FieldDetailScreen() {
   };
 
   const handleEditField = () => {
-    router.push(`/create-field?id=${field.id}`);
+    router.push(`/edit-field?id=${field.id}`);
+  };
+
+  const handleDeleteField = () => {
+    if (field.matchups.length > 0) {
+      Alert.alert(
+        "Cannot Delete Field",
+        `This field has ${field.matchups.length} matchup(s) scheduled. Please remove all matchups before deleting the field.`,
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Delete Field",
+      `Are you sure you want to delete "${field.name}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await deleteField(field.id);
+            router.push("/fields-list");
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -54,7 +68,7 @@ export default function FieldDetailScreen() {
       <FieldDetailHeader
         fieldName={field.name}
         matchupsCount={field.matchups.length}
-        onBack={() => router.back()}
+        onBack={() => router.push("/fields-list")}
       />
 
       <ScrollView style={styles.content}>
@@ -77,13 +91,6 @@ export default function FieldDetailScreen() {
                     `/game?fieldId=${field.id}&matchupId=${matchup.id}`,
                   )
                 }
-                onDelete={() =>
-                  handleDeleteMatchup(
-                    matchup.id,
-                    teamA?.name || "Team A",
-                    teamB?.name || "Team B",
-                  )
-                }
               />
             );
           })
@@ -91,21 +98,24 @@ export default function FieldDetailScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <IconButton
+        <PrimaryButton
           title="Start Games"
-          icon="▶️"
-          variant="accent"
           onPress={handleStartGames}
           disabled={field.matchups.length === 0}
-          style={styles.footerButton}
+          style={styles.startButton}
         />
-        <IconButton
-          title="Edit Field"
-          icon="✏️"
-          variant="outline"
-          onPress={handleEditField}
-          style={styles.footerButton}
-        />
+        <View style={styles.actionButtons}>
+          <OutlineButton
+            title="Edit Field"
+            onPress={handleEditField}
+            style={styles.actionButton}
+          />
+          <SecondaryButton
+            title="Delete Field"
+            onPress={handleDeleteField}
+            style={styles.deleteButton}
+          />
+        </View>
       </View>
     </View>
   );
@@ -116,17 +126,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
   content: {
     flex: 1,
     padding: Spacing.lg,
   },
   footer: {
-    flexDirection: "row",
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
-    gap: Spacing.lg,
+    gap: Spacing.md,
   },
-  footerButton: {
+  startButton: {
+    backgroundColor: Colors.accent,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  actionButton: {
     flex: 1,
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: Colors.danger,
   },
 });

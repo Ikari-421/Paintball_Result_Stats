@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors, Spacing, Typography } from '@/constants/theme';
+import { Colors, Spacing, Typography } from "@/constants/theme";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface FieldDetailHeaderProps {
   fieldName: string;
@@ -7,7 +7,11 @@ interface FieldDetailHeaderProps {
   onBack: () => void;
 }
 
-export const FieldDetailHeader = ({ fieldName, matchupsCount, onBack }: FieldDetailHeaderProps) => {
+export const FieldDetailHeader = ({
+  fieldName,
+  matchupsCount,
+  onBack,
+}: FieldDetailHeaderProps) => {
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={onBack} style={styles.backButton}>
@@ -16,27 +20,26 @@ export const FieldDetailHeader = ({ fieldName, matchupsCount, onBack }: FieldDet
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{fieldName}</Text>
         <Text style={styles.subtitle}>
-          {matchupsCount} MatchUp{matchupsCount !== 1 ? 's' : ''} Scheduled
+          {matchupsCount} MatchUp{matchupsCount !== 1 ? "s" : ""} Scheduled
         </Text>
       </View>
-      <View style={styles.placeholder} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: Spacing.lg,
     paddingTop: Spacing.xxxl,
   },
   backButton: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   backIcon: {
     fontSize: 24,
@@ -44,19 +47,14 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     ...Typography.title,
     color: Colors.primary,
   },
   subtitle: {
-    fontSize: 14,
-    color: Colors.primary,
-    opacity: 0.7,
-    marginTop: 4,
-  },
-  placeholder: {
-    width: 40,
+    ...Typography.subtitle,
+    color: Colors.secondary,
   },
 });
