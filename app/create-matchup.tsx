@@ -5,11 +5,15 @@ import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, StyleSheet, Text, View } from "react-native";
 
 export default function CreateMatchupScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    returnTo?: string;
+    fieldId?: string;
+  }>();
   const { teamA, teamB, gameMode, reset } = useMatchupCreation();
 
   const handleSelectTeamA = () => {
@@ -21,7 +25,7 @@ export default function CreateMatchupScreen() {
   };
 
   const handleSelectGameMode = () => {
-    router.push("/game-mods");
+    router.push("/select-game-mode");
   };
 
   const handleAddMatchup = () => {
@@ -47,15 +51,23 @@ export default function CreateMatchupScreen() {
       order: 0,
     };
 
+    const returnPath = params.returnTo || "/create-field";
+
+    const returnParams: any = {
+      matchup: JSON.stringify(newMatchup),
+      teamAName: teamA.name,
+      teamBName: teamB.name,
+      gameModeId: gameMode.id,
+      gameModeName: gameMode.name,
+    };
+
+    if (params.fieldId) {
+      returnParams.id = params.fieldId;
+    }
+
     router.push({
-      pathname: "/create-field",
-      params: {
-        matchup: JSON.stringify(newMatchup),
-        teamAName: teamA.name,
-        teamBName: teamB.name,
-        gameModeId: gameMode.id,
-        gameModeName: gameMode.name,
-      },
+      pathname: returnPath as any,
+      params: returnParams,
     });
 
     reset();

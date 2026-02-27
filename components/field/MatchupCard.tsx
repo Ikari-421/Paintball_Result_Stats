@@ -10,6 +10,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 interface MatchupCardProps {
   teamAName: string;
   teamBName: string;
+  gameModeName?: string;
   isActive?: boolean;
   onPress: () => void;
   onDelete?: () => void;
@@ -18,6 +19,7 @@ interface MatchupCardProps {
 export const MatchupCard = ({
   teamAName,
   teamBName,
+  gameModeName,
   isActive = false,
   onPress,
   onDelete,
@@ -25,18 +27,23 @@ export const MatchupCard = ({
   return (
     <View style={[styles.card, isActive && styles.cardActive]}>
       <TouchableOpacity style={styles.content} onPress={onPress}>
-        <View style={styles.teamsContainer}>
-          <Text style={[styles.teamName, isActive && styles.teamNameActive]}>
-            {teamAName}
-          </Text>
-          <View style={[styles.vsBadge, isActive && styles.vsBadgeActive]}>
-            <Text style={[styles.vsText, isActive && styles.vsTextActive]}>
-              VS
+        <View style={styles.mainContent}>
+          <View style={styles.teamsContainer}>
+            <Text style={[styles.teamName, isActive && styles.teamNameActive]}>
+              {teamAName}
+            </Text>
+            <View style={[styles.vsBadge, isActive && styles.vsBadgeActive]}>
+              <Text style={[styles.vsText, isActive && styles.vsTextActive]}>
+                VS
+              </Text>
+            </View>
+            <Text style={[styles.teamName, isActive && styles.teamNameActive]}>
+              {teamBName}
             </Text>
           </View>
-          <Text style={[styles.teamName, isActive && styles.teamNameActive]}>
-            {teamBName}
-          </Text>
+          {gameModeName && (
+            <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
+          )}
         </View>
         <Text style={styles.icon}>{isActive ? "▶️" : "🕐"}</Text>
       </TouchableOpacity>
@@ -70,10 +77,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.lg,
   },
-  teamsContainer: {
+  mainContent: {
     flex: 1,
+  },
+  teamsContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  gameMode: {
+    fontSize: 12,
+    color: Colors.secondary,
+    textAlign: "center",
+    marginTop: Spacing.xs,
   },
   teamName: {
     flex: 1,

@@ -7,9 +7,17 @@ interface MatchupListProps {
   matchups: Matchup[];
   teams: Team[];
   onDelete: (matchupId: string) => void;
+  onMoveUp?: (matchupId: string) => void;
+  onMoveDown?: (matchupId: string) => void;
 }
 
-export const MatchupList = ({ matchups, teams, onDelete }: MatchupListProps) => {
+export const MatchupList = ({
+  matchups,
+  teams,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}: MatchupListProps) => {
   const getTeamName = (teamId: string) => {
     return teams.find((t) => t.id === teamId)?.name || "Unknown";
   };
@@ -24,7 +32,7 @@ export const MatchupList = ({ matchups, teams, onDelete }: MatchupListProps) => 
 
   return (
     <>
-      {matchups.map((matchup) => (
+      {matchups.map((matchup, index) => (
         <View key={matchup.id} style={styles.matchupCard}>
           <View style={styles.matchupContent}>
             <Text style={styles.teamName}>{getTeamName(matchup.teamA)}</Text>
@@ -33,12 +41,30 @@ export const MatchupList = ({ matchups, teams, onDelete }: MatchupListProps) => 
             </View>
             <Text style={styles.teamName}>{getTeamName(matchup.teamB)}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.deleteMatchupButton}
-            onPress={() => onDelete(matchup.id)}
-          >
-            <Text style={styles.deleteIcon}>🗑️</Text>
-          </TouchableOpacity>
+          <View style={styles.actionsContainer}>
+            {onMoveUp && index > 0 && (
+              <TouchableOpacity
+                style={styles.reorderButton}
+                onPress={() => onMoveUp(matchup.id)}
+              >
+                <Text style={styles.reorderIcon}>⬆️</Text>
+              </TouchableOpacity>
+            )}
+            {onMoveDown && index < matchups.length - 1 && (
+              <TouchableOpacity
+                style={styles.reorderButton}
+                onPress={() => onMoveDown(matchup.id)}
+              >
+                <Text style={styles.reorderIcon}>⬇️</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.deleteMatchupButton}
+              onPress={() => onDelete(matchup.id)}
+            >
+              <Text style={styles.deleteIcon}>🗑️</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ))}
     </>
@@ -90,6 +116,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     color: Colors.text,
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  reorderButton: {
+    padding: Spacing.xs,
+  },
+  reorderIcon: {
+    fontSize: 16,
   },
   deleteMatchupButton: {
     padding: Spacing.sm,
