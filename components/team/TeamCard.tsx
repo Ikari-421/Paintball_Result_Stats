@@ -11,9 +11,9 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface TeamCardProps {
   team: { id: string; name: string };
-  isSelected: boolean;
-  onSelect: () => void;
-  onDelete: () => void;
+  isSelected?: boolean;
+  onSelect?: () => void;
+  onDelete?: () => void;
   avatarColor: string;
 }
 
@@ -74,13 +74,11 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   deleteButton: {
-    width: 50,
-    height: "100%",
-    backgroundColor: Colors.danger,
+    width: 40,
     alignItems: "center",
     justifyContent: "center",
   },
   deleteIcon: {
-    fontSize: 20,
+    fontSize: 16,
   },
 });

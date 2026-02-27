@@ -1,4 +1,3 @@
-import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { SearchInput } from "@/components/common/SearchInput";
 import { GuestTeamForm } from "@/components/team/GuestTeamForm";
@@ -53,8 +52,6 @@ export default function TeamsListScreen() {
           <TeamCard
             key={team.id}
             team={team}
-            isSelected={isSelected(team.id)}
-            onSelect={() => selectTeam(team.id)}
             onDelete={() => handleDelete(team.id, team.name)}
             avatarColor={getAvatarColor(index)}
           />
@@ -62,13 +59,6 @@ export default function TeamsListScreen() {
 
         <GuestTeamForm onSubmit={createTeam} />
       </ScrollView>
-
-      <View style={styles.footer}>
-        <PrimaryButton
-          title="Select & Continue"
-          onPress={() => router.back()}
-        />
-      </View>
     </View>
   );
 }
