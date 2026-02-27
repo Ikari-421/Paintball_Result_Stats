@@ -1,22 +1,85 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import "react-native-reanimated";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { initDb } from "@/src/infrastructure/database";
+import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [isDbReady, setIsDbReady] = useState(false);
+  const { loadTeams, loadFields, loadGameModes, loadGames } = useCoreStore();
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        // Initialize database
+        initDb();
+
+        // Load all data from database
+        await Promise.all([
+          loadTeams(),
+          loadFields(),
+          loadGameModes(),
+          loadGames(),
+        ]);
+
+        setIsDbReady(true);
+      } catch (error) {
+        console.error("Failed to initialize app:", error);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  if (!isDbReady) {
+    return null; // Or a loading screen
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="menu" options={{ headerShown: false }} />
+
+        {/* Team Management */}
+        <Stack.Screen name="teams-list" options={{ headerShown: false }} />
+        <Stack.Screen name="create-team" options={{ headerShown: false }} />
+
+        {/* Field Management */}
+        <Stack.Screen name="fields-list" options={{ headerShown: false }} />
+        <Stack.Screen name="create-field" options={{ headerShown: false }} />
+        <Stack.Screen name="field/[id]" options={{ headerShown: false }} />
+
+        {/* Game Mode Management */}
+        <Stack.Screen name="game-mods" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="create-game-mode"
+          options={{ headerShown: false }}
+        />
+
+        {/* Game Session */}
+        <Stack.Screen name="game" options={{ headerShown: false }} />
+
+        {/* Other */}
+        <Stack.Screen name="history" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: "modal", title: "Modal" }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
