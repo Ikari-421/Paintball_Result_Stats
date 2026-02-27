@@ -7,9 +7,12 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { NumberInput } from "../components/common/NumberInput";
+import { PrimaryButton } from "../components/common/PrimaryButton";
+import { ScreenHeader } from "../components/common/ScreenHeader";
+import { BorderRadius, Colors, Shadows, Spacing } from "../constants/theme";
 
 export default function CreateGameModeScreen() {
   const router = useRouter();
@@ -24,7 +27,7 @@ export default function CreateGameModeScreen() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert("Erreur", "Le nom du mode de jeu est requis");
+      Alert.alert("Error", "Game mode name is required");
       return;
     }
 
@@ -35,28 +38,22 @@ export default function CreateGameModeScreen() {
     const scoreLimit = parseInt(raceTo);
 
     if (isNaN(gameTime) || gameTime <= 0) {
-      Alert.alert("Erreur", "La durée du jeu doit être un nombre positif");
+      Alert.alert("Error", "Game time must be a positive number");
       return;
     }
 
     if (isNaN(breakTime) || breakTime < 0) {
-      Alert.alert(
-        "Erreur",
-        "La durée du break doit être un nombre positif ou zéro",
-      );
+      Alert.alert("Error", "Break time must be a positive number or zero");
       return;
     }
 
     if (isNaN(timeouts) || timeouts < 0) {
-      Alert.alert(
-        "Erreur",
-        "Le nombre de timeouts doit être un nombre positif ou zéro",
-      );
+      Alert.alert("Error", "Timeouts must be a positive number or zero");
       return;
     }
 
     if (isNaN(scoreLimit) || scoreLimit <= 0) {
-      Alert.alert("Erreur", "La limite de score doit être un nombre positif");
+      Alert.alert("Error", "Score limit must be a positive number");
       return;
     }
 
@@ -72,127 +69,78 @@ export default function CreateGameModeScreen() {
       });
       router.back();
     } catch (err) {
-      Alert.alert("Erreur", error || "Impossible de créer le mode de jeu");
+      Alert.alert("Error", error || "Unable to create game mode");
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Text style={styles.backText}>← Annuler</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Nouveau Mode</Text>
-        <View style={{ width: 80 }} />
-      </View>
+      <ScreenHeader title="Game Mod Setup" onBack={() => router.back()} />
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <ScrollView style={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.label}>Nom du mode</Text>
+          <Text style={styles.label}>Mod Name</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="Ex: Tournoi Rapide"
-            placeholderTextColor="#95cbbc"
+            placeholder="e.g. Finals Format"
+            placeholderTextColor={Colors.secondary}
             autoFocus
           />
-        </View>
 
-        <View style={styles.card}>
-          <View style={styles.inputRow}>
-            <View style={styles.inputColumn}>
-              <Text style={styles.label}>Durée du jeu</Text>
-              <Text style={styles.sublabel}>Minutes</Text>
-            </View>
-            <TextInput
-              style={styles.numberInput}
+          <View style={styles.parametersGrid}>
+            <NumberInput
+              label="Game Time"
+              sublabel="Duration per round (min)"
               value={gameTimeMinutes}
               onChangeText={setGameTimeMinutes}
-              keyboardType="numeric"
               placeholder="10"
-              placeholderTextColor="#95cbbc"
             />
-          </View>
 
-          <View style={styles.inputRow}>
-            <View style={styles.inputColumn}>
-              <Text style={styles.label}>Temps de pause</Text>
-              <Text style={styles.sublabel}>Secondes entre rounds</Text>
-            </View>
-            <TextInput
-              style={styles.numberInput}
-              value={breakTimeSeconds}
-              onChangeText={setBreakTimeSeconds}
-              keyboardType="numeric"
-              placeholder="30"
-              placeholderTextColor="#95cbbc"
-            />
-          </View>
-
-          <View style={styles.inputRow}>
-            <View style={styles.inputColumn}>
-              <Text style={styles.label}>Overtime</Text>
-              <Text style={styles.sublabel}>Durée en minutes (optionnel)</Text>
-            </View>
-            <TextInput
-              style={styles.numberInput}
-              value={overtimeMinutes}
-              onChangeText={setOvertimeMinutes}
-              keyboardType="numeric"
-              placeholder="5"
-              placeholderTextColor="#95cbbc"
-            />
-          </View>
-
-          <View style={styles.inputRow}>
-            <View style={styles.inputColumn}>
-              <Text style={styles.label}>Timeouts</Text>
-              <Text style={styles.sublabel}>Par équipe</Text>
-            </View>
-            <TextInput
-              style={styles.numberInput}
+            <NumberInput
+              label="Time Out"
+              sublabel="Limit per team"
               value={timeOutsPerTeam}
               onChangeText={setTimeOutsPerTeam}
-              keyboardType="numeric"
-              placeholder="2"
-              placeholderTextColor="#95cbbc"
+              placeholder="5"
             />
-          </View>
 
-          <View style={styles.inputRow}>
-            <View style={styles.inputColumn}>
-              <Text style={styles.label}>Race To</Text>
-              <Text style={styles.sublabel}>Score limite pour gagner</Text>
-            </View>
-            <TextInput
-              style={styles.numberInput}
+            <NumberInput
+              label="Break Time"
+              sublabel="Time between rounds (sec)"
+              value={breakTimeSeconds}
+              onChangeText={setBreakTimeSeconds}
+              placeholder="30"
+            />
+
+            <NumberInput
+              label="Overtime"
+              sublabel="Duration of overtime (min)"
+              value={overtimeMinutes}
+              onChangeText={setOvertimeMinutes}
+              placeholder="5"
+            />
+
+            <NumberInput
+              label="Race To"
+              sublabel="Points to win the match"
               value={raceTo}
               onChangeText={setRaceTo}
-              keyboardType="numeric"
               placeholder="5"
-              placeholderTextColor="#95cbbc"
+              isHighlighted
             />
           </View>
         </View>
+      </ScrollView>
 
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            !name.trim() && styles.submitButtonDisabled,
-          ]}
+      <View style={styles.footer}>
+        <PrimaryButton
+          title="Create Game Mod"
           onPress={handleSubmit}
           disabled={!name.trim()}
-        >
-          <Text style={styles.submitButtonText}>Créer le mode de jeu</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        />
+      </View>
     </View>
   );
 }
@@ -200,104 +148,39 @@ export default function CreateGameModeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EBF2FA",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: "#2c4b5c",
-  },
-  backButton: {
-    padding: 8,
-  },
-  backText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#fff",
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    ...Shadows.card,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
-    color: "#152b42",
-  },
-  sublabel: {
-    fontSize: 12,
-    color: "#2c4b5c",
-    marginTop: 4,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
   },
   input: {
-    backgroundColor: "#EBF2FA",
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.lg,
     fontSize: 16,
-    color: "#152b42",
-    marginTop: 8,
+    color: Colors.text,
+    marginBottom: Spacing.xl,
   },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EBF2FA",
+  parametersGrid: {
+    gap: 0,
   },
-  inputColumn: {
-    flex: 1,
-  },
-  numberInput: {
-    backgroundColor: "#EBF2FA",
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#152b42",
-    textAlign: "center",
-    width: 80,
-  },
-  submitButton: {
-    backgroundColor: "#2c4b5c",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#95cbbc",
-    opacity: 0.5,
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
+  footer: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
 });

@@ -1,33 +1,35 @@
+import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { GameModeCard } from "@/components/gamemode/GameModeCard";
+import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { Colors, Spacing } from "@/constants/theme";
+import { GameMode } from "@/src/core/domain/GameMode";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 
-export default function GameModsScreen() {
+export default function SelectGameModeScreen() {
   const router = useRouter();
-  const { gameModes, deleteGameMode } = useCoreStore();
+  const { gameModes, loadGameModes } = useCoreStore();
+  const { gameMode, setGameMode } = useMatchupCreation();
+  const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
 
-  const handleEdit = (id: string) => {
-    router.push(`/edit-game-mode?id=${id}`);
-  };
+  useEffect(() => {
+    loadGameModes();
+  }, []);
 
-  const handleDelete = (id: string, name: string) => {
-    Alert.alert(
-      "Delete Game Mode",
-      `Are you sure you want to delete "${name}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => deleteGameMode(id),
-        },
-      ],
-    );
+  useEffect(() => {
+    if (gameMode) {
+      const mode = gameModes.find((m) => m.id === gameMode.id);
+      setSelectedMode(mode || null);
+    }
+  }, [gameMode, gameModes]);
+
+  const handleSelectMode = (mode: GameMode) => {
+    setSelectedMode(mode);
   };
 
   const handleUseDefault = () => {
@@ -37,14 +39,31 @@ export default function GameModsScreen() {
     );
   };
 
+  const handleContinue = () => {
+    if (!selectedMode) {
+      Alert.alert("Error", "Please select a game mode");
+      return;
+    }
+
+    setGameMode({
+      id: selectedMode.id,
+      name: selectedMode.name,
+    });
+
+    router.back();
+  };
+
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title="List of Game Modes"
-        onBack={() => router.push("/menu")}
-      />
+      <ScreenHeader title="Select Mod" onBack={() => router.back()} />
 
       <ScrollView style={styles.content}>
+        <OutlineButton
+          title="✓ Use Field's Default Mod"
+          onPress={handleUseDefault}
+          style={styles.defaultButton}
+        />
+
         <Text style={styles.sectionTitle}>SAVED GAME MODES</Text>
 
         {gameModes.length === 0 ? (
@@ -59,8 +78,8 @@ export default function GameModsScreen() {
             <GameModeCard
               key={mode.id}
               gameMode={mode}
-              onEdit={() => handleEdit(mode.id)}
-              onDelete={() => handleDelete(mode.id, mode.name)}
+              isSelected={selectedMode?.id === mode.id}
+              onSelect={() => handleSelectMode(mode)}
             />
           ))
         )}
@@ -73,7 +92,8 @@ export default function GameModsScreen() {
         />
         <PrimaryButton
           title="Select & Continue"
-          onPress={() => router.back()}
+          onPress={handleContinue}
+          disabled={!selectedMode}
         />
       </View>
     </View>
