@@ -52,22 +52,33 @@ export default function FieldDetailScreen() {
       console.log("[FieldDetails] Matchup:", firstMatchup.id);
       console.log("[FieldDetails] GameMode:", firstMatchup.gameModeId);
 
-      const gameId = await createGame({
-        fieldId: field.id,
-        matchupId: firstMatchup.id,
-        teamAId: firstMatchup.teamA,
-        teamBId: firstMatchup.teamB,
-        matchupOrder: firstMatchup.order,
-        gameModeId: firstMatchup.gameModeId,
-      });
-
-      console.log("[FieldDetails] Game créé avec ID:", gameId);
-      console.log("[FieldDetails] Rechargement des games...");
-      await loadGames();
-      console.log(
-        "[FieldDetails] Games rechargés, navigation vers:",
-        `/game-session/${gameId}`,
+      // Vérifier si un game existe déjà pour ce matchup
+      const existingGame = games.find(
+        (g) => g.matchup.id === firstMatchup.id && g.fieldId === field.id,
       );
+
+      let gameId: string;
+
+      if (existingGame) {
+        console.log("[FieldDetails] Game existant trouvé:", existingGame.id);
+        gameId = existingGame.id;
+      } else {
+        console.log("[FieldDetails] Création d'un nouveau game");
+        gameId = await createGame({
+          fieldId: field.id,
+          matchupId: firstMatchup.id,
+          teamAId: firstMatchup.teamA,
+          teamBId: firstMatchup.teamB,
+          matchupOrder: firstMatchup.order,
+          gameModeId: firstMatchup.gameModeId,
+        });
+
+        console.log("[FieldDetails] Game créé avec ID:", gameId);
+        console.log("[FieldDetails] Rechargement des games...");
+        await loadGames();
+      }
+
+      console.log("[FieldDetails] Navigation vers:", `/game-session/${gameId}`);
 
       // Navigate to game session
       router.push(`/game-session/${gameId}`);
@@ -140,16 +151,33 @@ export default function FieldDetailScreen() {
                   }
 
                   try {
-                    const gameId = await createGame({
-                      fieldId: field.id,
-                      matchupId: matchup.id,
-                      teamAId: matchup.teamA,
-                      teamBId: matchup.teamB,
-                      matchupOrder: matchup.order,
-                      gameModeId: matchup.gameModeId,
-                    });
+                    // Vérifier si un game existe déjà pour ce matchup
+                    const existingGame = games.find(
+                      (g) =>
+                        g.matchup.id === matchup.id && g.fieldId === field.id,
+                    );
 
-                    await loadGames();
+                    let gameId: string;
+
+                    if (existingGame) {
+                      console.log(
+                        "[MatchupCard] Game existant trouvé:",
+                        existingGame.id,
+                      );
+                      gameId = existingGame.id;
+                    } else {
+                      console.log("[MatchupCard] Création d'un nouveau game");
+                      gameId = await createGame({
+                        fieldId: field.id,
+                        matchupId: matchup.id,
+                        teamAId: matchup.teamA,
+                        teamBId: matchup.teamB,
+                        matchupOrder: matchup.order,
+                        gameModeId: matchup.gameModeId,
+                      });
+                      await loadGames();
+                    }
+
                     router.push(`/game-session/${gameId}`);
                   } catch (error) {
                     Alert.alert("Erreur", (error as Error).message);

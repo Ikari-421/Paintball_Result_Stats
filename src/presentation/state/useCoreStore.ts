@@ -143,14 +143,22 @@ interface CoreState {
   scorePoint: (gameId: string, teamId: string) => Promise<void>;
   adjustTime: (
     gameId: string,
-    newTimeSeconds: number,
+    newTime: number,
     reason: string,
   ) => Promise<void>;
   adjustScore: (
     gameId: string,
-    newScoreTeamA: number,
-    newScoreTeamB: number,
+    teamAScore: number,
+    teamBScore: number,
     reason: string,
+  ) => Promise<void>;
+  updateGameState: (
+    gameId: string,
+    stateData: {
+      currentRound: number;
+      isPaused: boolean;
+      status: string;
+    },
   ) => Promise<void>;
 
   // Utility
@@ -499,6 +507,38 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
       throw error;
+    }
+  },
+
+  updateGameState: async (
+    gameId: string,
+    stateData: {
+      currentRound: number;
+      isPaused: boolean;
+      status: string;
+    },
+  ) => {
+    try {
+      console.log("[Store] updateGameState - Début:", gameId, stateData);
+      const game = await gameRepository.findById(gameId);
+      if (!game) {
+        console.error("[Store] updateGameState - Game non trouvé:", gameId);
+        throw new Error("Game not found");
+      }
+
+      // Mettre à jour le game avec les nouvelles données de state
+      // Note: On utilise directement le repository pour mettre à jour les champs
+      await gameRepository.updateGameState(gameId, stateData);
+      console.log("[Store] updateGameState - GameState sauvegardé");
+
+      // Pas besoin de recharger tous les games, juste mettre à jour localement
+      const updatedGames = get().games.map((g) =>
+        g.id === gameId ? { ...g, ...stateData } : g,
+      );
+      set({ games: updatedGames as Game[] });
+    } catch (error) {
+      console.error("[Store] updateGameState - Erreur:", error);
+      set({ error: (error as Error).message });
     }
   },
 

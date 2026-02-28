@@ -30,6 +30,7 @@ export default function MatchScreen() {
     adjustTime,
     adjustScore,
     loadGames,
+    updateGameState,
   } = useCoreStore();
 
   const game = games.find((g) => g.id === gameId);
@@ -67,6 +68,44 @@ export default function MatchScreen() {
     console.log("[GameSession] Montage - gameId:", gameId);
     loadGames();
   }, []);
+
+  // Charger le GameState depuis la DB au montage
+  useEffect(() => {
+    if (game && game.currentRound !== undefined) {
+      console.log("[GameSession] Chargement GameState depuis DB");
+      const loadedState = GameState.create(
+        game.gameStateStatus as GameStatus,
+        game.currentRound,
+        game.isPaused === 1,
+      );
+      setGameState(loadedState);
+      console.log(
+        "[GameSession] GameState chargé:",
+        loadedState.status,
+        "round:",
+        loadedState.currentRound,
+      );
+    }
+  }, [game?.id]);
+
+  // Sauvegarder le GameState à chaque changement
+  useEffect(() => {
+    if (game && gameState.status !== GameStatus.NOT_STARTED) {
+      console.log(
+        "[GameSession] Sauvegarde GameState:",
+        gameState.status,
+        "round:",
+        gameState.currentRound,
+        "paused:",
+        gameState.isPaused,
+      );
+      updateGameState(gameId as string, {
+        currentRound: gameState.currentRound,
+        isPaused: gameState.isPaused,
+        status: gameState.status,
+      });
+    }
+  }, [gameState.status, gameState.currentRound, gameState.isPaused]);
 
   useEffect(() => {
     console.log("[GameSession] Games chargés:", games.length);

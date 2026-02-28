@@ -65,6 +65,9 @@ export const initDb = () => {
       remainingTime INTEGER NOT NULL,
       timerIsRunning INTEGER NOT NULL,
       status TEXT NOT NULL,
+      currentRound INTEGER DEFAULT 1,
+      isPaused INTEGER DEFAULT 0,
+      gameStateStatus TEXT DEFAULT 'NOT_STARTED',
       FOREIGN KEY (fieldId) REFERENCES fields(id)
     );
   `);

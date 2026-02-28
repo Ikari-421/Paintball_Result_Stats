@@ -31,6 +31,9 @@ interface GameRow {
   remainingTime: number;
   timerIsRunning: number;
   status: string;
+  currentRound: number;
+  isPaused: number;
+  gameStateStatus: string;
 }
 
 export class GameRepository implements IGameRepository {
@@ -48,8 +51,9 @@ export class GameRepository implements IGameRepository {
       `INSERT OR REPLACE INTO games (
                 id, fieldId, matchupId, matchupTeamA, matchupTeamB, matchupOrder,
                 gameModeId, gameModeName, gameTimeMinutes, breakTimeSeconds, overtimeMinutes,
-                timeOutsPerTeam, raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                timeOutsPerTeam, raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, status,
+                currentRound, isPaused, gameStateStatus
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         game.id,
         game.fieldId,
@@ -69,6 +73,9 @@ export class GameRepository implements IGameRepository {
         game.timer.remainingTime,
         game.timer.isRunning ? 1 : 0,
         game.status,
+        1, // currentRound - default pour l'instant
+        0, // isPaused - default pour l'instant
+        game.status, // gameStateStatus - utilise le même que status pour l'instant
       ],
     );
     console.log("[GameRepository] save - Game inséré en DB");
@@ -94,6 +101,31 @@ export class GameRepository implements IGameRepository {
 
   async delete(id: GameId): Promise<void> {
     db.runSync("DELETE FROM games WHERE id = ?", [id]);
+  }
+
+  async updateGameState(
+    id: GameId,
+    stateData: {
+      currentRound: number;
+      isPaused: boolean;
+      status: string;
+    },
+  ): Promise<void> {
+    console.log("[GameRepository] updateGameState - Début:", id, stateData);
+    db.runSync(
+      `UPDATE games 
+       SET currentRound = ?, isPaused = ?, gameStateStatus = ? 
+       WHERE id = ?`,
+      [
+        stateData.currentRound,
+        stateData.isPaused ? 1 : 0,
+        stateData.status,
+        id,
+      ],
+    );
+    console.log(
+      "[GameRepository] updateGameState - GameState mis à jour en DB",
+    );
   }
 
   private mapRowToGame(row: GameRow): Game {
@@ -128,6 +160,9 @@ export class GameRepository implements IGameRepository {
       score,
       timer,
       row.status as GameStatus,
+      row.currentRound,
+      row.isPaused,
+      row.gameStateStatus,
     );
   }
 }
