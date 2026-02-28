@@ -16,7 +16,7 @@ export interface TempMatchup {
   teamB: string;
   teamAName: string;
   teamBName: string;
-  gameModeId: string;
+  gameModeId: string; // Obligatoire - chaque matchup doit avoir un mode de jeu
   order: number;
 }
 

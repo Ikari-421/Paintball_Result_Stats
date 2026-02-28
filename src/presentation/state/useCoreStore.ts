@@ -15,6 +15,8 @@ import { EventStore } from "../../infrastructure/eventStore";
 
 // Use Cases
 import {
+  AdjustScore,
+  AdjustTime,
   CreateField,
   CreateGame,
   CreateGameMode,
@@ -22,6 +24,11 @@ import {
   DeleteField,
   DeleteGameMode,
   DeleteTeam,
+  FinishGame,
+  PauseGame,
+  ResumeGame,
+  ScorePoint,
+  StartGame,
   UpdateField,
   UpdateGameMode,
   UpdateTeam,
@@ -59,6 +66,13 @@ const createGameUseCase = new CreateGame(
   fieldRepository,
   eventStore,
 );
+const startGameUseCase = new StartGame(gameRepository, eventStore);
+const pauseGameUseCase = new PauseGame(gameRepository, eventStore);
+const resumeGameUseCase = new ResumeGame(gameRepository, eventStore);
+const finishGameUseCase = new FinishGame(gameRepository, eventStore);
+const scorePointUseCase = new ScorePoint(gameRepository, eventStore);
+const adjustTimeUseCase = new AdjustTime(gameRepository, eventStore);
+const adjustScoreUseCase = new AdjustScore(gameRepository, eventStore);
 
 interface CoreState {
   // State
@@ -84,6 +98,7 @@ interface CoreState {
     fieldId: string,
     teamAId: string,
     teamBId: string,
+    gameModeId: string,
   ) => Promise<void>;
   removeMatchupFromField: (fieldId: string, matchupId: string) => Promise<void>;
 
@@ -117,7 +132,26 @@ interface CoreState {
     teamBId: string;
     matchupOrder: number;
     gameModeId: string;
-  }) => Promise<void>;
+  }) => Promise<string>;
+  startGame: (gameId: string) => Promise<void>;
+  pauseGame: (gameId: string) => Promise<void>;
+  resumeGame: (gameId: string) => Promise<void>;
+  finishGame: (
+    gameId: string,
+    endReason: "SCORE_LIMIT" | "TIME_EXPIRED" | "MANUAL",
+  ) => Promise<void>;
+  scorePoint: (gameId: string, teamId: string) => Promise<void>;
+  adjustTime: (
+    gameId: string,
+    newTimeSeconds: number,
+    reason: string,
+  ) => Promise<void>;
+  adjustScore: (
+    gameId: string,
+    newScoreTeamA: number,
+    newScoreTeamB: number,
+    reason: string,
+  ) => Promise<void>;
 
   // Utility
   clearError: () => void;
@@ -177,22 +211,37 @@ export const useCoreStore = create<CoreState>((set, get) => ({
   // Field Actions
   loadFields: async () => {
     try {
+      console.log("[Store] loadFields - Début chargement");
       set({ isLoading: true, error: null });
       const fields = await fieldRepository.findAll();
+      console.log(
+        "[Store] loadFields - Fields chargés:",
+        fields.length,
+        fields,
+      );
       set({ fields, isLoading: false });
     } catch (error) {
+      console.error("[Store] loadFields - Erreur:", error);
       set({ error: (error as Error).message, isLoading: false });
     }
   },
 
   createField: async (name: string) => {
     try {
+      console.log("[Store] createField - Début:", name);
       set({ isLoading: true, error: null });
       const id = `field-${Date.now()}`;
+      console.log("[Store] createField - ID généré:", id);
+
       await createFieldUseCase.execute(id, name);
+      console.log("[Store] createField - Use case exécuté");
+
       await get().loadFields();
+      console.log("[Store] createField - Fields rechargés");
+
       return id;
     } catch (error) {
+      console.error("[Store] createField - Erreur:", error);
       set({ error: (error as Error).message, isLoading: false });
       throw error;
     }
@@ -222,20 +271,56 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     fieldId: string,
     teamAId: string,
     teamBId: string,
+    gameModeId: string,
   ) => {
     try {
+      console.log(
+        "[Store] addMatchupToField - Début:",
+        fieldId,
+        teamAId,
+        teamBId,
+        gameModeId,
+      );
       set({ isLoading: true, error: null });
       const field = await fieldRepository.findById(fieldId);
-      if (!field) throw new Error("Field not found");
+      if (!field) {
+        console.error("[Store] addMatchupToField - Field non trouvé:", fieldId);
+        throw new Error("Field not found");
+      }
+      console.log(
+        "[Store] addMatchupToField - Field trouvé:",
+        field.id,
+        field.name,
+      );
 
       const matchupId = `matchup-${Date.now()}`;
       const order = field.matchups.length;
-      const matchup = Matchup.create(matchupId, teamAId, teamBId, order);
+      console.log(
+        "[Store] addMatchupToField - Création matchup:",
+        matchupId,
+        "order:",
+        order,
+      );
+      const matchup = Matchup.create(
+        matchupId,
+        teamAId,
+        teamBId,
+        order,
+        gameModeId,
+      );
       const updatedField = field.addMatchup(matchup);
+      console.log(
+        "[Store] addMatchupToField - Field mis à jour, nombre de matchups:",
+        updatedField.matchups.length,
+      );
 
       await fieldRepository.save(updatedField);
+      console.log("[Store] addMatchupToField - Field sauvegardé");
+
       await get().loadFields();
+      console.log("[Store] addMatchupToField - Fields rechargés");
     } catch (error) {
+      console.error("[Store] addMatchupToField - Erreur:", error);
       set({ error: (error as Error).message, isLoading: false });
     }
   },
@@ -311,10 +396,109 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const id = `game-${Date.now()}`;
+      console.log("[Store] createGame - ID généré:", id);
       await createGameUseCase.execute({ id, ...params });
+      await get().loadGames();
+      console.log("[Store] createGame - Terminé, retour ID:", id);
+      return id;
+    } catch (error) {
+      console.error("[Store] createGame - Erreur:", error);
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  startGame: async (gameId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      await startGameUseCase.execute(gameId);
       await get().loadGames();
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  pauseGame: async (gameId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      await pauseGameUseCase.execute(gameId);
+      await get().loadGames();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  resumeGame: async (gameId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      await resumeGameUseCase.execute(gameId);
+      await get().loadGames();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  finishGame: async (
+    gameId: string,
+    endReason: "SCORE_LIMIT" | "TIME_EXPIRED" | "MANUAL",
+  ) => {
+    try {
+      set({ isLoading: true, error: null });
+      await finishGameUseCase.execute(gameId, endReason);
+      await get().loadGames();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  scorePoint: async (gameId: string, teamId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      await scorePointUseCase.execute(gameId, teamId);
+      await get().loadGames();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  adjustTime: async (
+    gameId: string,
+    newTimeSeconds: number,
+    reason: string,
+  ) => {
+    try {
+      set({ isLoading: true, error: null });
+      await adjustTimeUseCase.execute(gameId, newTimeSeconds, reason);
+      await get().loadGames();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  adjustScore: async (
+    gameId: string,
+    newScoreTeamA: number,
+    newScoreTeamB: number,
+    reason: string,
+  ) => {
+    try {
+      set({ isLoading: true, error: null });
+      await adjustScoreUseCase.execute(
+        gameId,
+        newScoreTeamA,
+        newScoreTeamB,
+        reason,
+      );
+      await get().loadGames();
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
     }
   },
 
