@@ -1,71 +1,52 @@
-import { ThemedText } from "@/components/themed-text";
-import { router } from "expo-router";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Colors, Spacing, Typography } from "@/constants/theme";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface ScreenHeaderProps {
   title: string;
-  showBackButton?: boolean;
   onBack?: () => void;
-  rightComponent?: React.ReactNode;
+  rightElement?: React.ReactNode;
 }
 
-export function ScreenHeader({
+export const ScreenHeader = ({
   title,
-  showBackButton = true,
   onBack,
-  rightComponent,
-}: ScreenHeaderProps) {
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      router.back();
-    }
-  };
-
+  rightElement,
+}: ScreenHeaderProps) => {
   return (
     <View style={styles.header}>
-      {showBackButton ? (
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <ThemedText style={styles.backText}>←</ThemedText>
+      {onBack ? (
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
       ) : (
-        <View style={styles.placeholder} />
+        <View style={{ width: 24 }} />
       )}
-
-      <ThemedText type="title" style={styles.title}>
-        {title}
-      </ThemedText>
-
-      {rightComponent ? (
-        rightComponent
-      ) : (
-        <View style={styles.placeholder} />
-      )}
+      <Text style={styles.title}>{title}</Text>
+      {rightElement || <View style={{ width: 24 }} />}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+    paddingTop: Spacing.xxxl,
   },
   backButton: {
-    padding: 5,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  backText: {
+  backIcon: {
     fontSize: 24,
-    fontWeight: "bold",
+    color: Colors.primary,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  placeholder: {
-    width: 34,
+    ...Typography.title,
+    color: Colors.primary,
   },
 });

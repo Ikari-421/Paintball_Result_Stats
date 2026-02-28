@@ -11,6 +11,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { initDb } from "@/src/infrastructure/database";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
+import { MatchupCreationProvider } from "../contexts/MatchupCreationContext";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -49,39 +50,35 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="menu" options={{ headerShown: false }} />
+    <MatchupCreationProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="menu" />
 
-        {/* Team Management */}
-        <Stack.Screen name="teams-list" options={{ headerShown: false }} />
-        <Stack.Screen name="create-team" options={{ headerShown: false }} />
+          {/* Field Management */}
+          <Stack.Screen name="field" />
 
-        {/* Field Management */}
-        <Stack.Screen name="fields-list" options={{ headerShown: false }} />
-        <Stack.Screen name="create-field" options={{ headerShown: false }} />
-        <Stack.Screen name="field/[id]" options={{ headerShown: false }} />
+          {/* Team Management */}
+          <Stack.Screen name="team" />
 
-        {/* Game Mode Management */}
-        <Stack.Screen name="game-mods" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="create-game-mode"
-          options={{ headerShown: false }}
-        />
+          {/* Game Mode Management */}
+          <Stack.Screen name="gamemode" />
 
-        {/* Game Session */}
-        <Stack.Screen name="game" options={{ headerShown: false }} />
+          {/* Game Session */}
+          <Stack.Screen name="start-match" />
+          <Stack.Screen name="match" />
 
-        {/* Other */}
-        <Stack.Screen name="history" options={{ headerShown: false }} />
-        <Stack.Screen name="profile" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
-        />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+          {/* Other */}
+          <Stack.Screen name="history" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
+          />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </MatchupCreationProvider>
   );
 }

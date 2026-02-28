@@ -1,110 +1,97 @@
-import { AppButton } from "@/components/common/AppButton";
-import { ScreenContainer } from "@/components/common/ScreenContainer";
-import { ThemedText } from "@/components/themed-text";
-import { AppBorderRadius, AppSpacing } from "@/constants/AppSpacing";
-import { Image } from "expo-image";
+import { OutlineButton } from "@/components/common/OutlineButton";
+import { MenuCard } from "@/components/menu/MenuCard";
+import { Colors, Spacing, Typography } from "@/constants/theme";
 import { router } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function MenuScreen() {
   return (
-    <ScreenContainer>
-      <ThemedText type="title" style={styles.menuText}>
-        Menu Principal
-      </ThemedText>
-
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.logo}
-          contentFit="contain"
-        />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Dashboard</Text>
+        <Text style={styles.profileIcon}>👤</Text>
       </View>
 
-      <View style={styles.buttonsContainer}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Configuration
-        </ThemedText>
-
-        <AppButton
-          title="Équipes"
-          onPress={() => router.push("/teams-list")}
-          variant="secondary"
-        />
-        <AppButton
-          title="Terrains"
-          onPress={() => router.push("/fields-list")}
-          variant="secondary"
-        />
-        <AppButton
-          title="Modes de Jeu"
-          onPress={() => router.push("/game-mods")}
-          variant="secondary"
+      <ScrollView style={styles.content}>
+        <MenuCard
+          title="Fields List"
+          subtitle="Manage and monitor active fields"
+          icon="🏟️"
+          iconColor={Colors.primary}
+          onPress={() => router.push("/field/fields-list")}
         />
 
-        <ThemedText
-          type="subtitle"
-          style={[styles.sectionTitle, { marginTop: 24 }]}
-        >
-          Autres
-        </ThemedText>
-
-        <AppButton
-          title="Historique"
-          onPress={() => router.push("/history")}
-          variant="secondary"
+        <MenuCard
+          title="Create Field"
+          subtitle="Setup a new field with matchups"
+          icon="➕"
+          iconColor={Colors.secondary}
+          onPress={() => router.push("/field/create-field")}
         />
-      </View>
+
+        <MenuCard
+          title="Teams"
+          subtitle="Manage roster and guest teams"
+          icon="👥"
+          iconColor={Colors.accent}
+          onPress={() => router.push("/team/teams-list")}
+        />
+
+        <MenuCard
+          title="Game Mods"
+          subtitle="Configure match rules & timers"
+          icon="⚙️"
+          iconColor={Colors.primary}
+          onPress={() => router.push("/gamemode/game-modes-list")}
+        />
+
+        <MenuCard
+          title="History"
+          subtitle="View past match results"
+          icon="📜"
+          iconColor="#ccc"
+          onPress={() => {}}
+          disabled
+        />
+      </ScrollView>
 
       <View style={styles.footer}>
-        <AppButton
-          title="Mon Profil"
+        <OutlineButton
+          title="My Profile"
+          icon="👤"
           onPress={() => router.push("/profile")}
-          variant="accent"
-          style={styles.profileButton}
         />
       </View>
-    </ScreenContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  menuText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: AppSpacing.xl,
-    marginTop: AppSpacing.xl,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: AppSpacing.xxl,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    backgroundColor: "#A1CEDC",
-    borderRadius: AppBorderRadius.lg,
-  },
-  buttonsContainer: {
+  container: {
     flex: 1,
-    justifyContent: "center",
-    gap: AppSpacing.lg,
-    paddingHorizontal: AppSpacing.xl,
+    backgroundColor: Colors.background,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-    marginBottom: AppSpacing.sm,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+    paddingTop: Spacing.xxxl,
+  },
+  headerTitle: {
+    ...Typography.title,
+    color: Colors.primary,
+  },
+  profileIcon: {
+    fontSize: 24,
+    color: Colors.primary,
+  },
+  content: {
+    flex: 1,
+    padding: Spacing.lg,
   },
   footer: {
-    marginTop: AppSpacing.xl,
-    alignItems: "center",
-    paddingHorizontal: AppSpacing.xl,
-  },
-  profileButton: {
-    paddingVertical: 12,
-    paddingHorizontal: AppSpacing.xxl,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
 });
