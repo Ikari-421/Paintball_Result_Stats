@@ -5,7 +5,6 @@ import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { MatchupList } from "@/components/field/MatchupList";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
-import { Matchup } from "@/src/core/domain/Field";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -18,12 +17,7 @@ import {
   View,
 } from "react-native";
 
-interface MatchupWithDetails extends Matchup {
-  teamAName?: string;
-  teamBName?: string;
-  gameModeId?: string;
-  gameModeName?: string;
-}
+// Removed MatchupWithDetails - using field.matchups directly
 
 export default function EditFieldScreen() {
   const router = useRouter();
@@ -44,7 +38,6 @@ export default function EditFieldScreen() {
     useMatchupCreation();
 
   const [name, setName] = useState("");
-  const [matchups, setMatchups] = useState<MatchupWithDetails[]>([]);
 
   const field = fields.find((f) => f.id === id);
 
@@ -55,20 +48,8 @@ export default function EditFieldScreen() {
   useEffect(() => {
     if (field) {
       setName(field.name);
-      const matchupsWithDetails: MatchupWithDetails[] = field.matchups.map(
-        (m) => {
-          const teamA = teams.find((t) => t.id === m.teamA);
-          const teamB = teams.find((t) => t.id === m.teamB);
-          return {
-            ...m,
-            teamAName: teamA?.name,
-            teamBName: teamB?.name,
-          };
-        },
-      );
-      setMatchups(matchupsWithDetails);
     }
-  }, [field, teams]);
+  }, [field]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -101,14 +82,19 @@ export default function EditFieldScreen() {
     const addTempMatchups = async () => {
       if (field && tempMatchups.length > 0) {
         for (const matchup of tempMatchups) {
-          await addMatchupToField(field.id, matchup.teamA, matchup.teamB);
+          await addMatchupToField(
+            field.id,
+            matchup.teamA,
+            matchup.teamB,
+            matchup.gameModeId,
+          );
         }
-        // Don't clear here - let the user manage tempMatchups lifecycle
-        // clearTempMatchups();
+        // Clear tempMatchups after adding to avoid duplicates
+        clearTempMatchups();
       }
     };
     addTempMatchups();
-  }, [tempMatchups.length]);
+  }, [tempMatchups]);
 
   const handleDeleteMatchup = async (matchupId: string) => {
     if (!field) return;
@@ -121,28 +107,26 @@ export default function EditFieldScreen() {
   };
 
   const handleMoveUp = (matchupId: string) => {
-    const index = matchups.findIndex((m) => m.id === matchupId);
+    if (!field) return;
+    const index = field.matchups.findIndex((m) => m.id === matchupId);
     if (index > 0) {
-      const newMatchups = [...matchups];
-      [newMatchups[index - 1], newMatchups[index]] = [
-        newMatchups[index],
-        newMatchups[index - 1],
-      ];
-      setMatchups(newMatchups);
-      // TODO: Persister l'ordre en base de données
+      // TODO: Implémenter la réorganisation avec persistance
+      Alert.alert(
+        "Info",
+        "La réorganisation des matchups sera implémentée prochainement",
+      );
     }
   };
 
   const handleMoveDown = (matchupId: string) => {
-    const index = matchups.findIndex((m) => m.id === matchupId);
-    if (index < matchups.length - 1) {
-      const newMatchups = [...matchups];
-      [newMatchups[index], newMatchups[index + 1]] = [
-        newMatchups[index + 1],
-        newMatchups[index],
-      ];
-      setMatchups(newMatchups);
-      // TODO: Persister l'ordre en base de données
+    if (!field) return;
+    const index = field.matchups.findIndex((m) => m.id === matchupId);
+    if (index < field.matchups.length - 1) {
+      // TODO: Implémenter la réorganisation avec persistance
+      Alert.alert(
+        "Info",
+        "La réorganisation des matchups sera implémentée prochainement",
+      );
     }
   };
 
@@ -182,11 +166,13 @@ export default function EditFieldScreen() {
 
         <View style={styles.matchupsHeader}>
           <Text style={styles.matchupsTitle}>MatchUps</Text>
-          <Text style={styles.matchupsCount}>{matchups.length} Scheduled</Text>
+          <Text style={styles.matchupsCount}>
+            {field.matchups.length} Scheduled
+          </Text>
         </View>
 
         <MatchupList
-          matchups={matchups}
+          matchups={field.matchups}
           teams={teams}
           onDelete={handleDeleteMatchup}
           onMoveUp={handleMoveUp}

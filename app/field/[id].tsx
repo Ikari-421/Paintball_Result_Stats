@@ -12,7 +12,15 @@ import { Alert, ScrollView, StyleSheet, View } from "react-native";
 export default function FieldDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { fields, teams, deleteField } = useCoreStore();
+  const {
+    fields,
+    teams,
+    gameModes,
+    games,
+    createGame,
+    deleteField,
+    loadGames,
+  } = useCoreStore();
 
   const field = fields.find((f) => f.id === id);
 
@@ -27,10 +35,46 @@ export default function FieldDetailScreen() {
     );
   }
 
-  const handleStartGames = () => {
+  const handleStartGames = async () => {
     if (field.matchups.length === 0) return;
     const firstMatchup = field.matchups[0];
-    router.push(`/game?fieldId=${field.id}&matchupId=${firstMatchup.id}`);
+
+    // Check if matchup has a gameMode
+    if (!firstMatchup.gameModeId) {
+      Alert.alert(
+        "Mode de jeu manquant",
+        "Ce matchup n'a pas de mode de jeu associé. Veuillez éditer le terrain pour ajouter un mode de jeu.",
+      );
+      return;
+    }
+
+    try {
+      console.log("[FieldDetails] Matchup:", firstMatchup.id);
+      console.log("[FieldDetails] GameMode:", firstMatchup.gameModeId);
+
+      const gameId = await createGame({
+        fieldId: field.id,
+        matchupId: firstMatchup.id,
+        teamAId: firstMatchup.teamA,
+        teamBId: firstMatchup.teamB,
+        matchupOrder: firstMatchup.order,
+        gameModeId: firstMatchup.gameModeId,
+      });
+
+      console.log("[FieldDetails] Game créé avec ID:", gameId);
+      console.log("[FieldDetails] Rechargement des games...");
+      await loadGames();
+      console.log(
+        "[FieldDetails] Games rechargés, navigation vers:",
+        `/game-session/${gameId}`,
+      );
+
+      // Navigate to game session
+      router.push(`/game-session/${gameId}`);
+    } catch (error) {
+      console.error("[FieldDetails] Erreur création game:", error);
+      Alert.alert("Erreur", (error as Error).message);
+    }
   };
 
   const handleEditField = () => {
@@ -86,11 +130,31 @@ export default function FieldDetailScreen() {
                 teamAName={teamA?.name || "Team A"}
                 teamBName={teamB?.name || "Team B"}
                 isActive={isActive}
-                onPress={() =>
-                  router.push(
-                    `/game?fieldId=${field.id}&matchupId=${matchup.id}`,
-                  )
-                }
+                onPress={async () => {
+                  if (!matchup.gameModeId) {
+                    Alert.alert(
+                      "Mode de jeu manquant",
+                      "Ce matchup n'a pas de mode de jeu associé.",
+                    );
+                    return;
+                  }
+
+                  try {
+                    const gameId = await createGame({
+                      fieldId: field.id,
+                      matchupId: matchup.id,
+                      teamAId: matchup.teamA,
+                      teamBId: matchup.teamB,
+                      matchupOrder: matchup.order,
+                      gameModeId: matchup.gameModeId,
+                    });
+
+                    await loadGames();
+                    router.push(`/game-session/${gameId}`);
+                  } catch (error) {
+                    Alert.alert("Erreur", (error as Error).message);
+                  }
+                }}
               />
             );
           })

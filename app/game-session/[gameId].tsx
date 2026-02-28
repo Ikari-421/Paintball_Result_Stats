@@ -1,3 +1,4 @@
+import { useArbitratorCommand } from "@/hooks/useArbitratorCommand";
 import { useGameTimer } from "@/hooks/useGameTimer";
 import { GameState, GameStatus } from "@/src/core/domain/GameState";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
@@ -5,9 +6,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -15,7 +18,19 @@ import {
 export default function MatchScreen() {
   const router = useRouter();
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
-  const { games, teams, fields } = useCoreStore();
+  const {
+    games,
+    teams,
+    fields,
+    startGame,
+    pauseGame,
+    resumeGame,
+    finishGame,
+    scorePoint,
+    adjustTime,
+    adjustScore,
+    loadGames,
+  } = useCoreStore();
 
   const game = games.find((g) => g.id === gameId);
   const teamA = teams.find((t) => t.id === game?.matchup.teamA);
@@ -27,6 +42,12 @@ export default function MatchScreen() {
   const [scoreB, setScoreB] = useState(0);
   const [currentRoundScoreA, setCurrentRoundScoreA] = useState(0);
   const [currentRoundScoreB, setCurrentRoundScoreB] = useState(0);
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [adjustType, setAdjustType] = useState<"time" | "score">("time");
+  const [adjustValue, setAdjustValue] = useState("");
+  const [adjustReason, setAdjustReason] = useState("");
+
+  const commandHandler = useArbitratorCommand();
 
   // Initialize timer with game mode duration
   const gameTimeSeconds = game?.gameMode.gameTime?.minutes
@@ -41,19 +62,46 @@ export default function MatchScreen() {
   const breakTimer = useGameTimer(breakTimeSeconds);
   const overtimeTimer = useGameTimer(overtimeSeconds);
 
+  // Charger les games au montage
+  useEffect(() => {
+    console.log("[GameSession] Montage - gameId:", gameId);
+    loadGames();
+  }, []);
+
+  useEffect(() => {
+    console.log("[GameSession] Games chargés:", games.length);
+    console.log("[GameSession] Game trouvé:", game ? game.id : "NON TROUVÉ");
+    if (game) {
+      console.log("[GameSession] Game status:", game.status);
+      console.log(
+        "[GameSession] Teams:",
+        game.matchup.teamA,
+        game.matchup.teamB,
+      );
+    }
+  }, [games, gameId]);
+
   if (!game) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Match non trouvé</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.button}>
-          <Text style={styles.buttonText}>Retour</Text>
-        </TouchableOpacity>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Chargement du match...</Text>
+          <Text style={styles.debugText}>Game ID: {gameId}</Text>
+          <Text style={styles.debugText}>Games chargés: {games.length}</Text>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.primaryButton}
+          >
+            <Text style={styles.primaryButtonText}>Retour</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     try {
+      await startGame(gameId as string);
       const newState = gameState.start();
       setGameState(newState);
       gameTimer.start();
@@ -62,8 +110,9 @@ export default function MatchScreen() {
     }
   };
 
-  const handlePauseGame = () => {
+  const handlePauseGame = async () => {
     try {
+      await pauseGame(gameId as string);
       const newState = gameState.pause();
       setGameState(newState);
 
@@ -77,8 +126,9 @@ export default function MatchScreen() {
     }
   };
 
-  const handleResumeGame = () => {
+  const handleResumeGame = async () => {
     try {
+      await resumeGame(gameId as string);
       const newState = gameState.resume();
       setGameState(newState);
 
@@ -92,7 +142,7 @@ export default function MatchScreen() {
     }
   };
 
-  const handleScorePoint = (team: "A" | "B") => {
+  const handleScorePoint = async (team: "A" | "B") => {
     if (!gameState.isRunning()) {
       Alert.alert(
         "Erreur",
@@ -101,10 +151,38 @@ export default function MatchScreen() {
       return;
     }
 
-    if (team === "A") {
-      setCurrentRoundScoreA((prev) => prev + 1);
-    } else {
-      setCurrentRoundScoreB((prev) => prev + 1);
+    try {
+      const teamId = team === "A" ? game?.matchup.teamA : game?.matchup.teamB;
+      if (teamId) {
+        await scorePoint(gameId as string, teamId);
+        await loadGames();
+
+        if (team === "A") {
+          setScoreA((prev) => prev + 1);
+          setCurrentRoundScoreA((prev) => prev + 1);
+        } else {
+          setScoreB((prev) => prev + 1);
+          setCurrentRoundScoreB((prev) => prev + 1);
+        }
+
+        // Check if race to limit reached
+        const newScoreA = team === "A" ? scoreA + 1 : scoreA;
+        const newScoreB = team === "B" ? scoreB + 1 : scoreB;
+        if (
+          game &&
+          (newScoreA >= game.gameMode.raceTo.value ||
+            newScoreB >= game.gameMode.raceTo.value)
+        ) {
+          await handlePauseGame();
+          Alert.alert(
+            "Score Limite Atteint!",
+            `${team === "A" ? teamA?.name : teamB?.name} a atteint le score limite!`,
+            [{ text: "OK", onPress: () => handleFinishGame() }],
+          );
+        }
+      }
+    } catch (error) {
+      Alert.alert("Erreur", (error as Error).message);
     }
   };
 
@@ -174,6 +252,65 @@ export default function MatchScreen() {
     }
   };
 
+  const openAdjustModal = (type: "time" | "score") => {
+    if (gameState.status === GameStatus.RUNNING) {
+      Alert.alert(
+        "Erreur",
+        "Vous devez mettre le match en pause avant d'ajuster les paramètres.",
+      );
+      return;
+    }
+    setAdjustType(type);
+    setAdjustValue("");
+    setAdjustReason("");
+    setShowAdjustModal(true);
+  };
+
+  const handleValidateAdjustment = async () => {
+    try {
+      if (!adjustValue || !adjustReason) {
+        Alert.alert("Erreur", "Veuillez remplir tous les champs");
+        return;
+      }
+
+      if (adjustType === "time") {
+        const seconds = parseInt(adjustValue);
+        if (isNaN(seconds) || seconds < 0) {
+          Alert.alert("Erreur", "Temps invalide");
+          return;
+        }
+        await adjustTime(gameId as string, seconds, adjustReason);
+        gameTimer.reset(seconds);
+      } else {
+        const scores = adjustValue.split("-");
+        if (scores.length !== 2) {
+          Alert.alert("Erreur", "Format invalide. Utilisez: ScoreA-ScoreB");
+          return;
+        }
+        const newScoreA = parseInt(scores[0]);
+        const newScoreB = parseInt(scores[1]);
+        if (
+          isNaN(newScoreA) ||
+          isNaN(newScoreB) ||
+          newScoreA < 0 ||
+          newScoreB < 0
+        ) {
+          Alert.alert("Erreur", "Scores invalides");
+          return;
+        }
+        await adjustScore(gameId as string, newScoreA, newScoreB, adjustReason);
+        setScoreA(newScoreA);
+        setScoreB(newScoreB);
+      }
+
+      setShowAdjustModal(false);
+      await loadGames();
+      Alert.alert("Succès", "Ajustement enregistré");
+    } catch (error) {
+      Alert.alert("Erreur", (error as Error).message);
+    }
+  };
+
   const handleFinishGame = () => {
     Alert.alert(
       "Terminer le Match",
@@ -183,8 +320,9 @@ export default function MatchScreen() {
         {
           text: "Terminer",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             try {
+              await finishGame(gameId as string, "MANUAL");
               const newState = gameState.finish();
               setGameState(newState);
               gameTimer.pause();
@@ -208,9 +346,18 @@ export default function MatchScreen() {
   // Auto-detect when game timer ends
   useEffect(() => {
     if (gameTimer.isFinished && gameState.status === GameStatus.RUNNING) {
-      handleEndRound();
+      // Check for tie and trigger overtime
+      if (scoreA === scoreB && game?.gameMode.overTime) {
+        Alert.alert(
+          "Égalité!",
+          "Le temps est écoulé et les scores sont égaux. Prolongation!",
+          [{ text: "OK", onPress: handleStartOvertime }],
+        );
+      } else {
+        handleEndRound();
+      }
     }
-  }, [gameTimer.isFinished]);
+  }, [gameTimer.isFinished, scoreA, scoreB]);
 
   // Auto-detect when break timer ends
   useEffect(() => {
@@ -218,6 +365,17 @@ export default function MatchScreen() {
       handleEndBreak();
     }
   }, [breakTimer.isFinished]);
+
+  // Auto-detect when overtime ends
+  useEffect(() => {
+    if (overtimeTimer.isFinished && gameState.status === GameStatus.OVERTIME) {
+      Alert.alert(
+        "Fin de la Prolongation",
+        "Le temps de prolongation est écoulé!",
+        [{ text: "OK", onPress: handleEndRound }],
+      );
+    }
+  }, [overtimeTimer.isFinished]);
 
   const getStatusColor = () => {
     switch (gameState.status) {
@@ -423,6 +581,31 @@ export default function MatchScreen() {
                 </TouchableOpacity>
               )}
 
+              {/* Arbitrator Controls */}
+              {gameState.isPaused && (
+                <View style={styles.arbitratorControls}>
+                  <Text style={styles.arbitratorTitle}>Contrôles Arbitre</Text>
+                  <View style={styles.controlRow}>
+                    <TouchableOpacity
+                      style={styles.adjustButton}
+                      onPress={() => openAdjustModal("time")}
+                    >
+                      <Text style={styles.adjustButtonText}>
+                        ⏱ Ajuster Temps
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.adjustButton}
+                      onPress={() => openAdjustModal("score")}
+                    >
+                      <Text style={styles.adjustButtonText}>
+                        🎯 Ajuster Score
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
               {/* Finish Game */}
               <TouchableOpacity
                 style={styles.dangerButton}
@@ -448,6 +631,58 @@ export default function MatchScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Adjust Modal */}
+      <Modal
+        visible={showAdjustModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAdjustModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {adjustType === "time" ? "Ajuster le Temps" : "Ajuster le Score"}
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              {adjustType === "time"
+                ? "Entrez le nouveau temps en secondes"
+                : "Entrez le nouveau score (format: ScoreA-ScoreB)"}
+            </Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder={adjustType === "time" ? "Ex: 300" : "Ex: 5-3"}
+              value={adjustValue}
+              onChangeText={setAdjustValue}
+              keyboardType={adjustType === "time" ? "numeric" : "default"}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Raison de l'ajustement"
+              value={adjustReason}
+              onChangeText={setAdjustReason}
+              multiline
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowAdjustModal(false)}
+              >
+                <Text style={styles.modalCancelText}>✗ Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalValidateButton}
+                onPress={handleValidateAdjustment}
+              >
+                <Text style={styles.modalValidateText}>✓ Valider</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -660,11 +895,24 @@ const styles = StyleSheet.create({
     color: "#2c4b5c",
     marginBottom: 32,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
   errorText: {
     fontSize: 18,
-    color: "#FF6B6B",
+    color: "#2c4b5c",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 16,
+    fontWeight: "600",
+  },
+  debugText: {
+    fontSize: 14,
+    color: "#95cbbc",
+    textAlign: "center",
+    marginBottom: 8,
   },
   button: {
     backgroundColor: "#2c4b5c",
@@ -673,6 +921,96 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  arbitratorControls: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  arbitratorTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2c4b5c",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  adjustButton: {
+    flex: 1,
+    backgroundColor: "#95cbbc",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+  },
+  adjustButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#152b42",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#2c4b5c",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  input: {
+    backgroundColor: "#EBF2FA",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#95cbbc",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: "#FF6B6B",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+  },
+  modalCancelText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalValidateButton: {
+    flex: 1,
+    backgroundColor: "#5FC2BA",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+  },
+  modalValidateText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
