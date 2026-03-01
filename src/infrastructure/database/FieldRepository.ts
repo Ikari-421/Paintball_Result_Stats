@@ -63,7 +63,7 @@ export class FieldRepository implements IFieldRepository {
         row.teamA,
         row.teamB,
         row.orderIndex,
-        row.gameModeId,
+        row.gameModeId || 'unknown',
       ),
     );
 
@@ -103,7 +103,7 @@ export class FieldRepository implements IFieldRepository {
           row.teamA,
           row.teamB,
           row.orderIndex,
-          row.gameModeId,
+          row.gameModeId || 'unknown',
         ),
       );
 

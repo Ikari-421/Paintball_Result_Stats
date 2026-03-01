@@ -1,11 +1,11 @@
 import { Matchup } from "../../../core/domain/Field";
 import { Game, GameTimer, Score } from "../../../core/domain/Game";
 import {
-    BreakDuration,
-    GameDuration,
-    GameMode,
-    ScoreLimit,
-    TimeoutCount,
+  BreakDuration,
+  GameDuration,
+  GameMode,
+  ScoreLimit,
+  TimeoutCount,
 } from "../../../core/domain/GameMode";
 import { GameStatus } from "../../../core/domain/GameStatus";
 
