@@ -101,7 +101,7 @@ export default function CreateMatchupScreen() {
         </View>
 
         <View style={[styles.card, styles.gameModeCard]}>
-          <Text style={styles.cardTitle}>Game Mod</Text>
+          <Text style={styles.cardTitle}>Game Mode</Text>
           {gameMode ? (
             <View style={styles.selectedTeam}>
               <Text style={styles.selectedTeamName}>{gameMode.name}</Text>
@@ -112,7 +112,7 @@ export default function CreateMatchupScreen() {
               />
             </View>
           ) : (
-            <OutlineButton title="Select Mod" onPress={handleSelectGameMode} />
+            <OutlineButton title="Select Game Mode" onPress={handleSelectGameMode} />
           )}
         </View>
       </View>

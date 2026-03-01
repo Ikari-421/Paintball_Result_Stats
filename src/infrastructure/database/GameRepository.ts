@@ -1,12 +1,11 @@
 import { Matchup } from "../../core/domain/Field";
 import { Game, GameId, GameTimer, Score } from "../../core/domain/Game";
 import {
-    BreakDuration,
-    GameDuration,
-    GameMode,
-    OvertimeDuration,
-    ScoreLimit,
-    TimeoutCount,
+  BreakDuration,
+  GameDuration,
+  GameMode,
+  OvertimeDuration,
+  ScoreLimit,
 } from "../../core/domain/GameMode";
 import { GameStatus } from "../../core/domain/GameStatus";
 import { IGameRepository } from "../../core/ports/IGameRepository";
@@ -24,7 +23,6 @@ interface GameRow {
   gameTimeMinutes: number;
   breakTimeSeconds: number;
   overtimeMinutes: number | null;
-  timeOutsPerTeam: number;
   raceTo: number;
   teamAScore: number;
   teamBScore: number;
@@ -51,9 +49,9 @@ export class GameRepository implements IGameRepository {
       `INSERT OR REPLACE INTO games (
                 id, fieldId, matchupId, matchupTeamA, matchupTeamB, matchupOrder,
                 gameModeId, gameModeName, gameTimeMinutes, breakTimeSeconds, overtimeMinutes,
-                timeOutsPerTeam, raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, status,
+                raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, status,
                 currentRound, isPaused, gameStateStatus
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         game.id,
         game.fieldId,
@@ -66,7 +64,6 @@ export class GameRepository implements IGameRepository {
         game.gameMode.gameTime.minutes,
         game.gameMode.breakTime.seconds,
         game.gameMode.overTime?.minutes ?? null,
-        game.gameMode.timeOutsPerTeam.quantity,
         game.gameMode.raceTo.value,
         game.score.teamAScore,
         game.score.teamBScore,
@@ -142,7 +139,6 @@ export class GameRepository implements IGameRepository {
       row.gameModeName,
       new GameDuration(row.gameTimeMinutes),
       new BreakDuration(row.breakTimeSeconds),
-      new TimeoutCount(row.timeOutsPerTeam),
       new ScoreLimit(row.raceTo),
       row.overtimeMinutes !== null
         ? new OvertimeDuration(row.overtimeMinutes)

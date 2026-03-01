@@ -57,7 +57,7 @@ describe("Field", () => {
 
   describe("create", () => {
     it("should create a valid field without matchups", () => {
-      const field = Field.create("field-1", "Court Central");
+      const field = Field.create("field-1", "tournament-1", "Court Central");
 
       expect(field.id).toBe("field-1");
       expect(field.name).toBe("Court Central");
@@ -72,20 +72,20 @@ describe("Field", () => {
         1,
         "mode-1",
       );
-      const field = Field.create("field-1", "Court Central", [matchup]);
+      const field = Field.create("field-1", "tournament-1", "Court Central", [matchup]);
 
       expect(field.matchups.length).toBe(1);
       expect(field.matchups[0].id).toBe("matchup-1");
     });
 
     it("should throw error if id is empty", () => {
-      expect(() => Field.create("", "Court Central")).toThrow(
+      expect(() => Field.create("", "tournament-1", "Court Central")).toThrow(
         "Field ID cannot be empty",
       );
     });
 
     it("should throw error if name is empty", () => {
-      expect(() => Field.create("field-1", "")).toThrow(
+      expect(() => Field.create("field-1", "tournament-1", "")).toThrow(
         "Field name cannot be empty",
       );
     });
@@ -93,7 +93,7 @@ describe("Field", () => {
 
   describe("addMatchup", () => {
     it("should add a matchup to the field", () => {
-      const field = Field.create("field-1", "Court Central");
+      const field = Field.create("field-1", "tournament-1", "Court Central");
       const matchup = Matchup.create(
         "matchup-1",
         "team-a",
@@ -115,7 +115,7 @@ describe("Field", () => {
         1,
         "mode-1",
       );
-      const field = Field.create("field-1", "Court Central", [matchup1]);
+      const field = Field.create("field-1", "tournament-1", "Court Central", [matchup1]);
 
       const matchup2 = Matchup.create(
         "matchup-2",
@@ -146,7 +146,7 @@ describe("Field", () => {
         2,
         "mode-1",
       );
-      const field = Field.create("field-1", "Court Central", [
+      const field = Field.create("field-1", "tournament-1", "Court Central", [
         matchup1,
         matchup2,
       ]);
@@ -165,7 +165,7 @@ describe("Field", () => {
         1,
         "mode-1",
       );
-      const field = Field.create("field-1", "Court Central", [matchup]);
+      const field = Field.create("field-1", "tournament-1", "Court Central", [matchup]);
 
       const updated = field.removeMatchup("non-existent");
 

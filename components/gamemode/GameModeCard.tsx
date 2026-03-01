@@ -22,8 +22,7 @@ export const GameModeCard = ({
     const parts: string[] = [];
 
     parts.push(`${gameMode.gameTime.minutes}m`);
-    parts.push(`${gameMode.timeOutsPerTeam.quantity} TO`);
-    parts.push(`Race to ${gameMode.raceTo.value}`);
+    parts.push(gameMode.raceTo.value > 0 ? `Race to ${gameMode.raceTo.value}` : `Time Limit Only`);
 
     return parts.join(" • ");
   };

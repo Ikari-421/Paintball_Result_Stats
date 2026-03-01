@@ -18,7 +18,6 @@ export const initDb = () => {
       gameTimeMinutes INTEGER NOT NULL,
       breakTimeSeconds INTEGER NOT NULL,
       overtimeMinutes INTEGER,
-      timeOutsPerTeam INTEGER NOT NULL,
       raceTo INTEGER NOT NULL
     );
     
@@ -28,9 +27,19 @@ export const initDb = () => {
       isGuest BOOLEAN NOT NULL
     );
     
+    CREATE TABLE IF NOT EXISTS tournaments (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      location TEXT NOT NULL,
+      startDate INTEGER NOT NULL,
+      endDate INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS fields (
       id TEXT PRIMARY KEY,
-      name TEXT NOT NULL
+      tournamentId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      FOREIGN KEY (tournamentId) REFERENCES tournaments(id)
     );
     
     CREATE TABLE IF NOT EXISTS matchups (
@@ -58,7 +67,6 @@ export const initDb = () => {
       gameTimeMinutes INTEGER NOT NULL,
       breakTimeSeconds INTEGER NOT NULL,
       overtimeMinutes INTEGER,
-      timeOutsPerTeam INTEGER NOT NULL,
       raceTo INTEGER NOT NULL,
       teamAScore INTEGER NOT NULL,
       teamBScore INTEGER NOT NULL,

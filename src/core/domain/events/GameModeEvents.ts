@@ -12,7 +12,6 @@ export interface GameModeCreatedEvent extends GameModeEvent {
         gameTimeMinutes: number;
         breakTimeSeconds: number;
         overtimeMinutes?: number;
-        timeOutsPerTeam: number;
         raceTo: number;
     };
 }
@@ -24,7 +23,6 @@ export interface GameModeUpdatedEvent extends GameModeEvent {
         gameTimeMinutes: number;
         breakTimeSeconds: number;
         overtimeMinutes?: number;
-        timeOutsPerTeam: number;
         raceTo: number;
     };
 }

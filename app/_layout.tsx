@@ -56,26 +56,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="menu" />
 
-          {/* Field Management */}
-          <Stack.Screen name="field" />
-
-          {/* Team Management */}
-          <Stack.Screen name="team" />
-
-          {/* Game Mode Management */}
-          <Stack.Screen name="gamemode" />
-
-          {/* Game Session */}
-          <Stack.Screen name="start-match" />
-          <Stack.Screen name="match" />
-
-          {/* Other */}
-          <Stack.Screen name="history" />
-          <Stack.Screen name="profile" />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
+          {/* Folders auto-routed by Expo Router do not need explicit Stack.Screens here unless they have an _layout.tsx or index.tsx */}
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

@@ -5,7 +5,6 @@ import {
   GameDuration,
   GameMode,
   ScoreLimit,
-  TimeoutCount,
 } from "../../../core/domain/GameMode";
 import { GameStatus } from "../../../core/domain/GameStatus";
 
@@ -19,7 +18,6 @@ describe("Game", () => {
       "Quick Match",
       new GameDuration(10),
       new BreakDuration(30),
-      new TimeoutCount(2),
       new ScoreLimit(5),
     );
 

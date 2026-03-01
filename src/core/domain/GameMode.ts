@@ -12,15 +12,9 @@ export class BreakDuration {
   }
 }
 
-export class TimeoutCount {
-  constructor(public readonly quantity: number) {
-    if (quantity < 0) throw new Error("Timeout count cannot be negative");
-  }
-}
-
 export class ScoreLimit {
   constructor(public readonly value: number) {
-    if (value <= 0) throw new Error("Score limit must be greater than zero");
+    if (value < 0) throw new Error("Score limit must be zero or positive");
   }
 }
 
@@ -37,16 +31,14 @@ export class GameMode {
     public readonly gameTime: GameDuration,
     public readonly breakTime: BreakDuration,
     public readonly overTime: OvertimeDuration | undefined,
-    public readonly timeOutsPerTeam: TimeoutCount,
     public readonly raceTo: ScoreLimit,
-  ) {}
+  ) { }
 
   static create(
     id: GameModeId,
     name: string,
     gameTime: GameDuration,
     breakTime: BreakDuration,
-    timeOutsPerTeam: TimeoutCount,
     raceTo: ScoreLimit,
     overTime?: OvertimeDuration,
   ): GameMode {
@@ -63,7 +55,6 @@ export class GameMode {
       gameTime,
       breakTime,
       overTime,
-      timeOutsPerTeam,
       raceTo,
     );
   }

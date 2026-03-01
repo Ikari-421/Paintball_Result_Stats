@@ -1,4 +1,4 @@
-import { OutlineButton } from "@/components/common/OutlineButton";
+
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { SecondaryButton } from "@/components/common/SecondaryButton";
@@ -32,12 +32,6 @@ export default function SelectGameModeScreen() {
     setSelectedMode(mode);
   };
 
-  const handleUseDefault = () => {
-    Alert.alert(
-      "Use Default Mod",
-      "This will use the field's default game mode.",
-    );
-  };
 
   const handleContinue = () => {
     if (!selectedMode) {
@@ -55,15 +49,9 @@ export default function SelectGameModeScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Select Mod" onBack={() => router.back()} />
+      <ScreenHeader title="Select Game Mode" onBack={() => router.back()} />
 
       <ScrollView style={styles.content}>
-        <OutlineButton
-          title="✓ Use Field's Default Mod"
-          onPress={handleUseDefault}
-          style={styles.defaultButton}
-        />
-
         <Text style={styles.sectionTitle}>SAVED GAME MODES</Text>
 
         {gameModes.length === 0 ? (
@@ -87,7 +75,7 @@ export default function SelectGameModeScreen() {
 
       <View style={styles.footer}>
         <SecondaryButton
-          title="+ Create Game Mod"
+          title="+ Create Game Mode"
           onPress={() => router.push("/gamemode/create-game-mode")}
         />
         <PrimaryButton
@@ -109,9 +97,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.lg,
   },
-  defaultButton: {
-    marginBottom: Spacing.xl,
-  },
+
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",

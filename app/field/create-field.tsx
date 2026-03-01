@@ -1,12 +1,11 @@
 import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { MatchupList } from "@/components/field/MatchupList";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -21,6 +20,7 @@ export default function CreateFieldScreen() {
   const router = useRouter();
   const { teams, loadTeams, createField, addMatchupToField, error } =
     useCoreStore();
+  const { tournamentId } = useLocalSearchParams<{ tournamentId: string }>();
   const {
     tempMatchups,
     removeTempMatchup,
@@ -39,13 +39,17 @@ export default function CreateFieldScreen() {
       Alert.alert("Error", "Field name is required");
       return;
     }
+    if (!tournamentId) {
+      Alert.alert("Error", "Missing tournament context");
+      return;
+    }
 
     try {
       console.log("[CreateField] Début création field:", name.trim());
       console.log("[CreateField] Nombre de matchups:", tempMatchups.length);
 
       // Créer le field et récupérer son ID
-      const fieldId = await createField(name.trim());
+      const fieldId = await createField(name.trim(), tournamentId);
       console.log("[CreateField] Field créé avec ID:", fieldId);
 
       // Ajouter les matchups au field créé
@@ -68,8 +72,8 @@ export default function CreateFieldScreen() {
       }
 
       clearTempMatchups();
-      console.log("[CreateField] Navigation vers fields-list");
-      router.push("/field/fields-list");
+      console.log("[CreateField] Navigation vers tournoi");
+      router.push(`/tournament/${tournamentId}` as any);
     } catch (err) {
       console.error("[CreateField] Erreur:", err);
       Alert.alert("Error", error || "Unable to create field");
@@ -108,13 +112,10 @@ export default function CreateFieldScreen() {
     }
   };
 
-  const handleModSetup = () => {
-    router.push("/gamemode/game-modes-list");
-  };
 
   const handleBack = () => {
     clearTempMatchups();
-    router.push("/menu");
+    router.back();
   };
 
   return (
@@ -153,11 +154,6 @@ export default function CreateFieldScreen() {
           <OutlineButton
             title="+ MatchUp"
             onPress={handleAddMatchup}
-            style={styles.actionButton}
-          />
-          <SecondaryButton
-            title="Mod Setup"
-            onPress={handleModSetup}
             style={styles.actionButton}
           />
         </View>

@@ -11,7 +11,7 @@ export default function GameModsListScreen() {
   const { gameModes, deleteGameMode } = useCoreStore();
 
   const handleEdit = (id: string) => {
-    router.push(`/gameMode/edit-game-mode?id=${id}`);
+    router.push(`/gamemode/edit-game-mode?id=${id}`);
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -67,7 +67,7 @@ export default function GameModsListScreen() {
 
       <View style={styles.footer}>
         <SecondaryButton
-          title="+ Create Game Mod"
+          title="+ Create Game Mode"
           onPress={() => router.push("/gamemode/create-game-mode")}
         />
       </View>

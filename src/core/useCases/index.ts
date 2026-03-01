@@ -4,9 +4,11 @@ export { CreateField } from "./CreateField";
 export { CreateGame } from "./CreateGame";
 export { CreateGameMode } from "./CreateGameMode";
 export { CreateTeam } from "./CreateTeam";
+export { CreateTournament } from "./CreateTournament";
 export { DeleteField } from "./DeleteField";
 export { DeleteGameMode } from "./DeleteGameMode";
 export { DeleteTeam } from "./DeleteTeam";
+export { DeleteTournament } from "./DeleteTournament";
 export { FinishGame } from "./FinishGame";
 export { PauseGame } from "./PauseGame";
 export { ResumeGame } from "./ResumeGame";
@@ -15,4 +17,5 @@ export { StartGame } from "./StartGame";
 export { UpdateField } from "./UpdateField";
 export { UpdateGameMode } from "./UpdateGameMode";
 export { UpdateTeam } from "./UpdateTeam";
+export { UpdateTournament } from "./UpdateTournament";
 

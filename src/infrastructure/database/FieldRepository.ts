@@ -11,8 +11,9 @@ export class FieldRepository implements IFieldRepository {
       "matchups:",
       field.matchups.length,
     );
-    db.runSync("INSERT OR REPLACE INTO fields (id, name) VALUES (?, ?)", [
+    db.runSync("INSERT OR REPLACE INTO fields (id, tournamentId, name) VALUES (?, ?, ?)", [
       field.id,
+      field.tournamentId,
       field.name,
     ]);
     console.log("[FieldRepository] save - Field inséré dans DB");
@@ -42,7 +43,7 @@ export class FieldRepository implements IFieldRepository {
   }
 
   async findById(id: FieldId): Promise<Field | null> {
-    const fieldRow = db.getFirstSync<{ id: string; name: string }>(
+    const fieldRow = db.getFirstSync<{ id: string; tournamentId: string; name: string }>(
       "SELECT * FROM fields WHERE id = ?",
       [id],
     );
@@ -67,12 +68,12 @@ export class FieldRepository implements IFieldRepository {
       ),
     );
 
-    return Field.create(fieldRow.id, fieldRow.name, matchups);
+    return Field.create(fieldRow.id, fieldRow.tournamentId, fieldRow.name, matchups);
   }
 
   async findAll(): Promise<Field[]> {
     console.log("[FieldRepository] findAll - Début");
-    const fieldRows = db.getAllSync<{ id: string; name: string }>(
+    const fieldRows = db.getAllSync<{ id: string; tournamentId: string; name: string }>(
       "SELECT * FROM fields",
     );
     console.log(
@@ -107,7 +108,7 @@ export class FieldRepository implements IFieldRepository {
         ),
       );
 
-      fields.push(Field.create(fieldRow.id, fieldRow.name, matchups));
+      fields.push(Field.create(fieldRow.id, fieldRow.tournamentId, fieldRow.name, matchups));
     }
 
     return fields;
