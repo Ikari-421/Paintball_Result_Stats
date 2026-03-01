@@ -70,6 +70,9 @@ export class Game {
     public readonly score: Score,
     public readonly timer: GameTimer,
     public readonly status: GameStatus,
+    public readonly currentRound: number = 1,
+    public readonly isPaused: number = 0,
+    public readonly gameStateStatus: string = GameStatus.NOT_STARTED,
   ) {}
 
   static create(
@@ -83,7 +86,7 @@ export class Game {
     }
 
     const initialScore = new Score(0, 0);
-    const initialTimer = new GameTimer(gameMode.gameTime.minutes * 60, false);
+    const initialTimer = new GameTimer(gameMode.gameTime.minutes * 60);
 
     return new Game(
       id,
@@ -93,6 +96,9 @@ export class Game {
       initialScore,
       initialTimer,
       GameStatus.NOT_STARTED,
+      1, // currentRound
+      0, // isPaused
+      GameStatus.NOT_STARTED, // gameStateStatus
     );
   }
 

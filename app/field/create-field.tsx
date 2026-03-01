@@ -41,19 +41,41 @@ export default function CreateFieldScreen() {
     }
 
     try {
+      console.log("[CreateField] Début création field:", name.trim());
+      console.log("[CreateField] Nombre de matchups:", tempMatchups.length);
+
       // Créer le field et récupérer son ID
       const fieldId = await createField(name.trim());
+      console.log("[CreateField] Field créé avec ID:", fieldId);
 
       // Ajouter les matchups au field créé
       if (tempMatchups.length > 0) {
         for (const matchup of tempMatchups) {
+<<<<<<< HEAD
           await addMatchupToField(fieldId, matchup.teamA, matchup.teamB, matchup.gameModeId);
+=======
+          console.log(
+            "[CreateField] Ajout matchup:",
+            matchup.id,
+            "avec gameModeId:",
+            matchup.gameModeId,
+          );
+          await addMatchupToField(
+            fieldId,
+            matchup.teamA,
+            matchup.teamB,
+            matchup.gameModeId,
+          );
+>>>>>>> 57e36f09b5c1f1c096f52b6b5d53da17436c9e10
         }
+        console.log("[CreateField] Tous les matchups ajoutés");
       }
 
       clearTempMatchups();
+      console.log("[CreateField] Navigation vers fields-list");
       router.push("/field/fields-list");
     } catch (err) {
+      console.error("[CreateField] Erreur:", err);
       Alert.alert("Error", error || "Unable to create field");
     }
   };

@@ -42,7 +42,8 @@ export const initDb = () => {
       gameModeId TEXT NOT NULL,
       FOREIGN KEY (fieldId) REFERENCES fields(id),
       FOREIGN KEY (teamA) REFERENCES teams(id),
-      FOREIGN KEY (teamB) REFERENCES teams(id)
+      FOREIGN KEY (teamB) REFERENCES teams(id),
+      FOREIGN KEY (gameModeId) REFERENCES game_modes(id)
     );
     
     CREATE TABLE IF NOT EXISTS games (
@@ -64,6 +65,9 @@ export const initDb = () => {
       remainingTime INTEGER NOT NULL,
       timerIsRunning INTEGER NOT NULL,
       status TEXT NOT NULL,
+      currentRound INTEGER DEFAULT 1,
+      isPaused INTEGER DEFAULT 0,
+      gameStateStatus TEXT DEFAULT 'NOT_STARTED',
       FOREIGN KEY (fieldId) REFERENCES fields(id)
     );
   `);

@@ -1,9 +1,11 @@
+import { GameModeId } from "./GameMode";
 import { TeamId } from "./Team";
 
 export type FieldId = string;
 export type MatchupId = string;
 
 export class Matchup {
+<<<<<<< HEAD
     private constructor(
         public readonly id: MatchupId,
         public readonly teamA: TeamId,
@@ -40,6 +42,44 @@ export class Matchup {
 
         return new Matchup(id, teamA, teamB, order, gameModeId);
     }
+=======
+  private constructor(
+    public readonly id: MatchupId,
+    public readonly teamA: TeamId,
+    public readonly teamB: TeamId,
+    public readonly order: number,
+    public readonly gameModeId: GameModeId,
+  ) {}
+
+  static create(
+    id: MatchupId,
+    teamA: TeamId,
+    teamB: TeamId,
+    order: number,
+    gameModeId: GameModeId,
+  ): Matchup {
+    if (!id || id.trim() === "") {
+      throw new Error("Matchup ID cannot be empty");
+    }
+    if (!teamA || teamA.trim() === "") {
+      throw new Error("Team A ID cannot be empty");
+    }
+    if (!teamB || teamB.trim() === "") {
+      throw new Error("Team B ID cannot be empty");
+    }
+    if (teamA === teamB) {
+      throw new Error("Team A and Team B must be different");
+    }
+    if (order < 0) {
+      throw new Error("Order cannot be negative");
+    }
+    if (!gameModeId || gameModeId.trim() === "") {
+      throw new Error("GameMode ID cannot be empty");
+    }
+
+    return new Matchup(id, teamA, teamB, order, gameModeId);
+  }
+>>>>>>> 57e36f09b5c1f1c096f52b6b5d53da17436c9e10
 }
 
 export class Field {
