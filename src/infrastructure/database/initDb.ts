@@ -39,6 +39,7 @@ export const initDb = () => {
       teamA TEXT NOT NULL,
       teamB TEXT NOT NULL,
       orderIndex INTEGER NOT NULL,
+      gameModeId TEXT NOT NULL,
       FOREIGN KEY (fieldId) REFERENCES fields(id),
       FOREIGN KEY (teamA) REFERENCES teams(id),
       FOREIGN KEY (teamB) REFERENCES teams(id)
@@ -66,4 +67,10 @@ export const initDb = () => {
       FOREIGN KEY (fieldId) REFERENCES fields(id)
     );
   `);
+
+  try {
+    db.execSync('ALTER TABLE matchups ADD COLUMN gameModeId TEXT NOT NULL DEFAULT "";');
+  } catch (e) {
+    // Ignore error if column already exists
+  }
 };

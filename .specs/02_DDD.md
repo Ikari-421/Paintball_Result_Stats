@@ -10,6 +10,7 @@ On peut appeler ce domaine : **Match Management System**
 
 D’après les écrans, voici le vocabulaire métier à utiliser partout (code + discussions) :
 
+- Tournament (tournoi)
 - Field (terrain)
 - Matchup
 - Team
@@ -28,12 +29,17 @@ D’après les écrans, voici le vocabulaire métier à utiliser partout (code +
 
 Vu la complexité, on sépare en 4 sous-domaines :
 
-1️⃣ **Field Management**
+1️⃣ **Tournament Management**
 
-- Création de terrain
+- Création de tournoi
+- Gestion et assignation des terrains
+
+2️⃣ **Field Management**
+
+- Création de terrain (au sein d'un tournoi)
 - Organisation des matchups
 
-2️⃣ **Team Management**
+3️⃣ **Team Management**
 
 - Création d’équipe
 - Gestion des équipes invitées
@@ -54,6 +60,18 @@ Vu la complexité, on sépare en 4 sous-domaines :
 Le **Core Domain** ici = Game Session (la logique temps réel).
 
 ## 4. Modélisation du Domaine (Entités, Value Objects, Aggregates)
+
+### 🏆 TOURNAMENT CONTEXT
+
+**🧩 Aggregate Root : Tournament**
+
+```typescript
+class Tournament {
+  id: TournamentId;
+  name: string;
+  fieldIds: FieldId[];
+}
+```
 
 ### 📦 FIELD CONTEXT
 

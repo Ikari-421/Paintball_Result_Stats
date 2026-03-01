@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <h2 class="header-title">Profile</h2>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+
+            <div style="text-align: center; margin-bottom: 32px; padding-top: 24px;">
+                <i class="material-icons" style="font-size: 80px; color: var(--primary);">account_circle</i>
+                <h2 style="font-size: 24px; color: var(--text); margin-top: 16px;">Welcome Back!</h2>
+                <p style="color: var(--text); opacity: 0.7;">Sign in to sync your tournaments and stats</p>
+            </div>
+
+            <div class="card">
+                <label class="input-label">Email</label>
+                <input type="email" class="input" placeholder="name@domain.com">
+
+                <label class="input-label" style="margin-top: 16px;">Password</label>
+                <input type="password" class="input" placeholder="••••••••">
+
+                <a href="main_menu.html" class="btn" style="margin-top: 24px;">Sign In</a>
+            </div>
+
+            <div style="text-align: center; margin-top: 24px;">
+                <span style="color: var(--text); opacity: 0.7;">Don't have an account?</span>
+                <a href="#" style="color: var(--primary); font-weight: 700; text-decoration: none;">Register</a>
+            </div>
+
+        </main>
+
+    </div>
+</body>
+
+</html>

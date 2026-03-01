@@ -18,10 +18,10 @@ import {
   View,
 } from "react-native";
 
-interface MatchupWithDetails extends Matchup {
+interface MatchupWithDetails extends Omit<Matchup, 'gameModeId'> {
   teamAName?: string;
   teamBName?: string;
-  gameModeId?: string;
+  gameModeId: string;
   gameModeName?: string;
 }
 
@@ -101,7 +101,7 @@ export default function EditFieldScreen() {
     const addTempMatchups = async () => {
       if (field && tempMatchups.length > 0) {
         for (const matchup of tempMatchups) {
-          await addMatchupToField(field.id, matchup.teamA, matchup.teamB);
+          await addMatchupToField(field.id, matchup.teamA, matchup.teamB, matchup.gameModeId!);
         }
         // Don't clear here - let the user manage tempMatchups lifecycle
         // clearTempMatchups();
@@ -186,7 +186,7 @@ export default function EditFieldScreen() {
         </View>
 
         <MatchupList
-          matchups={matchups}
+          matchups={matchups as any}
           teams={teams}
           onDelete={handleDeleteMatchup}
           onMoveUp={handleMoveUp}

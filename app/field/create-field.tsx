@@ -47,7 +47,7 @@ export default function CreateFieldScreen() {
       // Ajouter les matchups au field créé
       if (tempMatchups.length > 0) {
         for (const matchup of tempMatchups) {
-          await addMatchupToField(fieldId, matchup.teamA, matchup.teamB);
+          await addMatchupToField(fieldId, matchup.teamA, matchup.teamB, matchup.gameModeId);
         }
       }
 

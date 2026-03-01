@@ -1,5 +1,5 @@
-import { IFieldRepository } from '../../core/ports/IFieldRepository';
 import { Field, FieldId, Matchup } from '../../core/domain/Field';
+import { IFieldRepository } from '../../core/ports/IFieldRepository';
 import { db } from './initDb';
 
 export class FieldRepository implements IFieldRepository {
@@ -13,8 +13,8 @@ export class FieldRepository implements IFieldRepository {
 
         for (const matchup of field.matchups) {
             db.runSync(
-                'INSERT INTO matchups (id, fieldId, teamA, teamB, orderIndex) VALUES (?, ?, ?, ?, ?)',
-                [matchup.id, field.id, matchup.teamA, matchup.teamB, matchup.order]
+                'INSERT INTO matchups (id, fieldId, teamA, teamB, orderIndex, gameModeId) VALUES (?, ?, ?, ?, ?, ?)',
+                [matchup.id, field.id, matchup.teamA, matchup.teamB, matchup.order, matchup.gameModeId]
             );
         }
     }
@@ -32,10 +32,11 @@ export class FieldRepository implements IFieldRepository {
             teamA: string;
             teamB: string;
             orderIndex: number;
+            gameModeId: string;
         }>('SELECT * FROM matchups WHERE fieldId = ? ORDER BY orderIndex', [id]);
 
         const matchups = matchupRows.map(row =>
-            Matchup.create(row.id, row.teamA, row.teamB, row.orderIndex)
+            Matchup.create(row.id, row.teamA, row.teamB, row.orderIndex, row.gameModeId || 'unknown')
         );
 
         return Field.create(fieldRow.id, fieldRow.name, matchups);
@@ -51,10 +52,11 @@ export class FieldRepository implements IFieldRepository {
                 teamA: string;
                 teamB: string;
                 orderIndex: number;
+                gameModeId: string;
             }>('SELECT * FROM matchups WHERE fieldId = ? ORDER BY orderIndex', [fieldRow.id]);
 
             const matchups = matchupRows.map(row =>
-                Matchup.create(row.id, row.teamA, row.teamB, row.orderIndex)
+                Matchup.create(row.id, row.teamA, row.teamB, row.orderIndex, row.gameModeId || 'unknown')
             );
 
             fields.push(Field.create(fieldRow.id, fieldRow.name, matchups));

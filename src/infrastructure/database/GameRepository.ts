@@ -1,8 +1,8 @@
-import { IGameRepository } from '../../core/ports/IGameRepository';
-import { Game, GameId, Score, GameTimer } from '../../core/domain/Game';
-import { GameStatus } from '../../core/domain/GameStatus';
 import { Matchup } from '../../core/domain/Field';
-import { GameMode, GameDuration, BreakDuration, OvertimeDuration, TimeoutCount, ScoreLimit } from '../../core/domain/GameMode';
+import { Game, GameId, GameTimer, Score } from '../../core/domain/Game';
+import { BreakDuration, GameDuration, GameMode, OvertimeDuration, ScoreLimit, TimeoutCount } from '../../core/domain/GameMode';
+import { GameStatus } from '../../core/domain/GameStatus';
+import { IGameRepository } from '../../core/ports/IGameRepository';
 import { db } from './initDb';
 
 interface GameRow {
@@ -79,7 +79,8 @@ export class GameRepository implements IGameRepository {
             row.matchupId,
             row.matchupTeamA,
             row.matchupTeamB,
-            row.matchupOrder
+            row.matchupOrder,
+            row.gameModeId
         );
 
         const gameMode = GameMode.create(

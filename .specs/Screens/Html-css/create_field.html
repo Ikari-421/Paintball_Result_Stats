@@ -24,6 +24,17 @@
             <label class="input-label">Field Name</label>
             <input type="text" class="input" placeholder="e.g. Main Arena">
 
+            <label class="input-label" style="margin-top: 16px;">Default Game Mode</label>
+            <div style="display: flex; gap: 8px;">
+                <select class="input" style="flex: 1; margin-bottom: 0;">
+                    <option>Standard FIBA</option>
+                    <option>Quick Match</option>
+                    <option>Training Session</option>
+                </select>
+                <a href="create_game_mode.html" class="btn btn-secondary" style="width: auto; padding: 0 16px;"><i
+                        class="material-icons">add</i></a>
+            </div>
+
             <div
                 style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
                 <h3 style="font-size: 16px; color: var(--primary);">MatchUps</h3>
@@ -62,15 +73,12 @@
         </main>
 
         <footer class="bottom-fixed" style="gap: 16px;">
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                 <a href="create_matchup.html" class="btn btn-outline" style="flex: 1;">
                     <i class="material-icons">add</i> MatchUp
                 </a>
-                <a href="select_game_mode.html" class="btn btn-secondary" style="flex: 1;">
-                    <i class="material-icons">settings</i> Mod Setup
-                </a>
             </div>
-            <a href="list_fields.html" class="btn">Create Field</a>
+            <a href="tournament_details.html" class="btn">Create Field</a>
         </footer>
 
     </div>

@@ -84,6 +84,7 @@ interface CoreState {
     fieldId: string,
     teamAId: string,
     teamBId: string,
+    gameModeId: string,
   ) => Promise<void>;
   removeMatchupFromField: (fieldId: string, matchupId: string) => Promise<void>;
 
@@ -117,7 +118,7 @@ interface CoreState {
     teamBId: string;
     matchupOrder: number;
     gameModeId: string;
-  }) => Promise<void>;
+  }) => Promise<string>;
 
   // Utility
   clearError: () => void;
@@ -222,6 +223,7 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     fieldId: string,
     teamAId: string,
     teamBId: string,
+    gameModeId: string,
   ) => {
     try {
       set({ isLoading: true, error: null });
@@ -230,7 +232,7 @@ export const useCoreStore = create<CoreState>((set, get) => ({
 
       const matchupId = `matchup-${Date.now()}`;
       const order = field.matchups.length;
-      const matchup = Matchup.create(matchupId, teamAId, teamBId, order);
+      const matchup = Matchup.create(matchupId, teamAId, teamBId, order, gameModeId);
       const updatedField = field.addMatchup(matchup);
 
       await fieldRepository.save(updatedField);
@@ -313,8 +315,10 @@ export const useCoreStore = create<CoreState>((set, get) => ({
       const id = `game-${Date.now()}`;
       await createGameUseCase.execute({ id, ...params });
       await get().loadGames();
+      return id;
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
+      throw error;
     }
   },
 

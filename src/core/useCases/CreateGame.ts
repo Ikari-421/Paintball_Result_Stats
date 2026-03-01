@@ -1,10 +1,10 @@
-import { IGameRepository } from '../ports/IGameRepository';
-import { IGameModeRepository } from '../ports/IGameModeRepository';
-import { IFieldRepository } from '../ports/IFieldRepository';
-import { IEventStore } from '../ports/IEventStore';
-import { Game } from '../domain/Game';
 import { Matchup } from '../domain/Field';
+import { Game } from '../domain/Game';
 import { DomainGameEvent } from '../domain/events/GameEvents';
+import { IEventStore } from '../ports/IEventStore';
+import { IFieldRepository } from '../ports/IFieldRepository';
+import { IGameModeRepository } from '../ports/IGameModeRepository';
+import { IGameRepository } from '../ports/IGameRepository';
 
 export interface CreateGameParams {
     id: string;
@@ -22,7 +22,7 @@ export class CreateGame {
         private gameModeRepository: IGameModeRepository,
         private fieldRepository: IFieldRepository,
         private eventStore: IEventStore
-    ) {}
+    ) { }
 
     async execute(params: CreateGameParams): Promise<Game> {
         const gameMode = await this.gameModeRepository.findById(params.gameModeId);
@@ -39,11 +39,12 @@ export class CreateGame {
             params.matchupId,
             params.teamAId,
             params.teamBId,
-            params.matchupOrder
+            params.matchupOrder,
+            params.gameModeId
         );
 
         const game = Game.create(params.id, params.fieldId, matchup, gameMode);
-        
+
         await this.gameRepository.save(game);
 
         const event: DomainGameEvent = {

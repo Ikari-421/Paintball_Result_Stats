@@ -1,6 +1,6 @@
-import { Game, Score, GameTimer } from '../../../core/domain/Game';
-import { GameMode, GameDuration, BreakDuration, TimeoutCount, ScoreLimit } from '../../../core/domain/GameMode';
 import { Matchup } from '../../../core/domain/Field';
+import { Game, GameTimer, Score } from '../../../core/domain/Game';
+import { BreakDuration, GameDuration, GameMode, ScoreLimit, TimeoutCount } from '../../../core/domain/GameMode';
 import { GameStatus } from '../../../core/domain/GameStatus';
 
 describe('Game', () => {
@@ -17,7 +17,7 @@ describe('Game', () => {
             new ScoreLimit(5)
         );
 
-        matchup = Matchup.create('matchup-1', 'team-a', 'team-b', 1);
+        matchup = Matchup.create('matchup-1', 'team-a', 'team-b', 1, 'mode-1');
     });
 
     describe('Score', () => {

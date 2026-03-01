@@ -12,7 +12,7 @@ import { Alert, ScrollView, StyleSheet, View } from "react-native";
 export default function FieldDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { fields, teams, deleteField } = useCoreStore();
+  const { fields, teams, deleteField, createGame, games } = useCoreStore();
 
   const field = fields.find((f) => f.id === id);
 
@@ -27,10 +27,29 @@ export default function FieldDetailScreen() {
     );
   }
 
-  const handleStartGames = () => {
+  const handleStartGames = async () => {
     if (field.matchups.length === 0) return;
     const firstMatchup = field.matchups[0];
-    router.push(`/game?fieldId=${field.id}&matchupId=${firstMatchup.id}`);
+
+    const existingGame = games.find((g) => g.matchup.id === firstMatchup.id);
+    if (existingGame) {
+      router.push(`/match/${existingGame.id}` as any);
+      return;
+    }
+
+    try {
+      const gameId = await createGame({
+        fieldId: field.id,
+        matchupId: firstMatchup.id,
+        teamAId: firstMatchup.teamA,
+        teamBId: firstMatchup.teamB,
+        matchupOrder: firstMatchup.order,
+        gameModeId: firstMatchup.gameModeId,
+      });
+      router.push(`/match/${gameId}` as any);
+    } catch (error) {
+      Alert.alert("Error starting game", (error as Error).message);
+    }
   };
 
   const handleEditField = () => {
@@ -86,11 +105,26 @@ export default function FieldDetailScreen() {
                 teamAName={teamA?.name || "Team A"}
                 teamBName={teamB?.name || "Team B"}
                 isActive={isActive}
-                onPress={() =>
-                  router.push(
-                    `/game?fieldId=${field.id}&matchupId=${matchup.id}`,
-                  )
-                }
+                onPress={async () => {
+                  const existingGame = games.find((g) => g.matchup.id === matchup.id);
+                  if (existingGame) {
+                    router.push(`/match/${existingGame.id}` as any);
+                    return;
+                  }
+                  try {
+                    const gameId = await createGame({
+                      fieldId: field.id,
+                      matchupId: matchup.id,
+                      teamAId: matchup.teamA,
+                      teamBId: matchup.teamB,
+                      matchupOrder: matchup.order,
+                      gameModeId: matchup.gameModeId,
+                    });
+                    router.push(`/match/${gameId}` as any);
+                  } catch (error) {
+                    Alert.alert("Error starting game", (error as Error).message);
+                  }
+                }}
               />
             );
           })

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Tournaments List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <h2 class="header-title">Tournaments</h2>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+            <a href="tournament_details.html" class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--primary);">emoji_events</i>
+                <div class="card-text" style="flex: 1;">
+                    <h3 style="font-size: 18px;">Summer League 2026</h3>
+                    <p>Paris • 14 Juil 2026</p>
+                </div>
+                <i class="material-icons" style="color: var(--text); opacity: 0.3; margin-left: auto;">chevron_right</i>
+            </a>
+
+            <a href="tournament_details.html" class="card action-card">
+                <i class="material-icons card-icon" style="color: var(--secondary);">emoji_events</i>
+                <div class="card-text" style="flex: 1;">
+                    <h3 style="font-size: 18px;">Office Tournament</h3>
+                    <p>Lyon • 01 Sept 2026</p>
+                </div>
+                <i class="material-icons" style="color: var(--text); opacity: 0.3; margin-left: auto;">chevron_right</i>
+            </a>
+        </main>
+
+        <footer class="bottom-fixed">
+            <a href="create_tournament.html" class="btn">
+                <i class="material-icons">add</i> Create New Tournament
+            </a>
+        </footer>
+
+    </div>
+</body>
+
+</html>

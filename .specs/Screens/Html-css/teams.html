@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreBoard - Teams</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <button class="icon-btn" onclick="history.back()"><i class="material-icons">arrow_back</i></button>
+            <h2 class="header-title">Teams</h2>
+            <i class="material-icons" style="visibility: hidden;">arrow_back</i>
+        </header>
+
+        <main class="content">
+            <div style="position: relative; margin-bottom: 24px;">
+                <i class="material-icons"
+                    style="position: absolute; left: 14px; top: 14px; color: var(--primary);">search</i>
+                <input type="text" class="input" placeholder="Filter teams..." style="padding-left: 44px;">
+            </div>
+
+            <div class="card action-card">
+                <div
+                    style="width: 40px; height: 40px; background: var(--bg-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary);">
+                    A</div>
+                <div style="flex: 1;">
+                    <h3 style="font-size: 16px;">Team Alpha</h3>
+                    <p style="font-size: 12px; color: var(--text); opacity: 0.7;">Div 1 • Pro League</p>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <a href="create_team.html" class="icon-btn"
+                        style="color: var(--text); opacity: 0.5; padding: 4px;"><i class="material-icons"
+                            style="font-size: 20px;">edit</i></a>
+                    <button class="icon-btn" style="color: #ef4444; opacity: 0.8; padding: 4px;"><i
+                            class="material-icons" style="font-size: 20px;">delete_outline</i></button>
+                </div>
+            </div>
+
+            <div class="card action-card">
+                <div
+                    style="width: 40px; height: 40px; background: var(--bg-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--secondary);">
+                    B</div>
+                <div style="flex: 1;">
+                    <h3 style="font-size: 16px;">Team Beta</h3>
+                    <p style="font-size: 12px; color: var(--text); opacity: 0.7;">Div 2 • Amateur</p>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <a href="create_team.html" class="icon-btn"
+                        style="color: var(--text); opacity: 0.5; padding: 4px;"><i class="material-icons"
+                            style="font-size: 20px;">edit</i></a>
+                    <button class="icon-btn" style="color: #ef4444; opacity: 0.8; padding: 4px;"><i
+                            class="material-icons" style="font-size: 20px;">delete_outline</i></button>
+                </div>
+            </div>
+
+            <div class="card action-card">
+                <div
+                    style="width: 40px; height: 40px; background: var(--bg-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--accent);">
+                    C</div>
+                <div style="flex: 1;">
+                    <h3 style="font-size: 16px;">Team Charlie</h3>
+                    <p style="font-size: 12px; color: var(--text); opacity: 0.7;">Div 1 • Pro League</p>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <a href="create_team.html" class="icon-btn"
+                        style="color: var(--text); opacity: 0.5; padding: 4px;"><i class="material-icons"
+                            style="font-size: 20px;">edit</i></a>
+                    <button class="icon-btn" style="color: #ef4444; opacity: 0.8; padding: 4px;"><i
+                            class="material-icons" style="font-size: 20px;">delete_outline</i></button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bottom-fixed">
+            <a href="create_team.html" class="btn"><i class="material-icons">add</i> Add Team</a>
+        </footer>
+    </div>
+</body>
+
+</html>
