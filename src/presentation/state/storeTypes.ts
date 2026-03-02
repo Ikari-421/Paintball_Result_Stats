@@ -31,6 +31,7 @@ export interface FieldState {
         gameModeId: string,
     ) => Promise<void>;
     removeMatchupFromField: (fieldId: string, matchupId: string) => Promise<void>;
+    reorderMatchupsInField: (fieldId: string, matchupIds: string[]) => Promise<void>;
 }
 
 export interface GameModeState {

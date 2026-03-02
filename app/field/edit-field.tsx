@@ -1,7 +1,6 @@
 import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { MatchupList } from "@/components/field/MatchupList";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
@@ -10,12 +9,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Removed MatchupWithDetails - using field.matchups directly
 
@@ -33,6 +32,7 @@ export default function EditFieldScreen() {
     removeMatchupFromField,
     loadTeams,
     error,
+    reorderMatchupsInField,
   } = useCoreStore();
   const { tempMatchups, clearTempMatchups, addTempMatchup } =
     useMatchupCreation();
@@ -64,6 +64,7 @@ export default function EditFieldScreen() {
 
     try {
       await updateField(field.id, name.trim());
+      clearTempMatchups();
       router.push(`/field/${field.id}`);
     } catch (err) {
       Alert.alert("Error", error || "Unable to update field");
@@ -106,90 +107,81 @@ export default function EditFieldScreen() {
     }
   };
 
-  const handleMoveUp = (matchupId: string) => {
+  const handleDragEnd = async (newOrder: any[]) => {
     if (!field) return;
-    const index = field.matchups.findIndex((m) => m.id === matchupId);
-    if (index > 0) {
-      // TODO: Implémenter la réorganisation avec persistance
-      Alert.alert(
-        "Info",
-        "La réorganisation des matchups sera implémentée prochainement",
-      );
-    }
-  };
 
-  const handleMoveDown = (matchupId: string) => {
-    if (!field) return;
-    const index = field.matchups.findIndex((m) => m.id === matchupId);
-    if (index < field.matchups.length - 1) {
-      // TODO: Implémenter la réorganisation avec persistance
-      Alert.alert(
-        "Info",
-        "La réorganisation des matchups sera implémentée prochainement",
-      );
+    try {
+      // Create a list of matchup IDs in the new order
+      const newOrderIds = newOrder.map((m) => m.id);
+      await reorderMatchupsInField(field.id, newOrderIds);
+    } catch (err) {
+      console.error("Failed to reorder matchups:", err);
+      Alert.alert("Error", "Unable to save new order");
     }
-  };
-
-  const handleModSetup = () => {
-    router.push("/gamemode/game-modes-list");
   };
 
   if (!field) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Edit Field" onBack={() => router.back()} />
+        <ScreenHeader title="Edit Field" onBack={() => {
+          clearTempMatchups();
+          router.back()
+        }} />
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Field not found</Text>
-          <PrimaryButton title="Go Back" onPress={() => router.back()} />
+          <PrimaryButton title="Go Back" onPress={() => {
+            clearTempMatchups();
+            router.back()
+          }} />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <ScreenHeader
         title="Edit Field"
-        onBack={() => router.push(`/field/${field.id}`)}
+        onBack={() => {
+          clearTempMatchups();
+          router.push(`/field/${field.id}`);
+        }}
       />
 
-      <ScrollView style={styles.content}>
-        <Text style={styles.label}>Field Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. Main Arena"
-          placeholderTextColor={Colors.secondary}
-          autoFocus
-        />
-
-        <View style={styles.matchupsHeader}>
-          <Text style={styles.matchupsTitle}>MatchUps</Text>
-          <Text style={styles.matchupsCount}>
-            {field.matchups.length} Scheduled
-          </Text>
-        </View>
-
+      <View style={styles.content}>
         <MatchupList
           matchups={field.matchups}
           teams={teams}
           onDelete={handleDeleteMatchup}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
+          onDragEnd={handleDragEnd}
+          ListHeaderComponent={
+            <>
+              <Text style={styles.label}>Field Name</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g. Main Arena"
+                placeholderTextColor={Colors.secondary}
+                autoFocus
+              />
+
+              <View style={styles.matchupsHeader}>
+                <Text style={styles.matchupsTitle}>MatchUps</Text>
+                <Text style={styles.matchupsCount}>
+                  {field.matchups.length} Scheduled
+                </Text>
+              </View>
+            </>
+          }
         />
-      </ScrollView>
+      </View>
 
       <View style={styles.footer}>
         <View style={styles.actionButtons}>
           <OutlineButton
             title="+ MatchUp"
             onPress={handleAddMatchup}
-            style={styles.actionButton}
-          />
-          <SecondaryButton
-            title="Mod Setup"
-            onPress={handleModSetup}
             style={styles.actionButton}
           />
         </View>
@@ -199,7 +191,7 @@ export default function EditFieldScreen() {
           disabled={!name.trim()}
         />
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

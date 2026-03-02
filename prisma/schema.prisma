@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["reactNative"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  aggregateId String
+  type        String
+  payload     String
+  timestamp   Int
+  
+  @@map("events")
+}
+
+model GameMode {
+  id               String    @id
+  name             String
+  gameTimeMinutes  Int
+  breakTimeSeconds Int
+  overtimeMinutes  Int?
+  raceTo           Int
+  
+  matchups         Matchup[]
+  
+  @@map("game_modes")
+}
+
+model Team {
+  id       String    @id
+  name     String
+  isGuest  Boolean
+  
+  matchupsAsTeamA Matchup[] @relation("TeamA")
+  matchupsAsTeamB Matchup[] @relation("TeamB")
+
+  @@map("teams")
+}
+
+model Tournament {
+  id        String   @id
+  name      String
+  location  String
+  startDate Int
+  endDate   Int
+  
+  fields    Field[]
+  
+  @@map("tournaments")
+}
+
+model Field {
+  id           String     @id
+  tournamentId String
+  name         String
+  
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  matchups     Matchup[]
+  games        Game[]
+
+  @@map("fields")
+}
+
+model Matchup {
+  id           String   @id
+  fieldId      String
+  teamAId      String   @map("teamA")
+  teamBId      String   @map("teamB")
+  orderIndex   Int
+  gameModeId   String
+  
+  field        Field    @relation(fields: [fieldId], references: [id])
+  teamA        Team     @relation("TeamA", fields: [teamAId], references: [id])
+  teamB        Team     @relation("TeamB", fields: [teamBId], references: [id])
+  gameMode     GameMode @relation(fields: [gameModeId], references: [id])
+  
+  @@map("matchups")
+}
+
+model Game {
+  id               String   @id
+  fieldId          String
+  matchupId        String
+  matchupTeamA     String
+  matchupTeamB     String
+  matchupOrder     Int
+  gameModeId       String
+  gameModeName     String
+  gameTimeMinutes  Int
+  breakTimeSeconds Int
+  overtimeMinutes  Int?
+  raceTo           Int
+  teamAScore       Int
+  teamBScore       Int
+  remainingTime    Int
+  timerIsRunning   Int
+  status           String
+  currentRound     Int      @default(1)
+  isPaused         Int      @default(0)
+  gameStateStatus  String   @default("NOT_STARTED")
+  
+  field            Field    @relation(fields: [fieldId], references: [id])
+
+  @@map("games")
+}

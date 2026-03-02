@@ -3,21 +3,25 @@ import { TempMatchup } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
 import { Team } from "@/src/core/domain/Team";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import DraggableFlatList, {
+  RenderItemParams,
+  ScaleDecorator,
+} from "react-native-draggable-flatlist";
 
 interface MatchupListProps {
   matchups: (Matchup | TempMatchup)[];
   teams: Team[];
   onDelete: (matchupId: string) => void;
-  onMoveUp?: (matchupId: string) => void;
-  onMoveDown?: (matchupId: string) => void;
+  onDragEnd?: (data: (Matchup | TempMatchup)[]) => void;
+  ListHeaderComponent?: React.ReactElement;
 }
 
 export const MatchupList = ({
   matchups,
   teams,
   onDelete,
-  onMoveUp,
-  onMoveDown,
+  onDragEnd,
+  ListHeaderComponent,
 }: MatchupListProps) => {
   const getTeamName = (teamId: string, cachedName?: string) => {
     if (cachedName) return cachedName;
@@ -26,22 +30,46 @@ export const MatchupList = ({
 
   if (matchups.length === 0) {
     return (
-      <Text style={styles.emptyText}>
-        No matchups yet. Add teams to this field.
-      </Text>
+      <View>
+        {ListHeaderComponent}
+        <Text style={styles.emptyText}>
+          No matchups yet. Add teams to this field.
+        </Text>
+      </View>
     );
   }
 
-  return (
-    <>
-      {matchups.map((matchup, index) => {
-        const teamAName =
-          "teamAName" in matchup ? matchup.teamAName : undefined;
-        const teamBName =
-          "teamBName" in matchup ? matchup.teamBName : undefined;
+  const renderItem = ({
+    item,
+    drag,
+    isActive,
+  }: RenderItemParams<Matchup | TempMatchup>) => {
+    const matchup = item;
+    const teamAName = "teamAName" in matchup ? matchup.teamAName : undefined;
+    const teamBName = "teamBName" in matchup ? matchup.teamBName : undefined;
 
-        return (
-          <View key={matchup.id} style={styles.matchupCard}>
+    return (
+      <ScaleDecorator>
+        <TouchableOpacity
+          activeOpacity={1}
+          onLongPress={drag}
+          disabled={isActive}
+          style={[
+            styles.matchupCardWrapper,
+            { backgroundColor: isActive ? Colors.background : "transparent" },
+          ]}
+        >
+          <View
+            style={[
+              styles.matchupCard,
+              { elevation: isActive ? 8 : 3 },
+            ]}
+          >
+            {onDragEnd && (
+              <View style={styles.dragHandle}>
+                <Text style={styles.dragIcon}>☰</Text>
+              </View>
+            )}
             <View style={styles.matchupContent}>
               <Text style={styles.teamName}>
                 {getTeamName(matchup.teamA, teamAName)}
@@ -54,22 +82,6 @@ export const MatchupList = ({
               </Text>
             </View>
             <View style={styles.actionsContainer}>
-              {onMoveUp && index > 0 && (
-                <TouchableOpacity
-                  style={styles.reorderButton}
-                  onPress={() => onMoveUp(matchup.id)}
-                >
-                  <Text style={styles.reorderIcon}>⬆️</Text>
-                </TouchableOpacity>
-              )}
-              {onMoveDown && index < matchups.length - 1 && (
-                <TouchableOpacity
-                  style={styles.reorderButton}
-                  onPress={() => onMoveDown(matchup.id)}
-                >
-                  <Text style={styles.reorderIcon}>⬇️</Text>
-                </TouchableOpacity>
-              )}
               <TouchableOpacity
                 style={styles.deleteMatchupButton}
                 onPress={() => onDelete(matchup.id)}
@@ -78,9 +90,29 @@ export const MatchupList = ({
               </TouchableOpacity>
             </View>
           </View>
-        );
-      })}
-    </>
+        </TouchableOpacity>
+      </ScaleDecorator>
+    );
+  };
+
+  if (!onDragEnd) {
+    return (
+      <View>
+        {ListHeaderComponent}
+        {matchups.map((matchup) => renderItem({ item: matchup, getIndex: () => 0, drag: () => { }, isActive: false } as any))}
+      </View>
+    );
+  }
+
+  return (
+    <DraggableFlatList
+      data={matchups}
+      onDragEnd={({ data }) => onDragEnd(data)}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      ListHeaderComponent={ListHeaderComponent}
+      contentContainerStyle={{ paddingBottom: Spacing.xxl }}
+    />
   );
 };
 
@@ -93,10 +125,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xxl,
     fontStyle: "italic",
   },
+  matchupCardWrapper: {
+    marginBottom: Spacing.md,
+    borderRadius: BorderRadius.lg,
+  },
   matchupCard: {
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,
@@ -104,7 +139,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+  },
+  dragHandle: {
+    paddingRight: Spacing.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dragIcon: {
+    fontSize: 20,
+    color: Colors.secondary,
+    opacity: 0.5,
   },
   matchupContent: {
     flex: 1,
@@ -134,12 +178,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.xs,
-  },
-  reorderButton: {
-    padding: Spacing.xs,
-  },
-  reorderIcon: {
-    fontSize: 16,
   },
   deleteMatchupButton: {
     padding: Spacing.sm,

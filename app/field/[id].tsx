@@ -1,13 +1,11 @@
 import { EmptyState } from "@/components/common/EmptyState";
-import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
-import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { FieldDetailHeader } from "@/components/field/FieldDetailHeader";
 import { MatchupCard } from "@/components/field/MatchupCard";
 import { Colors, Spacing } from "@/constants/theme";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function FieldDetailScreen() {
   const router = useRouter();
@@ -111,7 +109,7 @@ export default function FieldDetailScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteField(field.id);
-            router.push("/field/fields-list");
+            router.push(`/tournament/${field.tournamentId}` as any);
           },
         },
       ],
@@ -123,7 +121,7 @@ export default function FieldDetailScreen() {
       <FieldDetailHeader
         fieldName={field.name}
         matchupsCount={field.matchups.length}
-        onBack={() => router.push("/field/fields-list")}
+        onBack={() => router.back()}
       />
 
       <ScrollView style={styles.content}>
@@ -194,20 +192,13 @@ export default function FieldDetailScreen() {
           title="Start Games"
           onPress={handleStartGames}
           disabled={field.matchups.length === 0}
-          style={styles.startButton}
         />
-        <View style={styles.actionButtons}>
-          <OutlineButton
-            title="Edit Field"
-            onPress={handleEditField}
-            style={styles.actionButton}
-          />
-          <SecondaryButton
-            title="Delete Field"
-            onPress={handleDeleteField}
-            style={styles.deleteButton}
-          />
-        </View>
+        <TouchableOpacity style={styles.editLink} onPress={handleEditField}>
+          <Text style={styles.editLinkText}>Edit Field</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteLink} onPress={handleDeleteField}>
+          <Text style={styles.deleteLinkText}>Delete Field</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -231,20 +222,23 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
-    gap: Spacing.md,
   },
-  startButton: {
-    backgroundColor: Colors.accent,
+  editLink: {
+    marginTop: Spacing.xl,
+    alignItems: "center",
   },
-  actionButtons: {
-    flexDirection: "row",
-    gap: Spacing.md,
+  editLinkText: {
+    color: Colors.primary,
+    fontSize: 14,
+    fontWeight: "600",
   },
-  actionButton: {
-    flex: 1,
+  deleteLink: {
+    marginTop: Spacing.md,
+    alignItems: "center",
   },
-  deleteButton: {
-    flex: 1,
-    backgroundColor: Colors.danger,
+  deleteLinkText: {
+    color: "#ff3b30",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

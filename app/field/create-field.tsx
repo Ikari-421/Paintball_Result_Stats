@@ -9,12 +9,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function CreateFieldScreen() {
   const router = useRouter();
@@ -88,30 +88,9 @@ export default function CreateFieldScreen() {
     removeTempMatchup(matchupId);
   };
 
-  const handleMoveUp = (matchupId: string) => {
-    const index = tempMatchups.findIndex((m) => m.id === matchupId);
-    if (index > 0) {
-      const newMatchups = [...tempMatchups];
-      [newMatchups[index - 1], newMatchups[index]] = [
-        newMatchups[index],
-        newMatchups[index - 1],
-      ];
-      reorderTempMatchups(newMatchups);
-    }
+  const handleDragEnd = (newOrder: any[]) => {
+    reorderTempMatchups(newOrder);
   };
-
-  const handleMoveDown = (matchupId: string) => {
-    const index = tempMatchups.findIndex((m) => m.id === matchupId);
-    if (index < tempMatchups.length - 1) {
-      const newMatchups = [...tempMatchups];
-      [newMatchups[index], newMatchups[index + 1]] = [
-        newMatchups[index + 1],
-        newMatchups[index],
-      ];
-      reorderTempMatchups(newMatchups);
-    }
-  };
-
 
   const handleBack = () => {
     clearTempMatchups();
@@ -119,35 +98,37 @@ export default function CreateFieldScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <ScreenHeader title="Create Field" onBack={handleBack} />
 
-      <ScrollView style={styles.content}>
-        <Text style={styles.label}>Field Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. Main Arena"
-          placeholderTextColor={Colors.secondary}
-          autoFocus
-        />
-
-        <View style={styles.matchupsHeader}>
-          <Text style={styles.matchupsTitle}>MatchUps</Text>
-          <Text style={styles.matchupsCount}>
-            {tempMatchups.length} Scheduled
-          </Text>
-        </View>
-
+      <View style={styles.content}>
         <MatchupList
           matchups={tempMatchups}
           teams={teams}
           onDelete={handleDeleteMatchup}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
+          onDragEnd={handleDragEnd}
+          ListHeaderComponent={
+            <>
+              <Text style={styles.label}>Field Name</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g. Main Arena"
+                placeholderTextColor={Colors.secondary}
+                autoFocus
+              />
+
+              <View style={styles.matchupsHeader}>
+                <Text style={styles.matchupsTitle}>MatchUps</Text>
+                <Text style={styles.matchupsCount}>
+                  {tempMatchups.length} Scheduled
+                </Text>
+              </View>
+            </>
+          }
         />
-      </ScrollView>
+      </View>
 
       <View style={styles.footer}>
         <View style={styles.actionButtons}>
@@ -163,7 +144,7 @@ export default function CreateFieldScreen() {
           disabled={!name.trim()}
         />
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

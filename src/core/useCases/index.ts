@@ -11,6 +11,7 @@ export { DeleteTeam } from "./DeleteTeam";
 export { DeleteTournament } from "./DeleteTournament";
 export { FinishGame } from "./FinishGame";
 export { PauseGame } from "./PauseGame";
+export { ReorderMatchupsUseCase } from "./ReorderMatchupsUseCase";
 export { ResumeGame } from "./ResumeGame";
 export { ScorePoint } from "./ScorePoint";
 export { StartGame } from "./StartGame";

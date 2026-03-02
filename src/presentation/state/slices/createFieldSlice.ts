@@ -1,9 +1,9 @@
 import { StateCreator } from "zustand";
 import { Matchup } from "../../../core/domain/Field";
-import { createFieldUseCase, deleteFieldUseCase, fieldRepository, updateFieldUseCase } from "../dependencies";
+import { createFieldUseCase, deleteFieldUseCase, fieldRepository, reorderMatchupsUseCase, updateFieldUseCase } from "../dependencies";
 import { CoreState } from "../storeTypes";
 
-export const createFieldSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'fields' | 'loadFields' | 'createField' | 'updateField' | 'deleteField' | 'addMatchupToField' | 'removeMatchupFromField'>> = (set, get) => ({
+export const createFieldSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'fields' | 'loadFields' | 'createField' | 'updateField' | 'deleteField' | 'addMatchupToField' | 'removeMatchupFromField' | 'reorderMatchupsInField'>> = (set, get) => ({
     fields: [],
 
     loadFields: async () => {
@@ -82,6 +82,16 @@ export const createFieldSlice: StateCreator<CoreState, [], [], Pick<CoreState, '
 
             const updatedField = field.removeMatchup(matchupId);
             await fieldRepository.save(updatedField);
+            await get().loadFields();
+        } catch (error) {
+            set({ error: (error as Error).message, isLoading: false });
+        }
+    },
+
+    reorderMatchupsInField: async (fieldId: string, matchupIds: string[]) => {
+        try {
+            set({ isLoading: true, error: null });
+            await reorderMatchupsUseCase.execute(fieldId, matchupIds);
             await get().loadFields();
         } catch (error) {
             set({ error: (error as Error).message, isLoading: false });

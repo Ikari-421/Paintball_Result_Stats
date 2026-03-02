@@ -61,7 +61,13 @@ export default function CreateMatchupScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Create Matchup" onBack={() => router.back()} />
+      <ScreenHeader
+        title="Create Matchup"
+        onBack={() => {
+          reset();
+          router.back();
+        }}
+      />
 
       <View style={styles.content}>
         <View style={styles.card}>
@@ -124,7 +130,7 @@ export default function CreateMatchupScreen() {
           disabled={!teamA || !teamB || !gameMode}
         />
       </View>
-    </View>
+    </View >
   );
 }
 

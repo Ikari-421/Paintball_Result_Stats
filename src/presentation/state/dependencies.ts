@@ -23,6 +23,7 @@ import {
     DeleteTournament,
     FinishGame,
     PauseGame,
+    ReorderMatchupsUseCase,
     ResumeGame,
     ScorePoint,
     StartGame,
@@ -47,6 +48,7 @@ export const deleteTeamUseCase = new DeleteTeam(teamRepository, eventStore);
 export const createFieldUseCase = new CreateField(fieldRepository, eventStore);
 export const updateFieldUseCase = new UpdateField(fieldRepository, eventStore);
 export const deleteFieldUseCase = new DeleteField(fieldRepository, eventStore);
+export const reorderMatchupsUseCase = new ReorderMatchupsUseCase(fieldRepository);
 export const createGameModeUseCase = new CreateGameMode(
     gameModeRepository,
     eventStore,
