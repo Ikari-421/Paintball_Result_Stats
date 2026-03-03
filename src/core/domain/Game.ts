@@ -35,6 +35,7 @@ export class GameTimer {
   constructor(
     public readonly remainingTime: number, // in seconds
     public readonly isRunning: boolean = false,
+    public readonly endTimestamp: number | null = null,
   ) {
     if (remainingTime < 0) {
       throw new Error("Remaining time cannot be negative");
@@ -42,18 +43,27 @@ export class GameTimer {
   }
 
   start(): GameTimer {
-    return new GameTimer(this.remainingTime, true);
+    const endTimestamp = Date.now() + this.remainingTime * 1000;
+    return new GameTimer(this.remainingTime, true, endTimestamp);
   }
 
-  pause(): GameTimer {
-    return new GameTimer(this.remainingTime, false);
+  stop(): GameTimer {
+    if (!this.isRunning || !this.endTimestamp) {
+      return new GameTimer(this.remainingTime, false, null);
+    }
+    const newRemainingTime = Math.max(0, Math.floor((this.endTimestamp - Date.now()) / 1000));
+    return new GameTimer(newRemainingTime, false, null);
   }
 
   updateTime(seconds: number): GameTimer {
     if (seconds < 0) {
       throw new Error("Time cannot be negative");
     }
-    return new GameTimer(seconds, this.isRunning);
+    if (this.isRunning) {
+      const newEndTimestamp = Date.now() + seconds * 1000;
+      return new GameTimer(seconds, this.isRunning, newEndTimestamp);
+    }
+    return new GameTimer(seconds, this.isRunning, null);
   }
 
   isExpired(): boolean {
@@ -71,9 +81,9 @@ export class Game {
     public readonly timer: GameTimer,
     public readonly status: GameStatus,
     public readonly currentRound: number = 1,
-    public readonly isPaused: number = 0,
+    public readonly isTimeStopped: number = 0,
     public readonly gameStateStatus: string = GameStatus.NOT_STARTED,
-  ) {}
+  ) { }
 
   static create(
     id: GameId,
@@ -97,7 +107,7 @@ export class Game {
       initialTimer,
       GameStatus.NOT_STARTED,
       1, // currentRound
-      0, // isPaused
+      0, // isTimeStopped
       GameStatus.NOT_STARTED, // gameStateStatus
     );
   }
@@ -118,9 +128,9 @@ export class Game {
     );
   }
 
-  pause(): Game {
+  stopTime(): Game {
     if (this.status !== GameStatus.RUNNING) {
-      throw new Error("Game can only be paused when RUNNING");
+      throw new Error("Game can only be stopped when RUNNING");
     }
 
     return new Game(
@@ -129,7 +139,7 @@ export class Game {
       this.matchup,
       this.gameMode,
       this.score,
-      this.timer.pause(),
+      this.timer.stop(),
       GameStatus.BREAK,
     );
   }
@@ -157,7 +167,7 @@ export class Game {
       this.matchup,
       this.gameMode,
       this.score,
-      this.timer.pause(),
+      this.timer.stop(),
       GameStatus.FINISHED,
     );
   }

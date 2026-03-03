@@ -1,6 +1,6 @@
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { Colors, Spacing } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -12,8 +12,8 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Ionicons
-          name="basketball-outline"
+        <FontAwesome5
+          name="basketball-ball"
           size={80}
           color={Colors.primary}
           style={styles.icon}

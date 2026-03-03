@@ -1,19 +1,19 @@
-import { IGameRepository } from '../ports/IGameRepository';
-import { IEventStore } from '../ports/IEventStore';
 import { Game, Score } from '../domain/Game';
 import { GameStatus } from '../domain/GameStatus';
 import { DomainGameEvent } from '../domain/events/GameEvents';
+import { IEventStore } from '../ports/IEventStore';
+import { IGameRepository } from '../ports/IGameRepository';
 
 export class AdjustScore {
     constructor(
         private gameRepository: IGameRepository,
         private eventStore: IEventStore
-    ) {}
+    ) { }
 
     async execute(
-        gameId: string, 
-        newScoreTeamA: number, 
-        newScoreTeamB: number, 
+        gameId: string,
+        newScoreTeamA: number,
+        newScoreTeamB: number,
         reason: string
     ): Promise<Game> {
         const game = await this.gameRepository.findById(gameId);
@@ -22,7 +22,7 @@ export class AdjustScore {
         }
 
         if (game.status === GameStatus.RUNNING) {
-            throw new Error('Cannot adjust score while game is running. Pause the game first.');
+            throw new Error('Cannot adjust score while game is running. Stop the game time first.');
         }
 
         if (newScoreTeamA < 0 || newScoreTeamB < 0) {
@@ -32,7 +32,7 @@ export class AdjustScore {
         const previousScore = game.score;
         const newScore = new Score(newScoreTeamA, newScoreTeamB);
         const updatedGame = game.updateScore(newScore);
-        
+
         await this.gameRepository.save(updatedGame);
 
         const event: DomainGameEvent = {

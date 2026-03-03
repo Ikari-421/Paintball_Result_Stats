@@ -131,14 +131,19 @@ export default function FieldDetailScreen() {
           field.matchups.map((matchup, index) => {
             const teamA = teams.find((t) => t.id === matchup.teamA);
             const teamB = teams.find((t) => t.id === matchup.teamB);
-            const isActive = index === 0;
+            const existingGame = games.find(
+              (g) => g.matchup.id === matchup.id && g.fieldId === field.id,
+            );
+            const gameMode = gameModes.find((mode) => mode.id === matchup.gameModeId);
+            const gameStatus = existingGame?.gameStateStatus || undefined;
 
             return (
               <MatchupCard
                 key={matchup.id}
                 teamAName={teamA?.name || "Team A"}
                 teamBName={teamB?.name || "Team B"}
-                isActive={isActive}
+                status={gameStatus}
+                gameModeName={gameMode?.name}
                 onPress={async () => {
                   if (!matchup.gameModeId) {
                     Alert.alert(

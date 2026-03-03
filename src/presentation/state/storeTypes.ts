@@ -67,7 +67,7 @@ export interface GameState {
         gameModeId: string;
     }) => Promise<string>;
     startGame: (gameId: string) => Promise<void>;
-    pauseGame: (gameId: string) => Promise<void>;
+    stopGameTime: (gameId: string) => Promise<void>;
     resumeGame: (gameId: string) => Promise<void>;
     finishGame: (
         gameId: string,
@@ -89,7 +89,7 @@ export interface GameState {
         gameId: string,
         stateData: {
             currentRound: number;
-            isPaused: boolean;
+            isTimeStopped: boolean;
             status: string;
         },
     ) => Promise<void>;

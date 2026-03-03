@@ -28,9 +28,10 @@ interface GameRow {
   teamBScore: number;
   remainingTime: number;
   timerIsRunning: number;
+  timerEndTimestamp: number | null;
   status: string;
   currentRound: number;
-  isPaused: number;
+  isTimeStopped: number;
   gameStateStatus: string;
 }
 
@@ -49,9 +50,9 @@ export class GameRepository implements IGameRepository {
       `INSERT OR REPLACE INTO games (
                 id, fieldId, matchupId, matchupTeamA, matchupTeamB, matchupOrder,
                 gameModeId, gameModeName, gameTimeMinutes, breakTimeSeconds, overtimeMinutes,
-                raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, status,
-                currentRound, isPaused, gameStateStatus
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, timerEndTimestamp, status,
+                currentRound, isTimeStopped, gameStateStatus
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         game.id,
         game.fieldId,
@@ -69,9 +70,10 @@ export class GameRepository implements IGameRepository {
         game.score.teamBScore,
         game.timer.remainingTime,
         game.timer.isRunning ? 1 : 0,
+        game.timer.endTimestamp,
         game.status,
         1, // currentRound - default pour l'instant
-        0, // isPaused - default pour l'instant
+        0, // isTimeStopped - default pour l'instant
         game.status, // gameStateStatus - utilise le même que status pour l'instant
       ],
     );
@@ -104,18 +106,18 @@ export class GameRepository implements IGameRepository {
     id: GameId,
     stateData: {
       currentRound: number;
-      isPaused: boolean;
+      isTimeStopped: boolean;
       status: string;
     },
   ): Promise<void> {
     console.log("[GameRepository] updateGameState - Début:", id, stateData);
     db.runSync(
       `UPDATE games 
-       SET currentRound = ?, isPaused = ?, gameStateStatus = ? 
+       SET currentRound = ?, isTimeStopped = ?, gameStateStatus = ? 
        WHERE id = ?`,
       [
         stateData.currentRound,
-        stateData.isPaused ? 1 : 0,
+        stateData.isTimeStopped ? 1 : 0,
         stateData.status,
         id,
       ],
@@ -146,7 +148,7 @@ export class GameRepository implements IGameRepository {
     );
 
     const score = new Score(row.teamAScore, row.teamBScore);
-    const timer = new GameTimer(row.remainingTime, row.timerIsRunning === 1);
+    const timer = new GameTimer(row.remainingTime, row.timerIsRunning === 1, row.timerEndTimestamp);
 
     return new (Game as any)(
       row.id,
@@ -157,7 +159,7 @@ export class GameRepository implements IGameRepository {
       timer,
       row.status as GameStatus,
       row.currentRound,
-      row.isPaused,
+      row.isTimeStopped,
       row.gameStateStatus,
     );
   }

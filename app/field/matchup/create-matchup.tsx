@@ -3,9 +3,9 @@ import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function CreateMatchupScreen() {
   const router = useRouter();
@@ -73,13 +73,18 @@ export default function CreateMatchupScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Team A</Text>
           {teamA ? (
-            <View style={styles.selectedTeam}>
-              <Text style={styles.selectedTeamName}>{teamA.name}</Text>
-              <Ionicons
-                name="checkmark-circle"
-                size={24}
-                color={Colors.primary}
-              />
+            <View style={styles.selectedContainer}>
+              <View style={styles.selectedTeam}>
+                <Text style={styles.selectedTeamName}>{teamA.name}</Text>
+                <FontAwesome5
+                  name="check-circle"
+                  size={24}
+                  color={Colors.primary}
+                />
+              </View>
+              <TouchableOpacity onPress={handleSelectTeamA} style={styles.changeButton}>
+                <Text style={styles.changeLinkText}>Change</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <PrimaryButton title="Select Team" onPress={handleSelectTeamA} />
@@ -93,13 +98,18 @@ export default function CreateMatchupScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Team B</Text>
           {teamB ? (
-            <View style={styles.selectedTeam}>
-              <Text style={styles.selectedTeamName}>{teamB.name}</Text>
-              <Ionicons
-                name="checkmark-circle"
-                size={24}
-                color={Colors.primary}
-              />
+            <View style={styles.selectedContainer}>
+              <View style={styles.selectedTeam}>
+                <Text style={styles.selectedTeamName}>{teamB.name}</Text>
+                <FontAwesome5
+                  name="check-circle"
+                  size={24}
+                  color={Colors.primary}
+                />
+              </View>
+              <TouchableOpacity onPress={handleSelectTeamB} style={styles.changeButton}>
+                <Text style={styles.changeLinkText}>Change</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <OutlineButton title="Select Team" onPress={handleSelectTeamB} />
@@ -109,13 +119,18 @@ export default function CreateMatchupScreen() {
         <View style={[styles.card, styles.gameModeCard]}>
           <Text style={styles.cardTitle}>Game Mode</Text>
           {gameMode ? (
-            <View style={styles.selectedTeam}>
-              <Text style={styles.selectedTeamName}>{gameMode.name}</Text>
-              <Ionicons
-                name="checkmark-circle"
-                size={24}
-                color={Colors.primary}
-              />
+            <View style={styles.selectedContainer}>
+              <View style={styles.selectedTeam}>
+                <Text style={styles.selectedTeamName}>{gameMode.name}</Text>
+                <FontAwesome5
+                  name="check-circle"
+                  size={24}
+                  color={Colors.primary}
+                />
+              </View>
+              <TouchableOpacity onPress={handleSelectGameMode} style={styles.changeButton}>
+                <Text style={styles.changeLinkText}>Change</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <OutlineButton title="Select Game Mode" onPress={handleSelectGameMode} />
@@ -193,5 +208,19 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+  },
+  selectedContainer: {
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  changeButton: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+  },
+  changeLinkText: {
+    color: Colors.primary,
+    fontWeight: "600",
+    fontSize: 14,
+    textDecorationLine: "underline",
   },
 });

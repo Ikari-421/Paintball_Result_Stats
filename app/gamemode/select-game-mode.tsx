@@ -52,6 +52,13 @@ export default function SelectGameModeScreen() {
       <ScreenHeader title="Select Game Mode" onBack={() => router.back()} />
 
       <ScrollView style={styles.content}>
+        <View style={styles.createButtonContainer}>
+          <SecondaryButton
+            title="+ Create Game Mode"
+            onPress={() => router.push("/gamemode/create-game-mode")}
+          />
+        </View>
+
         <Text style={styles.sectionTitle}>SAVED GAME MODES</Text>
 
         {gameModes.length === 0 ? (
@@ -74,10 +81,6 @@ export default function SelectGameModeScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <SecondaryButton
-          title="+ Create Game Mode"
-          onPress={() => router.push("/gamemode/create-game-mode")}
-        />
         <PrimaryButton
           title="Select & Continue"
           onPress={handleContinue}
@@ -97,7 +100,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.lg,
   },
-
+  createButtonContainer: {
+    marginBottom: Spacing.xl,
+  },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",

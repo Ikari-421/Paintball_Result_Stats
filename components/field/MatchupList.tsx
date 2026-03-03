@@ -1,8 +1,10 @@
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { TempMatchup } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
+import { GameStatus } from "@/src/core/domain/GameStatus";
 import { Team } from "@/src/core/domain/Team";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
@@ -46,7 +48,27 @@ export const MatchupList = ({
   }: RenderItemParams<Matchup | TempMatchup>) => {
     const matchup = item;
     const teamAName = "teamAName" in matchup ? matchup.teamAName : undefined;
-    const teamBName = "teamBName" in matchup ? matchup.teamBName : undefined;
+    const teamBName = (matchup as any).teamBName;
+    const gameModeName = (matchup as any).gameMode?.name;
+
+    const statusStr = (matchup as any).status || GameStatus.NOT_STARTED;
+    const status = statusStr as GameStatus;
+
+    const getStatusConfig = (status: GameStatus) => {
+      switch (status) {
+        case GameStatus.NOT_STARTED:
+        case GameStatus.FINISHED:
+          return { color: "#FF3B30", text: status ? status.replace("_", " ") : "UNKNOWN" };
+        case GameStatus.BREAK:
+          return { color: "#FF9500", text: status };
+        case GameStatus.RUNNING:
+        case GameStatus.OVERTIME:
+          return { color: "#34C759", text: status };
+        default:
+          return { color: Colors.secondary, text: status || "UNKNOWN" };
+      }
+    };
+    const statusConfig = getStatusConfig(status);
 
     return (
       <ScaleDecorator>
@@ -71,22 +93,46 @@ export const MatchupList = ({
               </View>
             )}
             <View style={styles.matchupContent}>
-              <Text style={styles.teamName}>
-                {getTeamName(matchup.teamA, teamAName)}
-              </Text>
-              <View style={styles.vsBadge}>
-                <Text style={styles.vsText}>VS</Text>
+              <View style={styles.teamsContainer}>
+                <Text style={styles.teamName}>
+                  {getTeamName(matchup.teamA, teamAName)}
+                </Text>
+                <View style={styles.vsBadge}>
+                  <Text style={styles.vsText}>VS</Text>
+                </View>
+                <Text style={styles.teamName}>
+                  {getTeamName(matchup.teamB, teamBName)}
+                </Text>
               </View>
-              <Text style={styles.teamName}>
-                {getTeamName(matchup.teamB, teamBName)}
-              </Text>
+              {gameModeName && (
+                <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
+              )}
+              <View style={styles.statusContainer}>
+                <View style={[styles.statusDot, { backgroundColor: statusConfig.color }]} />
+                <Text style={[styles.statusText, { color: statusConfig.color }]}>
+                  {statusConfig.text}
+                </Text>
+              </View>
             </View>
             <View style={styles.actionsContainer}>
               <TouchableOpacity
                 style={styles.deleteMatchupButton}
-                onPress={() => onDelete(matchup.id)}
+                onPress={() => {
+                  Alert.alert(
+                    "Delete Matchup",
+                    "Are you sure you want to delete this matchup?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: () => onDelete(matchup.id)
+                      }
+                    ]
+                  );
+                }}
               >
-                <Text style={styles.deleteIcon}>🗑️</Text>
+                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
               </TouchableOpacity>
             </View>
           </View>
@@ -152,8 +198,13 @@ const styles = StyleSheet.create({
   },
   matchupContent: {
     flex: 1,
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  teamsContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: Spacing.xs,
   },
   teamName: {
     flex: 1,
@@ -161,6 +212,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
     color: Colors.text,
+  },
+  gameMode: {
+    fontSize: 12,
+    color: Colors.secondary,
+    textAlign: "center",
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Spacing.sm,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: Spacing.sm,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   vsBadge: {
     backgroundColor: Colors.background,

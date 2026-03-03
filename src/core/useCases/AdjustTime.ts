@@ -1,14 +1,14 @@
-import { IGameRepository } from '../ports/IGameRepository';
-import { IEventStore } from '../ports/IEventStore';
 import { Game, GameTimer } from '../domain/Game';
 import { GameStatus } from '../domain/GameStatus';
 import { DomainGameEvent } from '../domain/events/GameEvents';
+import { IEventStore } from '../ports/IEventStore';
+import { IGameRepository } from '../ports/IGameRepository';
 
 export class AdjustTime {
     constructor(
         private gameRepository: IGameRepository,
         private eventStore: IEventStore
-    ) {}
+    ) { }
 
     async execute(gameId: string, newTimeSeconds: number, reason: string): Promise<Game> {
         const game = await this.gameRepository.findById(gameId);
@@ -17,7 +17,7 @@ export class AdjustTime {
         }
 
         if (game.status === GameStatus.RUNNING) {
-            throw new Error('Cannot adjust time while game is running. Pause the game first.');
+            throw new Error('Cannot adjust time while game is running. Stop the game time first.');
         }
 
         if (newTimeSeconds < 0) {
@@ -27,7 +27,7 @@ export class AdjustTime {
         const previousTime = game.timer.remainingTime;
         const newTimer = new GameTimer(newTimeSeconds, game.timer.isRunning);
         const updatedGame = game.updateTimer(newTimer);
-        
+
         await this.gameRepository.save(updatedGame);
 
         const event: DomainGameEvent = {

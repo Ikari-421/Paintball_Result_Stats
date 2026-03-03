@@ -22,15 +22,15 @@ import {
     DeleteTeam,
     DeleteTournament,
     FinishGame,
-    PauseGame,
     ReorderMatchupsUseCase,
     ResumeGame,
     ScorePoint,
     StartGame,
+    StopGameTime,
     UpdateField,
     UpdateGameMode,
     UpdateTeam,
-    UpdateTournament,
+    UpdateTournament
 } from "../../core/useCases";
 
 // Initialize repositories and event store
@@ -68,7 +68,7 @@ export const createGameUseCase = new CreateGame(
     eventStore,
 );
 export const startGameUseCase = new StartGame(gameRepository, eventStore);
-export const pauseGameUseCase = new PauseGame(gameRepository, eventStore);
+export const stopGameTimeUseCase = new StopGameTime(gameRepository, eventStore);
 export const resumeGameUseCase = new ResumeGame(gameRepository, eventStore);
 export const finishGameUseCase = new FinishGame(gameRepository, eventStore);
 export const scorePointUseCase = new ScorePoint(gameRepository, eventStore);

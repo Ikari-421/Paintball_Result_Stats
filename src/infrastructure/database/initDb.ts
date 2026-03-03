@@ -72,11 +72,36 @@ export const initDb = () => {
       teamBScore INTEGER NOT NULL,
       remainingTime INTEGER NOT NULL,
       timerIsRunning INTEGER NOT NULL,
+      timerEndTimestamp INTEGER,
       status TEXT NOT NULL,
       currentRound INTEGER DEFAULT 1,
-      isPaused INTEGER DEFAULT 0,
+      isTimeStopped INTEGER DEFAULT 0,
       gameStateStatus TEXT DEFAULT 'NOT_STARTED',
       FOREIGN KEY (fieldId) REFERENCES fields(id)
     );
   `);
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN timerEndTimestamp INTEGER;");
+  } catch (e) {
+    console.log("Column timerEndTimestamp already exists or another error occurred during migration.");
+  }
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN isTimeStopped INTEGER DEFAULT 0;");
+  } catch (e) {
+    console.log("Column isTimeStopped already exists or another error occurred during migration.");
+  }
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN gameStateStatus TEXT DEFAULT 'NOT_STARTED';");
+  } catch (e) {
+    console.log("Column gameStateStatus already exists or another error occurred during migration.");
+  }
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN currentRound INTEGER DEFAULT 1;");
+  } catch (e) {
+    console.log("Column currentRound already exists or another error occurred during migration.");
+  }
 };

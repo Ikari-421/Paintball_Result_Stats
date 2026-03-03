@@ -7,7 +7,7 @@ import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { useSearch } from "@/hooks/useSearch";
 import { Team } from "@/src/core/domain/Team";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -32,7 +32,7 @@ export default function SelectTeamScreen() {
   // Add Team Modal State
   const [isModalVisible, setModalVisible] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
-  const [isGuest, setIsGuest] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     loadTeams();
@@ -83,7 +83,7 @@ export default function SelectTeamScreen() {
 
     // Reset and close modal
     setNewTeamName("");
-    setIsGuest(true);
+    setIsGuest(false);
     setModalVisible(false);
   };
 
@@ -104,7 +104,7 @@ export default function SelectTeamScreen() {
             style={styles.addButton}
             onPress={() => setModalVisible(true)}
           >
-            <Ionicons name="add" size={28} color={Colors.white} />
+            <FontAwesome5 name="plus" size={24} color={Colors.white} />
           </TouchableOpacity>
         </View>
 
@@ -126,8 +126,8 @@ export default function SelectTeamScreen() {
               <Text style={styles.teamName}>{team.name}</Text>
             </View>
             {selectedTeam?.id === team.id && (
-              <Ionicons
-                name="checkmark-circle"
+              <FontAwesome5
+                name="check-circle"
                 size={24}
                 color={Colors.primary}
               />
@@ -172,7 +172,7 @@ export default function SelectTeamScreen() {
                 onPress={() => {
                   setModalVisible(false);
                   setNewTeamName("");
-                  setIsGuest(true);
+                  setIsGuest(false);
                 }}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>

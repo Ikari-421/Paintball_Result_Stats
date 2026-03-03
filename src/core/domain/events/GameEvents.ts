@@ -22,8 +22,8 @@ export interface GameStartedEvent extends GameEvent {
     };
 }
 
-export interface GamePausedEvent extends GameEvent {
-    type: 'GamePaused';
+export interface GameTimeStoppedEvent extends GameEvent {
+    type: 'GameTimeStopped';
     payload: {
         remainingTime: number;
     };
@@ -85,7 +85,7 @@ export interface GameFinishedEvent extends GameEvent {
 export type DomainGameEvent =
     | GameCreatedEvent
     | GameStartedEvent
-    | GamePausedEvent
+    | GameTimeStoppedEvent
     | GameResumedEvent
     | PointScoredEvent
     | ScoreCorrectedEvent

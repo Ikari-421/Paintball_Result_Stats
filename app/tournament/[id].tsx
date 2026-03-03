@@ -4,6 +4,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { FieldCard } from "@/components/field/FieldCard";
 import { Colors, Spacing } from "@/constants/theme";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -56,8 +57,14 @@ export default function TournamentDetailsScreen() {
             <ScreenHeader title={tournament.name} onBack={() => router.push("/tournament/tournaments-list" as any)} />
 
             <View style={styles.tournamentInfo}>
-                <Text style={styles.infoText}>📍 {tournament.location}</Text>
-                <Text style={styles.infoText}>📅 {tournament.startDate.toLocaleDateString()} - {tournament.endDate.toLocaleDateString()}</Text>
+                <View style={styles.infoRow}>
+                    <FontAwesome5 name="map-marker-alt" size={14} color={Colors.secondary} />
+                    <Text style={styles.infoText}>{tournament.location}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                    <FontAwesome5 name="calendar-alt" size={14} color={Colors.secondary} />
+                    <Text style={styles.infoText}>{tournament.startDate.toLocaleDateString()} - {tournament.endDate.toLocaleDateString()}</Text>
+                </View>
             </View>
 
             <ScrollView style={styles.content}>
@@ -141,6 +148,11 @@ const styles = StyleSheet.create({
         borderBottomColor: "#eee",
         flexDirection: "row",
         justifyContent: "space-between",
+    },
+    infoRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.sm,
     },
     infoText: {
         fontSize: 14,

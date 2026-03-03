@@ -1,6 +1,8 @@
+import { Colors } from "@/constants/theme";
 import { useArbitratorCommand } from "@/hooks/useArbitratorCommand";
 import { useGameTimer } from "@/hooks/useGameTimer";
-import { GameState, GameStatus } from "@/src/core/domain/GameState";
+import { GameState } from "@/src/core/domain/GameState";
+import { GameStatus } from "@/src/core/domain/GameStatus";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -23,7 +25,7 @@ export default function MatchScreen() {
     teams,
     fields,
     startGame,
-    pauseGame,
+    stopGameTime,
     resumeGame,
     finishGame,
     scorePoint,
@@ -47,6 +49,7 @@ export default function MatchScreen() {
   const [adjustType, setAdjustType] = useState<"time" | "score">("time");
   const [adjustValue, setAdjustValue] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
+  const [showMatchupModal, setShowMatchupModal] = useState(false);
 
   const commandHandler = useArbitratorCommand();
 
@@ -76,9 +79,30 @@ export default function MatchScreen() {
       const loadedState = GameState.create(
         game.gameStateStatus as GameStatus,
         game.currentRound,
-        game.isPaused === 1,
+        game.isTimeStopped === 1,
       );
       setGameState(loadedState);
+
+      if (loadedState.status === GameStatus.BREAK) {
+        breakTimer.syncWithDB(
+          game.timer.remainingTime,
+          game.timer.isRunning,
+          game.timer.endTimestamp || null
+        );
+      } else if (loadedState.status === GameStatus.OVERTIME) {
+        overtimeTimer.syncWithDB(
+          game.timer.remainingTime,
+          game.timer.isRunning,
+          game.timer.endTimestamp || null
+        );
+      } else {
+        gameTimer.syncWithDB(
+          game.timer.remainingTime,
+          game.timer.isRunning,
+          game.timer.endTimestamp || null
+        );
+      }
+
       console.log(
         "[GameSession] GameState chargé:",
         loadedState.status,
@@ -96,19 +120,19 @@ export default function MatchScreen() {
         gameState.status,
         "round:",
         gameState.currentRound,
-        "paused:",
-        gameState.isPaused,
+        "time_stopped:",
+        gameState.isTimeStopped,
       );
       updateGameState(gameId as string, {
         currentRound: gameState.currentRound,
-        isPaused: gameState.isPaused,
+        isTimeStopped: gameState.isTimeStopped,
         status: gameState.status,
       });
     }
-  }, [gameState.status, gameState.currentRound, gameState.isPaused]);
+  }, [gameState.status, gameState.currentRound, gameState.isTimeStopped]);
 
   useEffect(() => {
-    console.log("[GameSession] Games chargés:", games.length);
+    console.log("[GameSession] Loaded games:", games.length);
     console.log("[GameSession] Game trouvé:", game ? game.id : "NON TROUVÉ");
     if (game) {
       console.log("[GameSession] Game status:", game.status);
@@ -124,14 +148,14 @@ export default function MatchScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.errorText}>Chargement du match...</Text>
+          <Text style={styles.errorText}>Loading match...</Text>
           <Text style={styles.debugText}>Game ID: {gameId}</Text>
-          <Text style={styles.debugText}>Games chargés: {games.length}</Text>
+          <Text style={styles.debugText}>Loaded games: {games.length}</Text>
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.primaryButton}
           >
-            <Text style={styles.primaryButtonText}>Retour</Text>
+            <Text style={styles.primaryButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -145,23 +169,23 @@ export default function MatchScreen() {
       setGameState(newState);
       gameTimer.start();
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
-  const handlePauseGame = async () => {
+  const handleStopGameTime = async () => {
     try {
-      await pauseGame(gameId as string);
-      const newState = gameState.pause();
+      await stopGameTime(gameId as string);
+      const newState = gameState.stopTime();
       setGameState(newState);
 
       if (gameState.status === GameStatus.RUNNING) {
-        gameTimer.pause();
+        gameTimer.stop();
       } else if (gameState.status === GameStatus.OVERTIME) {
-        overtimeTimer.pause();
+        overtimeTimer.stop();
       }
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
@@ -177,15 +201,15 @@ export default function MatchScreen() {
         overtimeTimer.resume();
       }
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
   const handleScorePoint = async (team: "A" | "B") => {
-    if (!gameState.isRunning()) {
+    if (!gameState.isTimeStopped) {
       Alert.alert(
-        "Erreur",
-        "Le match doit être en cours pour marquer un point",
+        "Error",
+        "The match must be stopped to score a point",
       );
       return;
     }
@@ -212,16 +236,16 @@ export default function MatchScreen() {
           (newScoreA >= game.gameMode.raceTo.value ||
             newScoreB >= game.gameMode.raceTo.value)
         ) {
-          await handlePauseGame();
+          await handleStopGameTime();
           Alert.alert(
-            "Score Limite Atteint!",
-            `${team === "A" ? teamA?.name : teamB?.name} a atteint le score limite!`,
+            "Target Score Reached!",
+            `${team === "A" ? teamA?.name : teamB?.name} has reached the target score!`,
             [{ text: "OK", onPress: () => handleFinishGame() }],
           );
         }
       }
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
@@ -234,36 +258,58 @@ export default function MatchScreen() {
   };
 
   const handleEndRound = () => {
-    Alert.alert("Fin du Round", "Quelle équipe a gagné ce round ?", [
-      { text: "Annuler", style: "cancel" },
+    // If no other matchups available, end round and start break directly.
+    if ((field?.matchups.length || 0) <= 1) {
+      handleEndRoundAction();
+    } else {
+      setShowMatchupModal(true);
+    }
+  };
+
+  const handleEndRoundAction = () => {
+    Alert.alert("End Round", "Which team won this round?", [
+      { text: "Cancel", style: "cancel" },
       {
-        text: "Équipe A",
+        text: teamA?.name || "Team A",
         onPress: () => {
           setScoreA((prev) => prev + 1);
           startBreak();
         },
       },
       {
-        text: "Équipe B",
+        text: teamB?.name || "Team B",
         onPress: () => {
           setScoreB((prev) => prev + 1);
+          startBreak();
+        },
+      },
+      {
+        text: "Draw",
+        onPress: () => {
           startBreak();
         },
       },
     ]);
   };
 
+  const handleSelectNextMatchup = async (matchupId: string) => {
+    setShowMatchupModal(false);
+    // Ideally here we finish current game, create new game for the next matchup and redirect to it in BREAK state.
+    // For now, doing standard end round on current game as a placeholder.
+    handleEndRoundAction();
+  };
+
   const startBreak = () => {
     try {
       const newState = gameState.startBreak();
       setGameState(newState);
-      gameTimer.pause();
+      gameTimer.stop();
       breakTimer.reset();
       breakTimer.start();
       setCurrentRoundScoreA(0);
       setCurrentRoundScoreB(0);
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
@@ -271,11 +317,11 @@ export default function MatchScreen() {
     try {
       const newState = gameState.endBreak();
       setGameState(newState);
-      breakTimer.pause();
+      breakTimer.stop();
       gameTimer.reset(gameTimeSeconds);
       gameTimer.start();
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
@@ -283,19 +329,19 @@ export default function MatchScreen() {
     try {
       const newState = gameState.startOvertime();
       setGameState(newState);
-      gameTimer.pause();
+      gameTimer.stop();
       overtimeTimer.reset();
       overtimeTimer.start();
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
   const openAdjustModal = (type: "time" | "score") => {
-    if (gameState.status === GameStatus.RUNNING) {
+    if (!gameState.isTimeStopped) {
       Alert.alert(
-        "Erreur",
-        "Vous devez mettre le match en pause avant d'ajuster les paramètres.",
+        "Error",
+        "You must stop the match time before adjusting settings.",
       );
       return;
     }
@@ -308,14 +354,14 @@ export default function MatchScreen() {
   const handleValidateAdjustment = async () => {
     try {
       if (!adjustValue || !adjustReason) {
-        Alert.alert("Erreur", "Veuillez remplir tous les champs");
+        Alert.alert("Error", "Please fill all fields");
         return;
       }
 
       if (adjustType === "time") {
         const seconds = parseInt(adjustValue);
         if (isNaN(seconds) || seconds < 0) {
-          Alert.alert("Erreur", "Temps invalide");
+          Alert.alert("Error", "Invalid time");
           return;
         }
         await adjustTime(gameId as string, seconds, adjustReason);
@@ -323,7 +369,7 @@ export default function MatchScreen() {
       } else {
         const scores = adjustValue.split("-");
         if (scores.length !== 2) {
-          Alert.alert("Erreur", "Format invalide. Utilisez: ScoreA-ScoreB");
+          Alert.alert("Error", "Invalid format. Use: ScoreA-ScoreB");
           return;
         }
         const newScoreA = parseInt(scores[0]);
@@ -334,7 +380,7 @@ export default function MatchScreen() {
           newScoreA < 0 ||
           newScoreB < 0
         ) {
-          Alert.alert("Erreur", "Scores invalides");
+          Alert.alert("Error", "Invalid scores");
           return;
         }
         await adjustScore(gameId as string, newScoreA, newScoreB, adjustReason);
@@ -344,37 +390,37 @@ export default function MatchScreen() {
 
       setShowAdjustModal(false);
       await loadGames();
-      Alert.alert("Succès", "Ajustement enregistré");
+      Alert.alert("Success", "Adjustment saved");
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
   const handleFinishGame = () => {
     Alert.alert(
-      "Terminer le Match",
-      `Score final: ${scoreA} - ${scoreB}\nVoulez-vous terminer ce match ?`,
+      "End Match",
+      `Final score: ${scoreA} - ${scoreB}\nDo you want to end this match?`,
       [
-        { text: "Annuler", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
-          text: "Terminer",
+          text: "End",
           style: "destructive",
           onPress: async () => {
             try {
               await finishGame(gameId as string, "MANUAL");
               const newState = gameState.finish();
               setGameState(newState);
-              gameTimer.pause();
-              breakTimer.pause();
-              overtimeTimer.pause();
+              gameTimer.stop();
+              breakTimer.stop();
+              overtimeTimer.stop();
 
               Alert.alert(
-                "Match Terminé",
-                "Le match a été enregistré avec succès",
+                "Match Finished",
+                "The match was saved successfully",
                 [{ text: "OK", onPress: () => router.back() }],
               );
             } catch (error) {
-              Alert.alert("Erreur", (error as Error).message);
+              Alert.alert("Error", (error as Error).message);
             }
           },
         },
@@ -388,8 +434,8 @@ export default function MatchScreen() {
       // Check for tie and trigger overtime
       if (scoreA === scoreB && game?.gameMode.overTime) {
         Alert.alert(
-          "Égalité!",
-          "Le temps est écoulé et les scores sont égaux. Prolongation!",
+          "Tie!",
+          "Time is up and scores are equal. Overtime!",
           [{ text: "OK", onPress: handleStartOvertime }],
         );
       } else {
@@ -409,43 +455,42 @@ export default function MatchScreen() {
   useEffect(() => {
     if (overtimeTimer.isFinished && gameState.status === GameStatus.OVERTIME) {
       Alert.alert(
-        "Fin de la Prolongation",
-        "Le temps de prolongation est écoulé!",
+        "End of Overtime",
+        "Overtime is over!",
         [{ text: "OK", onPress: handleEndRound }],
       );
     }
   }, [overtimeTimer.isFinished]);
 
-  const getStatusColor = () => {
+  const getTimerBorderColor = () => {
+    if (gameState.isTimeStopped) return "#FF3B30"; // Red when time stopped
     switch (gameState.status) {
       case GameStatus.NOT_STARTED:
-        return "#95cbbc";
-      case GameStatus.RUNNING:
-        return "#5FC2BA";
-      case GameStatus.BREAK:
-        return "#FFB84D";
-      case GameStatus.OVERTIME:
-        return "#FF6B6B";
       case GameStatus.FINISHED:
-        return "#2c4b5c";
+        return "#FF3B30"; // Red
+      case GameStatus.BREAK:
+        return "#FF9500"; // Orange
+      case GameStatus.RUNNING:
+      case GameStatus.OVERTIME:
+        return "#34C759"; // Green
       default:
-        return "#95cbbc";
+        return "transparent";
     }
   };
 
   const getStatusText = () => {
-    if (gameState.isPaused) return "PAUSE";
+    if (gameState.isTimeStopped) return "TIME_STOPPED";
     switch (gameState.status) {
       case GameStatus.NOT_STARTED:
-        return "NON DÉMARRÉ";
+        return "NOT STARTED";
       case GameStatus.RUNNING:
-        return `ROUND ${gameState.currentRound}`;
+        return "RUNNING";
       case GameStatus.BREAK:
-        return "PAUSE";
+        return "TIME_STOPPED";
       case GameStatus.OVERTIME:
-        return "PROLONGATION";
+        return "OVERTIME";
       case GameStatus.FINISHED:
-        return "TERMINÉ";
+        return "FINISHED";
       default:
         return "";
     }
@@ -462,60 +507,51 @@ export default function MatchScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: getStatusColor() }]}>
+      <View style={[styles.header, { backgroundColor: Colors.primary }]}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Text style={styles.backText}>← Retour</Text>
+          <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.statusText}>{getStatusText()}</Text>
+        <Text style={styles.statusText}>{field?.name || "Match"}</Text>
         <View style={{ width: 80 }} />
       </View>
 
       <ScrollView style={styles.content}>
-        {/* Timer Display */}
-        <View style={styles.timerContainer}>
-          <Text style={styles.timerLabel}>
-            {gameState.status === GameStatus.BREAK
-              ? "Temps de pause"
-              : "Temps de jeu"}
-          </Text>
-          <Text style={styles.timerText}>{currentTimer.formattedTime}</Text>
-          {gameState.isPaused && (
-            <Text style={styles.pausedText}>⏸ EN PAUSE</Text>
+        {/* Score Display */}
+        <View style={styles.scoreContainer}>
+          <View style={styles.scoreMainRow}>
+            <View style={styles.teamScore}>
+              <Text style={styles.teamName}>{teamA?.name || "Team A"}</Text>
+              <Text style={styles.scoreText}>{scoreA}</Text>
+            </View>
+
+            <View style={styles.centerScoreInfo}>
+              <Text style={styles.vsText}>VS</Text>
+            </View>
+
+            <View style={styles.teamScore}>
+              <Text style={styles.teamName}>{teamB?.name || "Team B"}</Text>
+              <Text style={styles.scoreText}>{scoreB}</Text>
+            </View>
+          </View>
+          {game?.gameMode.name && (
+            <Text style={[styles.gameModeTextInline, { color: "#95cbbc" }]}>
+              {game.gameMode.name}
+            </Text>
           )}
         </View>
 
-        {/* Score Display */}
-        <View style={styles.scoreContainer}>
-          <View style={styles.teamScore}>
-            <Text style={styles.teamName}>{teamA?.name || "Équipe A"}</Text>
-            <Text style={styles.scoreText}>{scoreA}</Text>
-            <Text style={styles.roundScoreText}>
-              Round: {currentRoundScoreA}
-            </Text>
-          </View>
-
-          <Text style={styles.vsText}>VS</Text>
-
-          <View style={styles.teamScore}>
-            <Text style={styles.teamName}>{teamB?.name || "Équipe B"}</Text>
-            <Text style={styles.scoreText}>{scoreB}</Text>
-            <Text style={styles.roundScoreText}>
-              Round: {currentRoundScoreB}
-            </Text>
-          </View>
-        </View>
-
-        {/* Game Info */}
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>Mode: {game.gameMode.name}</Text>
-          <Text style={styles.infoText}>
-            Race to: {game.gameMode.raceTo.value}
+        {/* Timer Display */}
+        <View style={[styles.timerContainer, { borderColor: getTimerBorderColor() }]}>
+          <Text style={[styles.timerStatusText, { color: getTimerBorderColor(), marginTop: 0, marginBottom: 8 }]}>
+            {getStatusText()}
           </Text>
-          <Text style={styles.infoText}>Terrain: {field?.name || "N/A"}</Text>
+          <Text style={styles.timerText}>{currentTimer.formattedTime}</Text>
         </View>
+
+        {/* Game Info - removed as requested */}
 
         {/* Controls */}
         {gameState.status === GameStatus.NOT_STARTED && (
@@ -523,50 +559,71 @@ export default function MatchScreen() {
             style={styles.primaryButton}
             onPress={handleStartGame}
           >
-            <Text style={styles.primaryButtonText}>▶ Démarrer le Match</Text>
+            <Text style={styles.primaryButtonText}>Start Match</Text>
           </TouchableOpacity>
         )}
 
-        {gameState.isInProgress() &&
-          gameState.status !== GameStatus.FINISHED && (
-            <>
-              {/* Pause/Resume */}
+        {gameState.isInProgress() && gameState.status !== GameStatus.FINISHED && (
+          <>
+            {/* RUNNING / OVERTIME State */}
+            {!gameState.isTimeStopped && (gameState.status === GameStatus.RUNNING || gameState.status === GameStatus.OVERTIME) && (
               <View style={styles.controlRow}>
-                {!gameState.isPaused ? (
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={handleStopGameTime}
+                >
+                  <Text style={styles.secondaryButtonText}>Stop</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* BREAK State */}
+            {!gameState.isTimeStopped && gameState.status === GameStatus.BREAK && (
+              <View style={styles.controlRow}>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={handleStopGameTime}
+                >
+                  <Text style={styles.secondaryButtonText}>Stop</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.warningButton}
+                  onPress={() => {
+                    breakTimer.setTime(5);
+                  }}
+                >
+                  <Text style={styles.warningButtonText}>SKIP to 5sec</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* TIME_STOPPED State */}
+            {gameState.isTimeStopped && (
+              <>
+                <View style={styles.controlRow}>
                   <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={handlePauseGame}
-                  >
-                    <Text style={styles.secondaryButtonText}>⏸ Pause</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
+                    style={styles.primaryButton}
                     onPress={handleResumeGame}
                   >
-                    <Text style={styles.secondaryButtonText}>▶ Reprendre</Text>
+                    <Text style={styles.primaryButtonText}>Resume</Text>
                   </TouchableOpacity>
-                )}
-              </View>
+                </View>
 
-              {/* Score Buttons */}
-              {(gameState.status === GameStatus.RUNNING ||
-                gameState.status === GameStatus.OVERTIME) && (
+                {/* Score Buttons (only visible in time stopped state) */}
                 <View style={styles.scoreButtons}>
                   <View style={styles.teamControls}>
                     <TouchableOpacity
                       style={styles.scoreButton}
                       onPress={() => handleScorePoint("A")}
-                      disabled={gameState.isPaused}
                     >
                       <Text style={styles.scoreButtonText}>+1</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.undoButton}
                       onPress={() => handleUndoPoint("A")}
-                      disabled={gameState.isPaused || currentRoundScoreA === 0}
+                      disabled={currentRoundScoreA === 0}
                     >
-                      <Text style={styles.undoButtonText}>↶ Annuler</Text>
+                      <Text style={styles.undoButtonText}>-1</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -574,63 +631,38 @@ export default function MatchScreen() {
                     <TouchableOpacity
                       style={styles.scoreButton}
                       onPress={() => handleScorePoint("B")}
-                      disabled={gameState.isPaused}
                     >
                       <Text style={styles.scoreButtonText}>+1</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.undoButton}
                       onPress={() => handleUndoPoint("B")}
-                      disabled={gameState.isPaused || currentRoundScoreB === 0}
+                      disabled={currentRoundScoreB === 0}
                     >
-                      <Text style={styles.undoButtonText}>↶ Annuler</Text>
+                      <Text style={styles.undoButtonText}>-1</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
-              )}
 
-              {/* Round/Break Controls */}
-              {gameState.status === GameStatus.RUNNING && (
                 <View style={styles.controlRow}>
                   <TouchableOpacity
                     style={styles.warningButton}
                     onPress={handleEndRound}
                   >
-                    <Text style={styles.warningButtonText}>Fin du Round</Text>
+                    <Text style={styles.warningButtonText}>Next Round/Matchup</Text>
                   </TouchableOpacity>
-                  {game.gameMode.overTime && (
-                    <TouchableOpacity
-                      style={styles.warningButton}
-                      onPress={handleStartOvertime}
-                    >
-                      <Text style={styles.warningButtonText}>Prolongation</Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
-              )}
 
-              {gameState.status === GameStatus.BREAK && (
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={handleEndBreak}
-                >
-                  <Text style={styles.primaryButtonText}>
-                    Reprendre le Match
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* Arbitrator Controls */}
-              {gameState.isPaused && (
+                {/* Arbitrator Controls */}
                 <View style={styles.arbitratorControls}>
-                  <Text style={styles.arbitratorTitle}>Contrôles Arbitre</Text>
+                  <Text style={styles.arbitratorTitle}>Referee Controls</Text>
                   <View style={styles.controlRow}>
                     <TouchableOpacity
                       style={styles.adjustButton}
                       onPress={() => openAdjustModal("time")}
                     >
                       <Text style={styles.adjustButtonText}>
-                        ⏱ Ajuster Temps
+                        Adjust Time
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -638,34 +670,35 @@ export default function MatchScreen() {
                       onPress={() => openAdjustModal("score")}
                     >
                       <Text style={styles.adjustButtonText}>
-                        🎯 Ajuster Score
+                        Adjust Score
                       </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
-              )}
 
-              {/* Finish Game */}
-              <TouchableOpacity
-                style={styles.dangerButton}
-                onPress={handleFinishGame}
-              >
-                <Text style={styles.dangerButtonText}>⏹ Terminer le Match</Text>
-              </TouchableOpacity>
-            </>
-          )}
+                {/* Finish Game */}
+                <TouchableOpacity
+                  style={styles.dangerButton}
+                  onPress={handleFinishGame}
+                >
+                  <Text style={styles.dangerButtonText}>End Match</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </>
+        )}
 
         {gameState.status === GameStatus.FINISHED && (
           <View style={styles.finishedContainer}>
-            <Text style={styles.finishedText}>🏆 Match Terminé</Text>
+            <Text style={styles.finishedText}>Match Finished</Text>
             <Text style={styles.finalScoreText}>
-              Score Final: {scoreA} - {scoreB}
+              Final Score: {scoreA} - {scoreB}
             </Text>
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={() => router.back()}
             >
-              <Text style={styles.primaryButtonText}>Retour</Text>
+              <Text style={styles.primaryButtonText}>GO FIELD</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -681,12 +714,12 @@ export default function MatchScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {adjustType === "time" ? "Ajuster le Temps" : "Ajuster le Score"}
+              {adjustType === "time" ? "Adjust Time" : "Adjust Score"}
             </Text>
             <Text style={styles.modalSubtitle}>
               {adjustType === "time"
-                ? "Entrez le nouveau temps en secondes"
-                : "Entrez le nouveau score (format: ScoreA-ScoreB)"}
+                ? "Enter new time in seconds"
+                : "Enter new score (format: ScoreA-ScoreB)"}
             </Text>
 
             <TextInput
@@ -699,7 +732,7 @@ export default function MatchScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Raison de l'ajustement"
+              placeholder="Reason for adjustment"
               value={adjustReason}
               onChangeText={setAdjustReason}
               multiline
@@ -710,15 +743,59 @@ export default function MatchScreen() {
                 style={styles.modalCancelButton}
                 onPress={() => setShowAdjustModal(false)}
               >
-                <Text style={styles.modalCancelText}>✗ Annuler</Text>
+                <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalValidateButton}
                 onPress={handleValidateAdjustment}
               >
-                <Text style={styles.modalValidateText}>✓ Valider</Text>
+                <Text style={styles.modalValidateText}>Confirm</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Matchup Selection Modal */}
+      <Modal
+        visible={showMatchupModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowMatchupModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Next Matchup</Text>
+            <ScrollView style={{ maxHeight: 300, width: "100%", marginVertical: 10 }}>
+              {field?.matchups.map((m) => {
+                const teamAInfo = teams.find((t) => t.id === m.teamA);
+                const teamBInfo = teams.find((t) => t.id === m.teamB);
+                return (
+                  <TouchableOpacity
+                    key={m.id}
+                    style={{
+                      padding: 15,
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#eee",
+                      alignItems: "center",
+                    }}
+                    onPress={() => handleSelectNextMatchup(m.id)}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                      {teamAInfo?.name || "Team A"} vs {teamBInfo?.name || "Team B"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity
+              style={[styles.modalCancelButton, { width: "100%" }]}
+              onPress={() => {
+                setShowMatchupModal(false);
+                handleEndRoundAction();
+              }}
+            >
+              <Text style={styles.modalCancelText}>Cancel (Just End Round)</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -756,8 +833,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   timerContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.primary,
     borderRadius: 16,
+    borderWidth: 2,
     padding: 24,
     alignItems: "center",
     marginBottom: 16,
@@ -769,25 +847,28 @@ const styles = StyleSheet.create({
   },
   timerLabel: {
     fontSize: 14,
-    color: "#2c4b5c",
+    color: Colors.white,
     marginBottom: 8,
+    opacity: 0.8,
   },
   timerText: {
     fontSize: 64,
     fontWeight: "700",
-    color: "#152b42",
+    color: Colors.white,
     fontVariant: ["tabular-nums"],
   },
-  pausedText: {
+  timerStatusText: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 8,
+  },
+  timeStoppedText: {
     fontSize: 16,
     color: "#FFB84D",
     marginTop: 8,
     fontWeight: "600",
   },
   scoreContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 24,
@@ -797,10 +878,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    alignItems: "center",
+  },
+  scoreMainRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-around",
+    width: "100%",
   },
   teamScore: {
     alignItems: "center",
     flex: 1,
+  },
+  centerScoreInfo: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 8,
+  },
+  gameModeTextInline: {
+    fontSize: 14,
+    color: "#2c4b5c",
+    marginTop: 4,
+    fontWeight: "600",
   },
   teamName: {
     fontSize: 16,

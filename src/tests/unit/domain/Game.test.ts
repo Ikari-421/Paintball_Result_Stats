@@ -90,10 +90,11 @@ describe("Game", () => {
       expect(started.isRunning).toBe(true);
     });
 
-    it("should pause timer", () => {
+    it("should stop timer", () => {
       const timer = new GameTimer(600, true);
-      const paused = timer.pause();
-      expect(paused.isRunning).toBe(false);
+      const stopped = timer.stop();
+      expect(stopped.isRunning).toBe(false);
+      expect(stopped.remainingTime).toBe(600);
     });
 
     it("should update time", () => {
@@ -152,31 +153,31 @@ describe("Game", () => {
     });
   });
 
-  describe("pause", () => {
-    it("should pause a running game", () => {
+  describe("stopTime", () => {
+    it("should stop a running game", () => {
       const game = Game.create("game-1", "field-1", matchup, gameMode);
       const started = game.start();
-      const paused = started.pause();
+      const stopped = started.stopTime();
 
-      expect(paused.status).toBe(GameStatus.BREAK);
-      expect(paused.timer.isRunning).toBe(false);
+      expect(stopped.status).toBe(GameStatus.BREAK);
+      expect(stopped.timer.isRunning).toBe(false);
     });
 
-    it("should throw error if game is not running", () => {
+    it("should throw error if stopping a non-running game", () => {
       const game = Game.create("game-1", "field-1", matchup, gameMode);
 
-      expect(() => game.pause()).toThrow(
-        "Game can only be paused when RUNNING",
+      expect(() => game.stopTime()).toThrow(
+        "Game can only be stopped when RUNNING",
       );
     });
   });
 
   describe("resume", () => {
-    it("should resume a paused game", () => {
+    it("should resume a stopped game", () => {
       const game = Game.create("game-1", "field-1", matchup, gameMode);
       const started = game.start();
-      const paused = started.pause();
-      const resumed = paused.resume();
+      const stopped = started.stopTime();
+      const resumed = stopped.resume();
 
       expect(resumed.status).toBe(GameStatus.RUNNING);
       expect(resumed.timer.isRunning).toBe(true);

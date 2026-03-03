@@ -1,5 +1,6 @@
 import { BorderRadius, Colors, Shadows, Spacing } from "@/constants/theme";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { StyleSheet, TextInput, View } from "react-native";
 
 interface SearchInputProps {
   value: string;
@@ -14,7 +15,7 @@ export const SearchInput = ({
 }: SearchInputProps) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>🔍</Text>
+      <FontAwesome5 name="search" size={18} color={Colors.primary} style={styles.icon} />
       <TextInput
         style={styles.input}
         placeholder={placeholder}
@@ -34,8 +35,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 14,
     top: 14,
-    fontSize: 20,
-    color: Colors.primary,
     zIndex: 1,
   },
   input: {

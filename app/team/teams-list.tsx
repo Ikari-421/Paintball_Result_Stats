@@ -6,7 +6,7 @@ import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useSearch } from "@/hooks/useSearch";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { getAvatarColor } from "@/utils/avatarUtils";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -93,7 +93,7 @@ export default function TeamsListScreen() {
             style={styles.addButton}
             onPress={() => setModalVisible(true)}
           >
-            <Ionicons name="add" size={28} color={Colors.white} />
+            <FontAwesome5 name="plus" size={24} color={Colors.white} />
           </TouchableOpacity>
         </View>
 

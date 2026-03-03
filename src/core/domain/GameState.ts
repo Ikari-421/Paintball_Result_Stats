@@ -1,52 +1,45 @@
-export enum GameStatus {
-  NOT_STARTED = "NOT_STARTED",
-  RUNNING = "RUNNING",
-  BREAK = "BREAK",
-  OVERTIME = "OVERTIME",
-  FINISHED = "FINISHED",
-  PAUSED = "PAUSED",
-}
+import { GameStatus } from "./GameStatus";
 
 export class GameState {
   private constructor(
     public readonly status: GameStatus,
     public readonly currentRound: number,
-    public readonly isPaused: boolean,
-  ) {}
+    public readonly isTimeStopped: boolean,
+  ) { }
 
   static create(
     status: GameStatus = GameStatus.NOT_STARTED,
     currentRound: number = 0,
-    isPaused: boolean = false,
+    isTimeStopped: boolean = false,
   ): GameState {
     if (currentRound < 0) {
       throw new Error("Current round cannot be negative");
     }
 
-    return new GameState(status, currentRound, isPaused);
+    return new GameState(status, currentRound, isTimeStopped);
   }
 
   static fromDB(data: {
     gameStateStatus: string;
     currentRound: number;
-    isPaused: boolean;
+    isTimeStopped: boolean;
   }): GameState {
     const status = data.gameStateStatus as GameStatus;
-    return new GameState(status, data.currentRound, data.isPaused);
+    return new GameState(status, data.currentRound, data.isTimeStopped);
   }
 
   canStart(): boolean {
     return this.status === GameStatus.NOT_STARTED;
   }
 
-  canPause(): boolean {
+  canStopTime(): boolean {
     return (
       this.status === GameStatus.RUNNING || this.status === GameStatus.OVERTIME
     );
   }
 
   canResume(): boolean {
-    return this.isPaused;
+    return this.isTimeStopped;
   }
 
   canStartBreak(): boolean {
@@ -73,9 +66,9 @@ export class GameState {
     return new GameState(GameStatus.RUNNING, 1, false);
   }
 
-  pause(): GameState {
-    if (!this.canPause()) {
-      throw new Error("Cannot pause game from current state");
+  stopTime(): GameState {
+    if (!this.canStopTime()) {
+      throw new Error("Cannot stop game time from current state");
     }
     return new GameState(this.status, this.currentRound, true);
   }
@@ -119,7 +112,7 @@ export class GameState {
     return (
       (this.status === GameStatus.RUNNING ||
         this.status === GameStatus.OVERTIME) &&
-      !this.isPaused
+      !this.isTimeStopped
     );
   }
 

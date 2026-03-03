@@ -1,9 +1,9 @@
 import { StateCreator } from "zustand";
 import { Game } from "../../../core/domain/Game";
-import { adjustScoreUseCase, adjustTimeUseCase, createGameUseCase, finishGameUseCase, gameRepository, pauseGameUseCase, resumeGameUseCase, scorePointUseCase, startGameUseCase } from "../dependencies";
+import { adjustScoreUseCase, adjustTimeUseCase, createGameUseCase, finishGameUseCase, gameRepository, resumeGameUseCase, scorePointUseCase, startGameUseCase, stopGameTimeUseCase } from "../dependencies";
 import { CoreState } from "../storeTypes";
 
-export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'games' | 'loadGames' | 'createGame' | 'startGame' | 'pauseGame' | 'resumeGame' | 'finishGame' | 'scorePoint' | 'adjustTime' | 'adjustScore' | 'updateGameState'>> = (set, get) => ({
+export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'games' | 'loadGames' | 'createGame' | 'startGame' | 'stopGameTime' | 'resumeGame' | 'finishGame' | 'scorePoint' | 'adjustTime' | 'adjustScore' | 'updateGameState'>> = (set, get) => ({
     games: [],
 
     loadGames: async () => {
@@ -40,15 +40,9 @@ export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'g
         }
     },
 
-    pauseGame: async (gameId: string) => {
-        try {
-            set({ isLoading: true, error: null });
-            await pauseGameUseCase.execute(gameId);
-            await get().loadGames();
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false });
-            throw error;
-        }
+    stopGameTime: async (gameId: string) => {
+        await stopGameTimeUseCase.execute(gameId);
+        await get().loadGames();
     },
 
     resumeGame: async (gameId: string) => {

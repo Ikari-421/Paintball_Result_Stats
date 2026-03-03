@@ -5,13 +5,15 @@ import {
   Spacing,
   Typography,
 } from "@/constants/theme";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { GameStatus } from "@/src/core/domain/GameStatus";
+import { Ionicons } from "@expo/vector-icons";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface MatchupCardProps {
   teamAName: string;
   teamBName: string;
   gameModeName?: string;
-  isActive?: boolean;
+  status?: GameStatus | string;
   onPress: () => void;
   onDelete?: () => void;
 }
@@ -20,36 +22,68 @@ export const MatchupCard = ({
   teamAName,
   teamBName,
   gameModeName,
-  isActive = false,
+  status,
   onPress,
   onDelete,
 }: MatchupCardProps) => {
+  const getStatusConfig = (status: GameStatus | string) => {
+    switch (status) {
+      case GameStatus.NOT_STARTED:
+      case GameStatus.FINISHED:
+        return { color: "#FF3B30", text: status ? status.replace("_", " ") : "UNKNOWN" };
+      case GameStatus.BREAK:
+        return { color: "#FF9500", text: status };
+      case GameStatus.RUNNING:
+      case GameStatus.OVERTIME:
+        return { color: "#34C759", text: status };
+      default:
+        return { color: Colors.secondary, text: status || "UNKNOWN" };
+    }
+  };
+
+  const currentStatus = status || GameStatus.NOT_STARTED;
+  const statusConfig = getStatusConfig(currentStatus);
+
   return (
-    <View style={[styles.card, isActive && styles.cardActive]}>
+    <View style={styles.card}>
       <TouchableOpacity style={styles.content} onPress={onPress}>
         <View style={styles.mainContent}>
           <View style={styles.teamsContainer}>
-            <Text style={[styles.teamName, isActive && styles.teamNameActive]}>
+            <Text style={styles.teamName}>
               {teamAName}
             </Text>
-            <View style={[styles.vsBadge, isActive && styles.vsBadgeActive]}>
-              <Text style={[styles.vsText, isActive && styles.vsTextActive]}>
+            <View style={styles.vsBadge}>
+              <Text style={styles.vsText}>
                 VS
               </Text>
             </View>
-            <Text style={[styles.teamName, isActive && styles.teamNameActive]}>
+            <Text style={styles.teamName}>
               {teamBName}
             </Text>
           </View>
           {gameModeName && (
             <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
           )}
+          <View style={styles.statusContainer}>
+            <View style={[styles.statusDot, { backgroundColor: statusConfig.color }]} />
+            <Text style={[styles.statusText, { color: statusConfig.color }]}>
+              {statusConfig.text}
+            </Text>
+          </View>
         </View>
-        <Text style={styles.icon}>{isActive ? "▶️" : "🕐"}</Text>
       </TouchableOpacity>
       {onDelete && (
-        <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-          <Text style={styles.deleteIcon}>🗑️</Text>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => {
+          Alert.alert(
+            "Delete Matchup",
+            "Are you sure you want to delete this matchup?",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Delete", style: "destructive", onPress: onDelete }
+            ]
+          );
+        }}>
+          <Ionicons name="trash-outline" size={20} color="#FF3B30" />
         </TouchableOpacity>
       )}
     </View>
@@ -64,12 +98,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     ...Shadows.card,
-    opacity: 0.6,
-  },
-  cardActive: {
-    opacity: 1,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.accent,
   },
   content: {
     flex: 1,
@@ -90,15 +118,13 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     textAlign: "center",
     marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   teamName: {
     flex: 1,
     textAlign: "center",
     ...Typography.subtitle,
     color: Colors.text,
-  },
-  teamNameActive: {
-    fontWeight: "700",
   },
   vsBadge: {
     backgroundColor: Colors.background,
@@ -107,21 +133,27 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     marginHorizontal: Spacing.md,
   },
-  vsBadgeActive: {
-    backgroundColor: Colors.background,
-  },
   vsText: {
     fontSize: 12,
     fontWeight: "800",
     color: Colors.text,
   },
-  vsTextActive: {
-    fontSize: 14,
-    fontWeight: "800",
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Spacing.sm,
   },
-  icon: {
-    fontSize: 24,
-    marginLeft: Spacing.md,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: Spacing.sm,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   deleteButton: {
     width: 50,
