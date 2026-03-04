@@ -72,9 +72,9 @@ export class GameRepository implements IGameRepository {
         game.timer.isRunning ? 1 : 0,
         game.timer.endTimestamp,
         game.status,
-        1, // currentRound - default pour l'instant
-        0, // isTimeStopped - default pour l'instant
-        game.status, // gameStateStatus - utilise le même que status pour l'instant
+        game.currentRound,
+        game.isTimeStopped,
+        game.gameStateStatus,
       ],
     );
     console.log("[GameRepository] save - Game inséré en DB");

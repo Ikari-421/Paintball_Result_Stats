@@ -21,10 +21,17 @@ export const useGameTimer = (initialSeconds: number) => {
 
   const stop = () => {
     setIsRunning(false);
-    if (endTimestamp) {
-      setRemainingSeconds(Math.max(0, Math.floor((endTimestamp - Date.now()) / 1000)));
-    }
+    setRemainingSeconds((prev) => {
+      if (endTimestamp) return Math.max(0, Math.ceil((endTimestamp - Date.now()) / 1000));
+      return prev;
+    });
     setEndTimestamp(null);
+  };
+
+  const startNew = (seconds: number) => {
+    setIsRunning(true);
+    setRemainingSeconds(seconds);
+    setEndTimestamp(Date.now() + seconds * 1000);
   };
 
   const resume = () => {
@@ -55,7 +62,7 @@ export const useGameTimer = (initialSeconds: number) => {
     setIsRunning(running);
     setEndTimestamp(endTs);
     if (running && endTs) {
-      setRemainingSeconds(Math.max(0, Math.floor((endTs - Date.now()) / 1000)));
+      setRemainingSeconds(Math.max(0, Math.ceil((endTs - Date.now()) / 1000)));
     } else {
       setRemainingSeconds(Math.max(0, seconds));
     }
@@ -66,7 +73,7 @@ export const useGameTimer = (initialSeconds: number) => {
       intervalRef.current = setInterval(() => {
         setRemainingSeconds((prev) => {
           if (endTimestamp) {
-            const calculatedRemaining = Math.max(0, Math.floor((endTimestamp - Date.now()) / 1000));
+            const calculatedRemaining = Math.max(0, Math.ceil((endTimestamp - Date.now()) / 1000));
             if (calculatedRemaining <= 0) {
               setIsRunning(false);
               return 0;
@@ -92,7 +99,7 @@ export const useGameTimer = (initialSeconds: number) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, remainingSeconds, endTimestamp]);
+  }, [isRunning, endTimestamp]); // CRITICAL: Removed remainingSeconds from dependencies
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -109,6 +116,7 @@ export const useGameTimer = (initialSeconds: number) => {
     stop,
     resume,
     reset,
+    startNew,
     addTime,
     setTime,
     syncWithDB,

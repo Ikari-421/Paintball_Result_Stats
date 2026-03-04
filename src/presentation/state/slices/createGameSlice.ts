@@ -1,9 +1,9 @@
 import { StateCreator } from "zustand";
 import { Game } from "../../../core/domain/Game";
-import { adjustScoreUseCase, adjustTimeUseCase, createGameUseCase, finishGameUseCase, gameRepository, resumeGameUseCase, scorePointUseCase, startGameUseCase, stopGameTimeUseCase } from "../dependencies";
+import { adjustScoreUseCase, adjustTimeUseCase, createGameUseCase, endBreakUseCase, finishGameUseCase, gameRepository, resumeGameUseCase, scorePointUseCase, startBreakUseCase, startGameUseCase, startOvertimeUseCase, stopGameTimeUseCase } from "../dependencies";
 import { CoreState } from "../storeTypes";
 
-export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'games' | 'loadGames' | 'createGame' | 'startGame' | 'stopGameTime' | 'resumeGame' | 'finishGame' | 'scorePoint' | 'adjustTime' | 'adjustScore' | 'updateGameState'>> = (set, get) => ({
+export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'games' | 'loadGames' | 'createGame' | 'startGame' | 'startOvertime' | 'stopGameTime' | 'resumeGame' | 'startBreak' | 'endBreak' | 'finishGame' | 'scorePoint' | 'adjustTime' | 'adjustScore' | 'updateGameState'>> = (set, get) => ({
     games: [],
 
     loadGames: async () => {
@@ -40,6 +40,17 @@ export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'g
         }
     },
 
+    startOvertime: async (gameId: string) => {
+        try {
+            set({ isLoading: true, error: null });
+            await startOvertimeUseCase.execute(gameId);
+            await get().loadGames();
+        } catch (error) {
+            set({ error: (error as Error).message, isLoading: false });
+            throw error;
+        }
+    },
+
     stopGameTime: async (gameId: string) => {
         await stopGameTimeUseCase.execute(gameId);
         await get().loadGames();
@@ -60,6 +71,28 @@ export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'g
         try {
             set({ isLoading: true, error: null });
             await finishGameUseCase.execute(gameId, endReason);
+            await get().loadGames();
+        } catch (error) {
+            set({ error: (error as Error).message, isLoading: false });
+            throw error;
+        }
+    },
+
+    startBreak: async (gameId: string) => {
+        try {
+            set({ isLoading: true, error: null });
+            await startBreakUseCase.execute(gameId);
+            await get().loadGames();
+        } catch (error) {
+            set({ error: (error as Error).message, isLoading: false });
+            throw error;
+        }
+    },
+
+    endBreak: async (gameId: string) => {
+        try {
+            set({ isLoading: true, error: null });
+            await endBreakUseCase.execute(gameId);
             await get().loadGames();
         } catch (error) {
             set({ error: (error as Error).message, isLoading: false });

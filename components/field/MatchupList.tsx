@@ -1,3 +1,4 @@
+import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { TempMatchup } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
@@ -14,6 +15,7 @@ interface MatchupListProps {
   matchups: (Matchup | TempMatchup)[];
   teams: Team[];
   onDelete: (matchupId: string) => void;
+  onEdit?: (matchupId: string) => void;
   onDragEnd?: (data: (Matchup | TempMatchup)[]) => void;
   ListHeaderComponent?: React.ReactElement;
 }
@@ -22,6 +24,7 @@ export const MatchupList = ({
   matchups,
   teams,
   onDelete,
+  onEdit,
   onDragEnd,
   ListHeaderComponent,
 }: MatchupListProps) => {
@@ -52,23 +55,7 @@ export const MatchupList = ({
     const gameModeName = (matchup as any).gameMode?.name;
 
     const statusStr = (matchup as any).status || GameStatus.NOT_STARTED;
-    const status = statusStr as GameStatus;
-
-    const getStatusConfig = (status: GameStatus) => {
-      switch (status) {
-        case GameStatus.NOT_STARTED:
-        case GameStatus.FINISHED:
-          return { color: "#FF3B30", text: status ? status.replace("_", " ") : "UNKNOWN" };
-        case GameStatus.BREAK:
-          return { color: "#FF9500", text: status };
-        case GameStatus.RUNNING:
-        case GameStatus.OVERTIME:
-          return { color: "#34C759", text: status };
-        default:
-          return { color: Colors.secondary, text: status || "UNKNOWN" };
-      }
-    };
-    const statusConfig = getStatusConfig(status);
+    const isStopped = statusStr === "TIME_STOPPED" || statusStr === GameStatus.BREAK;
 
     return (
       <ScaleDecorator>
@@ -108,13 +95,18 @@ export const MatchupList = ({
                 <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
               )}
               <View style={styles.statusContainer}>
-                <View style={[styles.statusDot, { backgroundColor: statusConfig.color }]} />
-                <Text style={[styles.statusText, { color: statusConfig.color }]}>
-                  {statusConfig.text}
-                </Text>
+                <MatchStatusBadge status={statusStr} isTimeStopped={isStopped} />
               </View>
             </View>
             <View style={styles.actionsContainer}>
+              {onEdit && (
+                <TouchableOpacity
+                  style={styles.deleteMatchupButton}
+                  onPress={() => onEdit(matchup.id)}
+                >
+                  <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.deleteMatchupButton}
                 onPress={() => {

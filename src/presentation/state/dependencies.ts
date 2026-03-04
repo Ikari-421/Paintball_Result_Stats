@@ -21,11 +21,14 @@ import {
     DeleteGameMode,
     DeleteTeam,
     DeleteTournament,
+    EndBreak,
     FinishGame,
     ReorderMatchupsUseCase,
     ResumeGame,
     ScorePoint,
+    StartBreak,
     StartGame,
+    StartOvertime,
     StopGameTime,
     UpdateField,
     UpdateGameMode,
@@ -68,10 +71,13 @@ export const createGameUseCase = new CreateGame(
     eventStore,
 );
 export const startGameUseCase = new StartGame(gameRepository, eventStore);
+export const startOvertimeUseCase = new StartOvertime(gameRepository, eventStore);
 export const stopGameTimeUseCase = new StopGameTime(gameRepository, eventStore);
 export const resumeGameUseCase = new ResumeGame(gameRepository, eventStore);
 export const finishGameUseCase = new FinishGame(gameRepository, eventStore);
 export const scorePointUseCase = new ScorePoint(gameRepository, eventStore);
+export const startBreakUseCase = new StartBreak(gameRepository, eventStore);
+export const endBreakUseCase = new EndBreak(gameRepository, eventStore);
 export const adjustTimeUseCase = new AdjustTime(gameRepository, eventStore);
 export const adjustScoreUseCase = new AdjustScore(gameRepository, eventStore);
 export const createTournamentUseCase = new CreateTournament(tournamentRepository, eventStore);

@@ -16,8 +16,10 @@ export class AdjustTime {
             throw new Error(`Game with id ${gameId} not found`);
         }
 
-        if (game.status === GameStatus.RUNNING) {
-            throw new Error('Cannot adjust time while game is running. Stop the game time first.');
+        if (game.status === GameStatus.RUNNING || game.status === GameStatus.OVERTIME) {
+            if (game.isTimeStopped !== 1 && (game.isTimeStopped as any) !== true) {
+                throw new Error(`Cannot adjust time while game timer is running (status: ${game.status}). Stop the game time first.`);
+            }
         }
 
         if (newTimeSeconds < 0) {

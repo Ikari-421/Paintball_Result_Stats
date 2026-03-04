@@ -31,6 +31,13 @@ export interface FieldState {
         gameModeId: string,
     ) => Promise<void>;
     removeMatchupFromField: (fieldId: string, matchupId: string) => Promise<void>;
+    updateMatchupInField: (
+        fieldId: string,
+        matchupId: string,
+        teamAId: string,
+        teamBId: string,
+        gameModeId: string,
+    ) => Promise<void>;
     reorderMatchupsInField: (fieldId: string, matchupIds: string[]) => Promise<void>;
 }
 
@@ -67,8 +74,11 @@ export interface GameState {
         gameModeId: string;
     }) => Promise<string>;
     startGame: (gameId: string) => Promise<void>;
+    startOvertime: (gameId: string) => Promise<void>;
     stopGameTime: (gameId: string) => Promise<void>;
     resumeGame: (gameId: string) => Promise<void>;
+    startBreak: (gameId: string) => Promise<void>;
+    endBreak: (gameId: string) => Promise<void>;
     finishGame: (
         gameId: string,
         endReason: "SCORE_LIMIT" | "TIME_EXPIRED" | "MANUAL",

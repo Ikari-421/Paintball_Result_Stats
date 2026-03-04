@@ -97,6 +97,13 @@ export default function EditFieldScreen() {
     addTempMatchups();
   }, [tempMatchups]);
 
+  const handleEditMatchup = (matchupId: string) => {
+    if (!field) return;
+    router.push(
+      `/field/matchup/edit-matchup?fieldId=${id}&matchupId=${matchupId}`
+    );
+  };
+
   const handleDeleteMatchup = async (matchupId: string) => {
     if (!field) return;
 
@@ -153,6 +160,7 @@ export default function EditFieldScreen() {
           matchups={field.matchups}
           teams={teams}
           onDelete={handleDeleteMatchup}
+          onEdit={handleEditMatchup}
           onDragEnd={handleDragEnd}
           ListHeaderComponent={
             <>

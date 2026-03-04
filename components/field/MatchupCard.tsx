@@ -1,3 +1,4 @@
+import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import {
   BorderRadius,
   Colors,
@@ -26,23 +27,8 @@ export const MatchupCard = ({
   onPress,
   onDelete,
 }: MatchupCardProps) => {
-  const getStatusConfig = (status: GameStatus | string) => {
-    switch (status) {
-      case GameStatus.NOT_STARTED:
-      case GameStatus.FINISHED:
-        return { color: "#FF3B30", text: status ? status.replace("_", " ") : "UNKNOWN" };
-      case GameStatus.BREAK:
-        return { color: "#FF9500", text: status };
-      case GameStatus.RUNNING:
-      case GameStatus.OVERTIME:
-        return { color: "#34C759", text: status };
-      default:
-        return { color: Colors.secondary, text: status || "UNKNOWN" };
-    }
-  };
-
   const currentStatus = status || GameStatus.NOT_STARTED;
-  const statusConfig = getStatusConfig(currentStatus);
+  const isStopped = currentStatus === "TIME_STOPPED" || currentStatus === GameStatus.BREAK;
 
   return (
     <View style={styles.card}>
@@ -64,11 +50,8 @@ export const MatchupCard = ({
           {gameModeName && (
             <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
           )}
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusDot, { backgroundColor: statusConfig.color }]} />
-            <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {statusConfig.text}
-            </Text>
+          <View style={styles.badgeContainer}>
+            <MatchStatusBadge status={currentStatus as GameStatus} isTimeStopped={isStopped} />
           </View>
         </View>
       </TouchableOpacity>
@@ -138,22 +121,10 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: Colors.text,
   },
-  statusContainer: {
-    flexDirection: "row",
+  badgeContainer: {
+    marginTop: Spacing.sm,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: Spacing.sm,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: Spacing.sm,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
   },
   deleteButton: {
     width: 50,

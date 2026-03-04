@@ -73,4 +73,11 @@ export class Field {
         const updatedMatchups = this.matchups.filter((m) => m.id !== matchupId);
         return new Field(this.id, this.tournamentId, this.name, updatedMatchups);
     }
+
+    updateMatchup(updatedMatchup: Matchup): Field {
+        const updatedMatchups = this.matchups.map(m =>
+            m.id === updatedMatchup.id ? updatedMatchup : m
+        );
+        return new Field(this.id, this.tournamentId, this.name, updatedMatchups);
+    }
 }

@@ -3,7 +3,7 @@ import { Matchup } from "../../../core/domain/Field";
 import { createFieldUseCase, deleteFieldUseCase, fieldRepository, reorderMatchupsUseCase, updateFieldUseCase } from "../dependencies";
 import { CoreState } from "../storeTypes";
 
-export const createFieldSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'fields' | 'loadFields' | 'createField' | 'updateField' | 'deleteField' | 'addMatchupToField' | 'removeMatchupFromField' | 'reorderMatchupsInField'>> = (set, get) => ({
+export const createFieldSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'fields' | 'loadFields' | 'createField' | 'updateField' | 'deleteField' | 'addMatchupToField' | 'removeMatchupFromField' | 'updateMatchupInField' | 'reorderMatchupsInField'>> = (set, get) => ({
     fields: [],
 
     loadFields: async () => {
@@ -81,6 +81,25 @@ export const createFieldSlice: StateCreator<CoreState, [], [], Pick<CoreState, '
             if (!field) throw new Error("Field not found");
 
             const updatedField = field.removeMatchup(matchupId);
+            await fieldRepository.save(updatedField);
+            await get().loadFields();
+        } catch (error) {
+            set({ error: (error as Error).message, isLoading: false });
+        }
+    },
+
+    updateMatchupInField: async (fieldId: string, matchupId: string, teamAId: string, teamBId: string, gameModeId: string) => {
+        try {
+            set({ isLoading: true, error: null });
+            const field = await fieldRepository.findById(fieldId);
+            if (!field) throw new Error("Field not found");
+
+            const existingMatchup = field.matchups.find(m => m.id === matchupId);
+            if (!existingMatchup) throw new Error("Matchup not found in field");
+
+            const updatedMatchup = Matchup.create(matchupId, teamAId, teamBId, existingMatchup.order, gameModeId);
+            const updatedField = field.updateMatchup(updatedMatchup);
+
             await fieldRepository.save(updatedField);
             await get().loadFields();
         } catch (error) {

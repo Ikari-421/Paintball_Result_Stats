@@ -136,13 +136,15 @@ export default function FieldDetailScreen() {
             );
             const gameMode = gameModes.find((mode) => mode.id === matchup.gameModeId);
             const gameStatus = existingGame?.gameStateStatus || undefined;
+            const isTimeStopped = existingGame?.isTimeStopped === 1;
+            const displayStatus = isTimeStopped ? "TIME_STOPPED" : gameStatus;
 
             return (
               <MatchupCard
                 key={matchup.id}
                 teamAName={teamA?.name || "Team A"}
                 teamBName={teamB?.name || "Team B"}
-                status={gameStatus}
+                status={displayStatus}
                 gameModeName={gameMode?.name}
                 onPress={async () => {
                   if (!matchup.gameModeId) {

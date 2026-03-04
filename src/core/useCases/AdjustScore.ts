@@ -21,8 +21,10 @@ export class AdjustScore {
             throw new Error(`Game with id ${gameId} not found`);
         }
 
-        if (game.status === GameStatus.RUNNING) {
-            throw new Error('Cannot adjust score while game is running. Stop the game time first.');
+        if (game.status === GameStatus.RUNNING || game.status === GameStatus.OVERTIME) {
+            if (game.isTimeStopped !== 1 && (game.isTimeStopped as any) !== true) {
+                throw new Error(`Cannot adjust score while game timer is running (status: ${game.status}). Stop the game time first.`);
+            }
         }
 
         if (newScoreTeamA < 0 || newScoreTeamB < 0) {
