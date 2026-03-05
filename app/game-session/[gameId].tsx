@@ -60,10 +60,20 @@ export default function MatchScreen() {
     }
   }, [game?.score.teamAScore, game?.score.teamBScore, showScoreValidationModal]);
 
-  // 3. Auto-resume when Break timer finishes
+  // 3. Auto-resume or Auto-start when Break timer finishes
   useEffect(() => {
     if (game?.status === GameStatus.BREAK && controllers.breakTimer.isFinished) {
-      handleAction("RESUME_MATCH");
+      // If the game was never effectively started yet, we START_MATCH
+      const isGameNotStartedYet = game.gameStateStatus === GameStatus.NOT_STARTED ||
+        (game.timer.remainingTime === game.gameMode.gameTime.minutes * 60 &&
+          game.score.teamAScore === 0 &&
+          game.score.teamBScore === 0);
+
+      if (isGameNotStartedYet) {
+        handleAction("START_MATCH");
+      } else {
+        handleAction("RESUME_MATCH");
+      }
     }
   }, [game?.status, controllers.breakTimer.isFinished]);
 

@@ -113,8 +113,8 @@ export class Game {
   }
 
   start(): Game {
-    if (this.status !== GameStatus.NOT_STARTED) {
-      throw new Error("Game can only be started from NOT_STARTED status");
+    if (this.status !== GameStatus.NOT_STARTED && this.status !== GameStatus.BREAK && this.status !== GameStatus.TIME_STOPPED) {
+      throw new Error(`Game can only be started from NOT_STARTED, BREAK, or TIME_STOPPED status. Current: ${this.status}`);
     }
 
     return new Game(
@@ -207,6 +207,10 @@ export class Game {
   }
 
   startBreak(): Game {
+    // If we're not started, keep NOT_STARTED as the underlying state.
+    // If we're already running or stopped, keep that as the underlying state.
+    const previousState = this.status === GameStatus.NOT_STARTED ? GameStatus.NOT_STARTED : this.gameStateStatus;
+
     return new Game(
       this.id,
       this.fieldId,
@@ -217,17 +221,18 @@ export class Game {
       GameStatus.BREAK,
       this.currentRound,
       1, // The main game time is stopped!
-      GameStatus.BREAK
+      previousState
     );
   }
 
   endBreak(): Game {
-    // Return to the previous stopped state 
-    // Usually it was NOT_STARTED or RUNNING with isTimeStopped=1. 
-    // We can just keep the previous status (which was overwritten) 
-    // Wait, if we overwrote this.status, we lost it. 
-    // But since time is stopped, it doesn't matter, we can just set it to RUNNING + isTimeStopped=1
-    // OR we can rely on isTimeStopped=1 to show "TIME STOPPED" in the UI.
+    // If the game was NOT_STARTED before the break, and the break ends (either manually or timer expires)
+    // The previous gameStateStatus should be NOT_STARTED. We return it to NOT_STARTED, but with isTimeStopped=1
+    // so that the UI can handle the transition.
+    const resolvedStatus = this.gameStateStatus === GameStatus.NOT_STARTED
+      ? GameStatus.NOT_STARTED
+      : GameStatus.RUNNING;
+
     return new Game(
       this.id,
       this.fieldId,
@@ -235,7 +240,7 @@ export class Game {
       this.gameMode,
       this.score,
       this.timer,
-      GameStatus.RUNNING, // Or NOT_STARTED depending on timer, but RUNNING + isTimeStopped=1 is safe
+      resolvedStatus,
       this.currentRound,
       1,
       this.gameStateStatus

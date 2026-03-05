@@ -35,7 +35,10 @@ export class NotStartedState extends GameUIState {
             badgeColor: "#FF3B30",
             showDot: true,
             activeTimerType: "game",
-            actions: [{ label: "Start Match", actionId: "START_MATCH", styleType: "primary" }],
+            actions: [
+                { label: `Break ${this.game.gameMode.breakTime.seconds}s`, actionId: "START_BREAK", subType: "long-break", styleType: "warning" },
+                { label: "Break 5s", actionId: "START_BREAK", subType: "short-break", styleType: "warning" },
+            ],
         };
     }
 }
@@ -67,12 +70,16 @@ export class OvertimeRunningState extends GameUIState {
 export class StoppedState extends GameUIState {
     getView(): GameStateView {
         const isGameTimeFinished = this.game.timer.remainingTime === 0;
-        let mainAction: ActionButton;
 
-        if (isGameTimeFinished) {
-            mainAction = { label: "Start Overtime", actionId: "START_OVERTIME", styleType: "primary" };
-        } else {
-            mainAction = { label: "Resume", actionId: "RESUME_MATCH", styleType: "primary" };
+        let actions: ActionButton[] = [
+            { label: `Break ${this.game.gameMode.breakTime.seconds}s`, actionId: "START_BREAK", subType: "long-break", styleType: "warning" },
+            { label: "Break 5s", actionId: "START_BREAK", subType: "short-break", styleType: "warning" }
+        ];
+
+        // Only explicitly allow Start Overtime if game time is finished,
+        // as Overtime is a special phase. Break buttons are still available.
+        if (isGameTimeFinished && this.game.status !== GameStatus.OVERTIME) {
+            actions.unshift({ label: "Start Overtime", actionId: "START_OVERTIME", styleType: "primary" });
         }
 
         return {
@@ -80,11 +87,7 @@ export class StoppedState extends GameUIState {
             badgeColor: "#FF9500",
             showDot: true,
             activeTimerType: this.game.status === GameStatus.OVERTIME ? "overtime" : "game",
-            actions: [
-                mainAction,
-                { label: `Break ${this.game.gameMode.breakTime.seconds}s`, actionId: "START_BREAK", subType: "long-break", styleType: "warning" },
-                { label: "Break 5s", actionId: "START_BREAK", subType: "short-break", styleType: "warning" },
-            ],
+            actions,
         };
     }
 }
