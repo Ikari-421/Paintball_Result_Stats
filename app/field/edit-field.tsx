@@ -33,6 +33,7 @@ export default function EditFieldScreen() {
     loadTeams,
     error,
     reorderMatchupsInField,
+    games,
   } = useCoreStore();
   const { tempMatchups, clearTempMatchups, addTempMatchup } =
     useMatchupCreation();
@@ -159,6 +160,7 @@ export default function EditFieldScreen() {
         <MatchupList
           matchups={field.matchups}
           teams={teams}
+          games={games}
           onDelete={handleDeleteMatchup}
           onEdit={handleEditMatchup}
           onDragEnd={handleDragEnd}

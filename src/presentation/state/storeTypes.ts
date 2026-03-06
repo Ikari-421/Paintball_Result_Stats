@@ -65,6 +65,7 @@ export interface GameModeState {
 export interface GameState {
     games: Game[];
     loadGames: () => Promise<void>;
+    loadGameEvents: (gameId: string) => Promise<any[]>;
     createGame: (params: {
         fieldId: string;
         matchupId: string;
@@ -82,6 +83,7 @@ export interface GameState {
     finishGame: (
         gameId: string,
         endReason: "SCORE_LIMIT" | "TIME_EXPIRED" | "MANUAL",
+        note?: string,
     ) => Promise<void>;
     scorePoint: (gameId: string, teamId: string) => Promise<void>;
     adjustTime: (

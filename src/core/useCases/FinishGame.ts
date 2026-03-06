@@ -1,23 +1,23 @@
-import { IGameRepository } from '../ports/IGameRepository';
-import { IEventStore } from '../ports/IEventStore';
 import { Game } from '../domain/Game';
 import { TeamId } from '../domain/Team';
 import { DomainGameEvent } from '../domain/events/GameEvents';
+import { IEventStore } from '../ports/IEventStore';
+import { IGameRepository } from '../ports/IGameRepository';
 
 export class FinishGame {
     constructor(
         private gameRepository: IGameRepository,
         private eventStore: IEventStore
-    ) {}
+    ) { }
 
-    async execute(gameId: string, endReason: 'SCORE_LIMIT' | 'TIME_EXPIRED' | 'MANUAL'): Promise<Game> {
+    async execute(gameId: string, endReason: 'SCORE_LIMIT' | 'TIME_EXPIRED' | 'MANUAL', note?: string): Promise<Game> {
         const game = await this.gameRepository.findById(gameId);
         if (!game) {
             throw new Error(`Game with id ${gameId} not found`);
         }
 
         const finishedGame = game.finish();
-        
+
         await this.gameRepository.save(finishedGame);
 
         let winnerTeamId: TeamId | null = null;
@@ -35,7 +35,8 @@ export class FinishGame {
                 finalScoreTeamA: finishedGame.score.teamAScore,
                 finalScoreTeamB: finishedGame.score.teamBScore,
                 winnerTeamId,
-                endReason
+                endReason,
+                note
             }
         };
 

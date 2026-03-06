@@ -79,6 +79,7 @@ export interface GameFinishedEvent extends GameEvent {
         finalScoreTeamB: number;
         winnerTeamId: TeamId | null;
         endReason: 'SCORE_LIMIT' | 'TIME_EXPIRED' | 'MANUAL';
+        note?: string;
     };
 }
 

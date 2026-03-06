@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/theme";
+import { GameStatus } from "@/src/core/domain/GameStatus";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -8,6 +9,7 @@ interface ScoreBoardProps {
     scoreA: number;
     scoreB: number;
     gameModeName?: string;
+    status?: GameStatus;
 }
 
 export const ScoreBoard = ({
@@ -16,13 +18,18 @@ export const ScoreBoard = ({
     scoreA,
     scoreB,
     gameModeName,
+    status,
 }: ScoreBoardProps) => {
+    const isFinished = status === GameStatus.FINISHED;
     return (
-        <View style={styles.scoreContainer}>
+        <View style={isFinished ? styles.finishedContainer : styles.scoreContainer}>
+            {isFinished && (
+                <Text style={styles.finishedLabel}>MATCH FINISHED</Text>
+            )}
             <View style={styles.scoreMainRow}>
                 <View style={styles.teamScore}>
-                    <Text style={styles.teamName}>{teamAName}</Text>
-                    <Text style={styles.scoreText}>{scoreA}</Text>
+                    <Text style={isFinished ? styles.teamNameDark : styles.teamName}>{teamAName}</Text>
+                    <Text style={isFinished ? styles.scoreTextDark : styles.scoreText}>{scoreA}</Text>
                 </View>
 
                 <View style={styles.centerScoreInfo}>
@@ -32,12 +39,12 @@ export const ScoreBoard = ({
                 </View>
 
                 <View style={styles.teamScore}>
-                    <Text style={styles.teamName}>{teamBName}</Text>
-                    <Text style={styles.scoreText}>{scoreB}</Text>
+                    <Text style={isFinished ? styles.teamNameDark : styles.teamName}>{teamBName}</Text>
+                    <Text style={isFinished ? styles.scoreTextDark : styles.scoreText}>{scoreB}</Text>
                 </View>
             </View>
             {gameModeName && (
-                <Text style={[styles.gameModeTextInline, { color: "#95cbbc" }]}>
+                <Text style={[styles.gameModeTextInline, { color: isFinished ? Colors.primary : "#95cbbc" }]}>
                     {gameModeName}
                 </Text>
             )}
@@ -48,7 +55,7 @@ export const ScoreBoard = ({
 const styles = StyleSheet.create({
     scoreContainer: {
         padding: 16,
-        paddingTop: 0,
+        marginTop: 24,
     },
     scoreMainRow: {
         flexDirection: "row",
@@ -102,5 +109,42 @@ const styles = StyleSheet.create({
         marginTop: 8,
         textTransform: "uppercase",
         letterSpacing: 0.5,
+    },
+    finishedContainer: {
+        backgroundColor: Colors.white,
+        padding: 24,
+        borderRadius: 24,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        marginTop: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
+        borderWidth: 3,
+        borderColor: Colors.error,
+    },
+    finishedLabel: {
+        color: Colors.error,
+        fontSize: 20,
+        fontWeight: "800",
+        textAlign: "center",
+        marginBottom: 16,
+        textTransform: "uppercase",
+        letterSpacing: 2,
+    },
+    teamNameDark: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: Colors.text,
+        marginBottom: 4,
+        textAlign: "center",
+    },
+    scoreTextDark: {
+        fontSize: 54,
+        fontWeight: "800",
+        color: Colors.text,
+        fontVariant: ["tabular-nums"],
     },
 });

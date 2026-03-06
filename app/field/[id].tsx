@@ -3,6 +3,7 @@ import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { FieldDetailHeader } from "@/components/field/FieldDetailHeader";
 import { MatchupCard } from "@/components/field/MatchupCard";
 import { Colors, Spacing } from "@/constants/theme";
+import { GameStatus } from "@/src/core/domain/GameStatus";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -137,7 +138,9 @@ export default function FieldDetailScreen() {
             const gameMode = gameModes.find((mode) => mode.id === matchup.gameModeId);
             const gameStatus = existingGame?.gameStateStatus || undefined;
             const isTimeStopped = existingGame?.isTimeStopped === 1;
-            const displayStatus = isTimeStopped ? "TIME_STOPPED" : gameStatus;
+            const displayStatus = existingGame?.status === GameStatus.FINISHED
+              ? GameStatus.FINISHED
+              : (isTimeStopped ? "TIME_STOPPED" : gameStatus);
 
             return (
               <MatchupCard
@@ -145,6 +148,8 @@ export default function FieldDetailScreen() {
                 teamAName={teamA?.name || "Team A"}
                 teamBName={teamB?.name || "Team B"}
                 status={displayStatus}
+                scoreA={existingGame?.score?.teamAScore}
+                scoreB={existingGame?.score?.teamBScore}
                 gameModeName={gameMode?.name}
                 onPress={async () => {
                   if (!matchup.gameModeId) {

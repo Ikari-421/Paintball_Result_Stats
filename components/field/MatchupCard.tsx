@@ -15,6 +15,8 @@ interface MatchupCardProps {
   teamBName: string;
   gameModeName?: string;
   status?: GameStatus | string;
+  scoreA?: number;
+  scoreB?: number;
   onPress: () => void;
   onDelete?: () => void;
 }
@@ -24,6 +26,8 @@ export const MatchupCard = ({
   teamBName,
   gameModeName,
   status,
+  scoreA,
+  scoreB,
   onPress,
   onDelete,
 }: MatchupCardProps) => {
@@ -35,17 +39,21 @@ export const MatchupCard = ({
       <TouchableOpacity style={styles.content} onPress={onPress}>
         <View style={styles.mainContent}>
           <View style={styles.teamsContainer}>
-            <Text style={styles.teamName}>
-              {teamAName}
-            </Text>
-            <View style={styles.vsBadge}>
-              <Text style={styles.vsText}>
-                VS
-              </Text>
+            <View style={styles.teamScoreWrapper}>
+              <Text style={styles.teamName}>{teamAName}</Text>
+              {scoreA !== undefined && (
+                <Text style={styles.scoreText}>{scoreA}</Text>
+              )}
             </View>
-            <Text style={styles.teamName}>
-              {teamBName}
-            </Text>
+            <View style={styles.vsBadge}>
+              <Text style={styles.vsText}>VS</Text>
+            </View>
+            <View style={styles.teamScoreWrapper}>
+              <Text style={styles.teamName}>{teamBName}</Text>
+              {scoreB !== undefined && (
+                <Text style={styles.scoreText}>{scoreB}</Text>
+              )}
+            </View>
           </View>
           {gameModeName && (
             <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
@@ -104,10 +112,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   teamName: {
-    flex: 1,
     textAlign: "center",
     ...Typography.subtitle,
     color: Colors.text,
+  },
+  teamScoreWrapper: {
+    flex: 1,
+    alignItems: "center",
+  },
+  scoreText: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: Colors.primary,
+    marginTop: 4,
   },
   vsBadge: {
     backgroundColor: Colors.background,

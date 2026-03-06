@@ -20,15 +20,18 @@ export const MatchStatusBadge = ({
             return { color: "#FF3B30", text: "NOT STARTED" };
         }
         if (status === GameStatus.FINISHED) {
-            return { color: "#FF3B30", text: "FINISHED" };
+            return { color: "#FF3B30", text: "GAME FINISHED" };
         }
-        if (isTimeStopped || status === "TIME_STOPPED" || status === GameStatus.BREAK) {
-            return { color: "#FF9500", text: "TIME STOPPED" };
+        if (status === GameStatus.BREAK) {
+            return { color: "#FF9500", text: "BREAK TIME" };
+        }
+        if (isTimeStopped || status === "TIME_STOPPED") {
+            return { color: "#FF9500", text: "TECHNICAL TIMEOUT" };
         }
         if (status === GameStatus.OVERTIME) {
-            return { color: "#34C759", text: "OVERTIME" };
+            return { color: "#34C759", text: "GOLDEN POINT" };
         }
-        return { color: "#34C759", text: "RUNNING" };
+        return { color: "#34C759", text: "GAME ON" };
     };
 
     const config = getStatusConfig();

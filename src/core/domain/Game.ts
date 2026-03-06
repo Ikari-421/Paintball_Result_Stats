@@ -137,7 +137,8 @@ export class Game {
     }
 
     const overtimeSeconds = this.gameMode.overTime?.minutes ? this.gameMode.overTime.minutes * 60 : 300;
-    const initialOvertimeTimer = new GameTimer(overtimeSeconds).start();
+    // Create the overtime timer, but don't start it. It starts stopped so the referee initiates a break.
+    const initialOvertimeTimer = new GameTimer(overtimeSeconds);
 
     return new Game(
       this.id,
@@ -148,7 +149,7 @@ export class Game {
       initialOvertimeTimer,
       GameStatus.OVERTIME,
       this.currentRound,
-      0, // isTimeStopped
+      1, // isTimeStopped. It requires a break to actually start!
       GameStatus.OVERTIME // gameStateStatus
     );
   }
@@ -177,6 +178,10 @@ export class Game {
       throw new Error("Game can only be resumed when time is stopped");
     }
 
+    const resumedStatus = this.status === GameStatus.BREAK
+      ? (this.gameStateStatus === GameStatus.OVERTIME ? GameStatus.OVERTIME : GameStatus.RUNNING)
+      : this.status;
+
     return new Game(
       this.id,
       this.fieldId,
@@ -184,7 +189,7 @@ export class Game {
       this.gameMode,
       this.score,
       this.timer.start(),
-      this.status === GameStatus.BREAK ? GameStatus.RUNNING : this.status,
+      resumedStatus,
       this.currentRound,
       0, // isTimeStopped
       this.gameStateStatus
@@ -231,7 +236,9 @@ export class Game {
     // so that the UI can handle the transition.
     const resolvedStatus = this.gameStateStatus === GameStatus.NOT_STARTED
       ? GameStatus.NOT_STARTED
-      : GameStatus.RUNNING;
+      : this.gameStateStatus === GameStatus.OVERTIME
+        ? GameStatus.OVERTIME
+        : GameStatus.RUNNING;
 
     return new Game(
       this.id,

@@ -27,9 +27,7 @@ export class ScorePoint {
 
         let updatedGame = game.updateScore(newScore);
 
-        if (game.gameMode.raceTo.value > 0 && newScore.hasReachedLimit(game.gameMode.raceTo.value)) {
-            updatedGame = updatedGame.finish();
-        }
+
 
         await this.gameRepository.save(updatedGame);
 

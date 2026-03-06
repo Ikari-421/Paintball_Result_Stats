@@ -18,6 +18,7 @@ interface MatchupListProps {
   onEdit?: (matchupId: string) => void;
   onDragEnd?: (data: (Matchup | TempMatchup)[]) => void;
   ListHeaderComponent?: React.ReactElement;
+  games?: any[]; // Pass games array here
 }
 
 export const MatchupList = ({
@@ -27,6 +28,7 @@ export const MatchupList = ({
   onEdit,
   onDragEnd,
   ListHeaderComponent,
+  games = [],
 }: MatchupListProps) => {
   const getTeamName = (teamId: string, cachedName?: string) => {
     if (cachedName) return cachedName;
@@ -54,8 +56,15 @@ export const MatchupList = ({
     const teamBName = (matchup as any).teamBName;
     const gameModeName = (matchup as any).gameMode?.name;
 
-    const statusStr = (matchup as any).status || GameStatus.NOT_STARTED;
-    const isStopped = statusStr === "TIME_STOPPED" || statusStr === GameStatus.BREAK;
+    // Find the real game locally
+    const existingGame = games.find((g) => g.matchup.id === matchup.id);
+    const scoreA = existingGame?.score?.teamAScore;
+    const scoreB = existingGame?.score?.teamBScore;
+
+    const fallbackStatus = (matchup as any).status || GameStatus.NOT_STARTED;
+    const gameStatus = existingGame?.gameStateStatus || fallbackStatus;
+    const isStopped = existingGame?.isTimeStopped === 1 || fallbackStatus === "TIME_STOPPED" || fallbackStatus === GameStatus.BREAK;
+    const displayStatus = existingGame?.status === GameStatus.FINISHED ? GameStatus.FINISHED : (isStopped ? "TIME_STOPPED" : gameStatus);
 
     return (
       <ScaleDecorator>
@@ -81,21 +90,33 @@ export const MatchupList = ({
             )}
             <View style={styles.matchupContent}>
               <View style={styles.teamsContainer}>
-                <Text style={styles.teamName}>
-                  {getTeamName(matchup.teamA, teamAName)}
-                </Text>
+                <View style={styles.teamScoreWrapper}>
+                  <Text style={styles.teamName}>
+                    {getTeamName(matchup.teamA, teamAName)}
+                  </Text>
+                  {scoreA !== undefined && (
+                    <Text style={styles.scoreText}>{scoreA}</Text>
+                  )}
+                </View>
+
                 <View style={styles.vsBadge}>
                   <Text style={styles.vsText}>VS</Text>
                 </View>
-                <Text style={styles.teamName}>
-                  {getTeamName(matchup.teamB, teamBName)}
-                </Text>
+
+                <View style={styles.teamScoreWrapper}>
+                  <Text style={styles.teamName}>
+                    {getTeamName(matchup.teamB, teamBName)}
+                  </Text>
+                  {scoreB !== undefined && (
+                    <Text style={styles.scoreText}>{scoreB}</Text>
+                  )}
+                </View>
               </View>
               {gameModeName && (
                 <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
               )}
               <View style={styles.statusContainer}>
-                <MatchStatusBadge status={statusStr} isTimeStopped={isStopped} />
+                <MatchStatusBadge status={displayStatus} isTimeStopped={isStopped} />
               </View>
             </View>
             <View style={styles.actionsContainer}>
@@ -199,11 +220,20 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   teamName: {
-    flex: 1,
     textAlign: "center",
     fontWeight: "600",
     fontSize: 14,
     color: Colors.text,
+  },
+  teamScoreWrapper: {
+    flex: 1,
+    alignItems: "center",
+  },
+  scoreText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: Colors.primary,
+    marginTop: 4,
   },
   gameMode: {
     fontSize: 12,

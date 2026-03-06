@@ -2,20 +2,20 @@ import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { Colors } from "@/constants/theme";
 import { GameStatus } from "@/src/core/domain/GameStatus";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 interface TimerDisplayProps {
     status: GameStatus;
     isTimeStopped: boolean;
     formattedTime: string;
-    onAdjustTime?: () => void;
+    activeTimerType?: "game" | "break" | "overtime" | null;
 }
 
 export const TimerDisplay = ({
     status,
     isTimeStopped,
     formattedTime,
-    onAdjustTime,
+    activeTimerType,
 }: TimerDisplayProps) => {
     const getTimerBorderColor = () => {
         switch (status) {
@@ -37,19 +37,21 @@ export const TimerDisplay = ({
 
     return (
         <View style={[styles.timerContainer, { borderColor }]}>
-            <MatchStatusBadge
-                status={status}
-                isTimeStopped={isTimeStopped}
-                style={{ marginTop: 0, marginBottom: 8 }}
-            />
+            {activeTimerType && (
+                <Text style={styles.timerTypeLabel}>
+                    {activeTimerType === "game" && "GAME TIME"}
+                    {activeTimerType === "break" && "BREAK TIME"}
+                    {activeTimerType === "overtime" && "OVERTIME"}
+                </Text>
+            )}
             <View style={styles.timeRow}>
                 <Text style={styles.timerText}>{formattedTime}</Text>
             </View>
-            {onAdjustTime && (
-                <TouchableOpacity onPress={onAdjustTime} style={styles.adjustLink}>
-                    <Text style={styles.adjustLinkText}>Adjust time</Text>
-                </TouchableOpacity>
-            )}
+            <MatchStatusBadge
+                status={status}
+                isTimeStopped={isTimeStopped}
+                style={{ marginTop: 4 }}
+            />
         </View>
     );
 };
@@ -61,6 +63,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         alignItems: "center",
         marginBottom: 24,
+        marginHorizontal: 16,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
@@ -81,14 +84,12 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         width: "100%",
     },
-    adjustLink: {
-        marginTop: 4,
-        padding: 4,
-    },
-    adjustLinkText: {
+    timerTypeLabel: {
+        marginBottom: 4,
+        fontSize: 18,
+        fontWeight: "800",
         color: Colors.primary,
-        fontSize: 14,
-        fontWeight: "600",
-        textDecorationLine: "underline",
+        textTransform: "uppercase",
+        letterSpacing: 2,
     },
 });

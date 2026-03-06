@@ -69,18 +69,10 @@ export class OvertimeRunningState extends GameUIState {
 
 export class StoppedState extends GameUIState {
     getView(): GameStateView {
-        const isGameTimeFinished = this.game.timer.remainingTime === 0;
-
         let actions: ActionButton[] = [
             { label: `Break ${this.game.gameMode.breakTime.seconds}s`, actionId: "START_BREAK", subType: "long-break", styleType: "warning" },
             { label: "Break 5s", actionId: "START_BREAK", subType: "short-break", styleType: "warning" }
         ];
-
-        // Only explicitly allow Start Overtime if game time is finished,
-        // as Overtime is a special phase. Break buttons are still available.
-        if (isGameTimeFinished && this.game.status !== GameStatus.OVERTIME) {
-            actions.unshift({ label: "Start Overtime", actionId: "START_OVERTIME", styleType: "primary" });
-        }
 
         return {
             badgeLabel: "TIME STOPPED",
