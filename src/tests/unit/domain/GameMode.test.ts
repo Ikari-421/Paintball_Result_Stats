@@ -1,4 +1,4 @@
-import { GameMode, GameDuration, BreakDuration, OvertimeDuration, TimeoutCount, ScoreLimit } from '../../../core/domain/GameMode';
+import { BreakDuration, GameDuration, GameMode, OvertimeDuration, ScoreLimit } from '../../../core/domain/GameMode';
 
 describe('GameMode', () => {
     describe('Value Objects', () => {
@@ -29,26 +29,13 @@ describe('GameMode', () => {
             expect(() => new OvertimeDuration(-3)).toThrow('Overtime duration cannot be negative');
         });
 
-        it('should create valid TimeoutCount', () => {
-            const count = new TimeoutCount(2);
-            expect(count.quantity).toBe(2);
-        });
-
-        it('should throw error for negative TimeoutCount', () => {
-            expect(() => new TimeoutCount(-1)).toThrow('Timeout count cannot be negative');
-        });
-
-        it('should create valid ScoreLimit', () => {
-            const limit = new ScoreLimit(10);
-            expect(limit.value).toBe(10);
-        });
-
-        it('should throw error for zero ScoreLimit', () => {
-            expect(() => new ScoreLimit(0)).toThrow('Score limit must be greater than zero');
+        it('should allow zero ScoreLimit', () => {
+            const limit = new ScoreLimit(0);
+            expect(limit.value).toBe(0);
         });
 
         it('should throw error for negative ScoreLimit', () => {
-            expect(() => new ScoreLimit(-5)).toThrow('Score limit must be greater than zero');
+            expect(() => new ScoreLimit(-5)).toThrow('Score limit must be zero or positive');
         });
     });
 
@@ -59,7 +46,6 @@ describe('GameMode', () => {
                 'Quick Match',
                 new GameDuration(10),
                 new BreakDuration(30),
-                new TimeoutCount(2),
                 new ScoreLimit(5)
             );
 
@@ -67,7 +53,6 @@ describe('GameMode', () => {
             expect(gameMode.name).toBe('Quick Match');
             expect(gameMode.gameTime.minutes).toBe(10);
             expect(gameMode.breakTime.seconds).toBe(30);
-            expect(gameMode.timeOutsPerTeam.quantity).toBe(2);
             expect(gameMode.raceTo.value).toBe(5);
             expect(gameMode.overTime).toBeUndefined();
         });
@@ -78,7 +63,6 @@ describe('GameMode', () => {
                 'Tournament',
                 new GameDuration(15),
                 new BreakDuration(60),
-                new TimeoutCount(3),
                 new ScoreLimit(10),
                 new OvertimeDuration(5)
             );
@@ -93,7 +77,6 @@ describe('GameMode', () => {
                     'Quick Match',
                     new GameDuration(10),
                     new BreakDuration(30),
-                    new TimeoutCount(2),
                     new ScoreLimit(5)
                 )
             ).toThrow('GameMode ID cannot be empty');
@@ -106,7 +89,6 @@ describe('GameMode', () => {
                     '',
                     new GameDuration(10),
                     new BreakDuration(30),
-                    new TimeoutCount(2),
                     new ScoreLimit(5)
                 )
             ).toThrow('GameMode name cannot be empty');

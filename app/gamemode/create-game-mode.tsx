@@ -5,6 +5,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -22,7 +23,7 @@ export default function CreateGameModeScreen() {
   const [gameTimeMinutes, setGameTimeMinutes] = useState("10");
   const [breakTimeSeconds, setBreakTimeSeconds] = useState("30");
   const [overtimeMinutes, setOvertimeMinutes] = useState("5");
-  const [timeOutsPerTeam, setTimeOutsPerTeam] = useState("2");
+  const [isRaceToEnabled, setIsRaceToEnabled] = useState(false);
   const [raceTo, setRaceTo] = useState("5");
 
   const handleSubmit = async () => {
@@ -34,8 +35,7 @@ export default function CreateGameModeScreen() {
     const gameTime = parseInt(gameTimeMinutes);
     const breakTime = parseInt(breakTimeSeconds);
     const overtime = parseInt(overtimeMinutes);
-    const timeouts = parseInt(timeOutsPerTeam);
-    const scoreLimit = parseInt(raceTo);
+    const scoreLimit = isRaceToEnabled ? parseInt(raceTo) : 0;
 
     if (isNaN(gameTime) || gameTime <= 0) {
       Alert.alert("Error", "Game time must be a positive number");
@@ -47,12 +47,7 @@ export default function CreateGameModeScreen() {
       return;
     }
 
-    if (isNaN(timeouts) || timeouts < 0) {
-      Alert.alert("Error", "Timeouts must be a positive number or zero");
-      return;
-    }
-
-    if (isNaN(scoreLimit) || scoreLimit <= 0) {
+    if (isRaceToEnabled && (isNaN(scoreLimit) || scoreLimit <= 0)) {
       Alert.alert("Error", "Score limit must be a positive number");
       return;
     }
@@ -62,7 +57,6 @@ export default function CreateGameModeScreen() {
         name: name.trim(),
         gameTimeMinutes: gameTime,
         breakTimeSeconds: breakTime,
-        timeOutsPerTeam: timeouts,
         raceTo: scoreLimit,
         overtimeMinutes:
           !isNaN(overtime) && overtime > 0 ? overtime : undefined,
@@ -75,11 +69,11 @@ export default function CreateGameModeScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Game Mod Setup" onBack={() => router.back()} />
+      <ScreenHeader title="Game Mode Setup" onBack={() => router.back()} />
 
       <ScrollView style={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.label}>Mod Name</Text>
+          <Text style={styles.label}>Mode Name</Text>
           <TextInput
             style={styles.input}
             value={name}
@@ -99,14 +93,6 @@ export default function CreateGameModeScreen() {
             />
 
             <NumberInput
-              label="Time Out"
-              sublabel="Limit per team"
-              value={timeOutsPerTeam}
-              onChangeText={setTimeOutsPerTeam}
-              placeholder="5"
-            />
-
-            <NumberInput
               label="Break Time"
               sublabel="Time between rounds (sec)"
               value={breakTimeSeconds}
@@ -122,21 +108,36 @@ export default function CreateGameModeScreen() {
               placeholder="5"
             />
 
-            <NumberInput
-              label="Race To"
-              sublabel="Points to win the match"
-              value={raceTo}
-              onChangeText={setRaceTo}
-              placeholder="5"
-              isHighlighted
-            />
+            <View style={styles.switchRowContainer}>
+              <View style={styles.switchRow}>
+                <View>
+                  <Text style={styles.label}>Race To</Text>
+                  <Text style={styles.subtext}>Match ends at a score limit</Text>
+                </View>
+                <Switch
+                  value={isRaceToEnabled}
+                  onValueChange={setIsRaceToEnabled}
+                  trackColor={{ false: Colors.border, true: Colors.primary }}
+                />
+              </View>
+              {isRaceToEnabled && (
+                <NumberInput
+                  label=""
+                  sublabel="Points to win the match"
+                  value={raceTo}
+                  onChangeText={setRaceTo}
+                  placeholder="5"
+                  isHighlighted
+                />
+              )}
+            </View>
           </View>
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <PrimaryButton
-          title="Create Game Mod"
+          title="Create Game Mode"
           onPress={handleSubmit}
           disabled={!name.trim()}
         />
@@ -182,5 +183,22 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+  },
+  switchRowContainer: {
+    marginBottom: Spacing.xl,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+  subtext: {
+    fontSize: 12,
+    color: Colors.secondary,
+    marginTop: 2,
   },
 });

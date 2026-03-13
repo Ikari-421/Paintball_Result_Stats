@@ -1,50 +1,146 @@
-# Welcome to your Expo app 👋
+# Paintball Result Stats
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile React Native d'arbitrage de paintball avec gestion de tournois, terrains, équipes et arbitrage temps réel. Construite avec Domain-Driven Design (DDD) et Event Sourcing.
 
-## Get started
+## Fonctionnalités
 
-1. Install dependencies
+- Gestion de tournois
+- Gestion de terrains et matchups
+- Gestion d'équipes (régulières et invitées)
+- Configuration de modes de jeu personnalisables
+- Arbitrage temps réel avec timer précis
+- Event Sourcing pour audit trail complet
+- Corrections arbitre avec validation explicite
 
-   ```bash
-   npm install
-   ```
+## Technologies
 
-2. Start the app
+- **React Native** (Expo)
+- **TypeScript** (strict mode)
+- **SQLite** (base de données locale)
+- **Zustand** (state management)
+- **Architecture:** Domain-Driven Design + Event Sourcing + Clean Architecture
 
-   ```bash
-   npx expo start
-   ```
+## Installation
 
-In the output, you'll find options to open the app in a
+### Prérequis
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js 18+
+- npm ou yarn
+- Expo CLI (optionnel)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Installation des dépendances
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Lancer l'Application
 
-## Learn more
+### Mode développement
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Dans la sortie, vous trouverez des options pour ouvrir l'application sur :
 
-## Join the community
+- Android emulator
+- iOS simulator
+- Expo Go
 
-Join our community of developers creating universal apps.
+### Lancer sur Android
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm run android
+```
+
+### Lancer sur iOS
+
+```bash
+npm run ios
+```
+
+### Lancer sur Web
+
+```bash
+npm run web
+```
+
+## Tests
+
+### Lancer les tests
+
+```bash
+npm test
+```
+
+### Lancer les tests en mode watch
+
+```bash
+npm run test:watch
+```
+
+### Tests disponibles
+
+Les tests unitaires se trouvent dans `src/tests/unit/domain/` :
+
+- `Game.test.ts` - Tests du Core Domain (Game Aggregate)
+- `Field.test.ts` - Tests du Field Aggregate
+- `Team.test.ts` - Tests du Team Aggregate
+- `GameMode.test.ts` - Tests du GameMode Aggregate
+
+## Architecture
+
+Ce projet utilise **Domain-Driven Design (DDD)** avec **Event Sourcing** et suit les principes de **Clean Architecture**.
+
+L'application est organisée en **5 Bounded Contexts** :
+
+- **Tournament Management** - Gestion des tournois
+- **Field Management** - Gestion des terrains et matchups
+- **Team Management** - Gestion des équipes
+- **Game Mode Management** - Configuration des règles de jeu
+- **Game Session** (Core Domain) - Arbitrage temps réel
+
+### Documentation complète
+
+- **[Documentation Architecture](docs/architecture/README.md)** - Point d'entrée de la documentation
+- **[DDD - Context Map](docs/architecture/ddd/context-map.md)** - Vue d'ensemble des domaines métier
+- **[C4 - System Context](docs/architecture/c4/c1-context.md)** - Architecture technique
+- **[Event Analysis](docs/architecture/ddd/event-analysis.md)** - Analyse Event Sourcing
+
+## Structure du Projet
+
+```
+paintball_result_stats/
+├── app/                    # Screens (Expo Router)
+├── components/             # Composants UI réutilisables
+├── contexts/               # React Contexts
+├── hooks/                  # Hooks personnalisés
+├── src/
+│   ├── core/
+│   │   ├── domain/        # Aggregates, Value Objects, Events
+│   │   ├── ports/         # Interfaces (Repositories)
+│   │   └── useCases/      # Use Cases (27)
+│   ├── infrastructure/    # Repositories, EventStore, SQLite
+│   ├── presentation/      # State Management (Zustand)
+│   └── tests/             # Tests unitaires
+├── docs/
+│   └── architecture/      # Documentation DDD & C4
+└── package.json
+```
+
+## Développement
+
+Le projet utilise file-based routing avec Expo Router. Les écrans se trouvent dans le dossier `app/`.
+
+### Commandes utiles
+
+- `npm start` - Démarrer le serveur de développement
+- `npm run android` - Lancer sur Android
+- `npm run ios` - Lancer sur iOS
+- `npm test` - Lancer les tests
+- `npm run lint` - Linter le code
+
+## Licence
+
+Projet privé.

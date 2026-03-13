@@ -1,26 +1,26 @@
 import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { MatchupList } from "@/components/field/MatchupList";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function CreateFieldScreen() {
   const router = useRouter();
   const { teams, loadTeams, createField, addMatchupToField, error } =
     useCoreStore();
+  const { tournamentId } = useLocalSearchParams<{ tournamentId: string }>();
   const {
     tempMatchups,
     removeTempMatchup,
@@ -39,21 +39,43 @@ export default function CreateFieldScreen() {
       Alert.alert("Error", "Field name is required");
       return;
     }
+    if (!tournamentId) {
+      Alert.alert("Error", "Missing tournament context");
+      return;
+    }
 
     try {
+      console.log("[CreateField] Début création field:", name.trim());
+      console.log("[CreateField] Nombre de matchups:", tempMatchups.length);
+
       // Créer le field et récupérer son ID
-      const fieldId = await createField(name.trim());
+      const fieldId = await createField(name.trim(), tournamentId);
+      console.log("[CreateField] Field créé avec ID:", fieldId);
 
       // Ajouter les matchups au field créé
       if (tempMatchups.length > 0) {
         for (const matchup of tempMatchups) {
-          await addMatchupToField(fieldId, matchup.teamA, matchup.teamB);
+          console.log(
+            "[CreateField] Ajout matchup:",
+            matchup.id,
+            "avec gameModeId:",
+            matchup.gameModeId,
+          );
+          await addMatchupToField(
+            fieldId,
+            matchup.teamA,
+            matchup.teamB,
+            matchup.gameModeId,
+          );
         }
+        console.log("[CreateField] Tous les matchups ajoutés");
       }
 
       clearTempMatchups();
-      router.push("/field/fields-list");
+      console.log("[CreateField] Navigation vers tournoi");
+      router.push(`/tournament/${tournamentId}` as any);
     } catch (err) {
+      console.error("[CreateField] Erreur:", err);
       Alert.alert("Error", error || "Unable to create field");
     }
   };
@@ -66,80 +88,53 @@ export default function CreateFieldScreen() {
     removeTempMatchup(matchupId);
   };
 
-  const handleMoveUp = (matchupId: string) => {
-    const index = tempMatchups.findIndex((m) => m.id === matchupId);
-    if (index > 0) {
-      const newMatchups = [...tempMatchups];
-      [newMatchups[index - 1], newMatchups[index]] = [
-        newMatchups[index],
-        newMatchups[index - 1],
-      ];
-      reorderTempMatchups(newMatchups);
-    }
-  };
-
-  const handleMoveDown = (matchupId: string) => {
-    const index = tempMatchups.findIndex((m) => m.id === matchupId);
-    if (index < tempMatchups.length - 1) {
-      const newMatchups = [...tempMatchups];
-      [newMatchups[index], newMatchups[index + 1]] = [
-        newMatchups[index + 1],
-        newMatchups[index],
-      ];
-      reorderTempMatchups(newMatchups);
-    }
-  };
-
-  const handleModSetup = () => {
-    router.push("/gamemode/game-modes-list");
+  const handleDragEnd = (newOrder: any[]) => {
+    reorderTempMatchups(newOrder);
   };
 
   const handleBack = () => {
     clearTempMatchups();
-    router.push("/menu");
+    router.back();
   };
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <ScreenHeader title="Create Field" onBack={handleBack} />
 
-      <ScrollView style={styles.content}>
-        <Text style={styles.label}>Field Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. Main Arena"
-          placeholderTextColor={Colors.secondary}
-          autoFocus
-        />
-
-        <View style={styles.matchupsHeader}>
-          <Text style={styles.matchupsTitle}>MatchUps</Text>
-          <Text style={styles.matchupsCount}>
-            {tempMatchups.length} Scheduled
-          </Text>
-        </View>
-
+      <View style={styles.content}>
         <MatchupList
           matchups={tempMatchups}
           teams={teams}
           onDelete={handleDeleteMatchup}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
+          onDragEnd={handleDragEnd}
+          ListHeaderComponent={
+            <>
+              <Text style={styles.label}>Field Name</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g. Main Arena"
+                placeholderTextColor={Colors.secondary}
+                autoFocus
+              />
+
+              <View style={styles.matchupsHeader}>
+                <Text style={styles.matchupsTitle}>MatchUps</Text>
+                <Text style={styles.matchupsCount}>
+                  {tempMatchups.length} Scheduled
+                </Text>
+              </View>
+            </>
+          }
         />
-      </ScrollView>
+      </View>
 
       <View style={styles.footer}>
         <View style={styles.actionButtons}>
           <OutlineButton
             title="+ MatchUp"
             onPress={handleAddMatchup}
-            style={styles.actionButton}
-          />
-          <SecondaryButton
-            title="Mod Setup"
-            onPress={handleModSetup}
             style={styles.actionButton}
           />
         </View>
@@ -149,7 +144,7 @@ export default function CreateFieldScreen() {
           disabled={!name.trim()}
         />
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

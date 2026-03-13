@@ -18,7 +18,6 @@ export const initDb = () => {
       gameTimeMinutes INTEGER NOT NULL,
       breakTimeSeconds INTEGER NOT NULL,
       overtimeMinutes INTEGER,
-      timeOutsPerTeam INTEGER NOT NULL,
       raceTo INTEGER NOT NULL
     );
     
@@ -28,9 +27,19 @@ export const initDb = () => {
       isGuest BOOLEAN NOT NULL
     );
     
+    CREATE TABLE IF NOT EXISTS tournaments (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      location TEXT NOT NULL,
+      startDate INTEGER NOT NULL,
+      endDate INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS fields (
       id TEXT PRIMARY KEY,
-      name TEXT NOT NULL
+      tournamentId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      FOREIGN KEY (tournamentId) REFERENCES tournaments(id)
     );
     
     CREATE TABLE IF NOT EXISTS matchups (
@@ -39,9 +48,11 @@ export const initDb = () => {
       teamA TEXT NOT NULL,
       teamB TEXT NOT NULL,
       orderIndex INTEGER NOT NULL,
+      gameModeId TEXT NOT NULL,
       FOREIGN KEY (fieldId) REFERENCES fields(id),
       FOREIGN KEY (teamA) REFERENCES teams(id),
-      FOREIGN KEY (teamB) REFERENCES teams(id)
+      FOREIGN KEY (teamB) REFERENCES teams(id),
+      FOREIGN KEY (gameModeId) REFERENCES game_modes(id)
     );
     
     CREATE TABLE IF NOT EXISTS games (
@@ -56,14 +67,41 @@ export const initDb = () => {
       gameTimeMinutes INTEGER NOT NULL,
       breakTimeSeconds INTEGER NOT NULL,
       overtimeMinutes INTEGER,
-      timeOutsPerTeam INTEGER NOT NULL,
       raceTo INTEGER NOT NULL,
       teamAScore INTEGER NOT NULL,
       teamBScore INTEGER NOT NULL,
       remainingTime INTEGER NOT NULL,
       timerIsRunning INTEGER NOT NULL,
+      timerEndTimestamp INTEGER,
       status TEXT NOT NULL,
+      currentRound INTEGER DEFAULT 1,
+      isTimeStopped INTEGER DEFAULT 0,
+      gameStateStatus TEXT DEFAULT 'NOT_STARTED',
       FOREIGN KEY (fieldId) REFERENCES fields(id)
     );
   `);
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN timerEndTimestamp INTEGER;");
+  } catch (e) {
+    console.log("Column timerEndTimestamp already exists or another error occurred during migration.");
+  }
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN isTimeStopped INTEGER DEFAULT 0;");
+  } catch (e) {
+    console.log("Column isTimeStopped already exists or another error occurred during migration.");
+  }
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN gameStateStatus TEXT DEFAULT 'NOT_STARTED';");
+  } catch (e) {
+    console.log("Column gameStateStatus already exists or another error occurred during migration.");
+  }
+
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN currentRound INTEGER DEFAULT 1;");
+  } catch (e) {
+    console.log("Column currentRound already exists or another error occurred during migration.");
+  }
 };

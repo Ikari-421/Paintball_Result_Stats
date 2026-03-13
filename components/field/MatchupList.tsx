@@ -1,23 +1,34 @@
+import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { TempMatchup } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
+import { GameStatus } from "@/src/core/domain/GameStatus";
 import { Team } from "@/src/core/domain/Team";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import DraggableFlatList, {
+  RenderItemParams,
+  ScaleDecorator,
+} from "react-native-draggable-flatlist";
 
 interface MatchupListProps {
   matchups: (Matchup | TempMatchup)[];
   teams: Team[];
   onDelete: (matchupId: string) => void;
-  onMoveUp?: (matchupId: string) => void;
-  onMoveDown?: (matchupId: string) => void;
+  onEdit?: (matchupId: string) => void;
+  onDragEnd?: (data: (Matchup | TempMatchup)[]) => void;
+  ListHeaderComponent?: React.ReactElement;
+  games?: any[]; // Pass games array here
 }
 
 export const MatchupList = ({
   matchups,
   teams,
   onDelete,
-  onMoveUp,
-  onMoveDown,
+  onEdit,
+  onDragEnd,
+  ListHeaderComponent,
+  games = [],
 }: MatchupListProps) => {
   const getTeamName = (teamId: string, cachedName?: string) => {
     if (cachedName) return cachedName;
@@ -26,61 +37,141 @@ export const MatchupList = ({
 
   if (matchups.length === 0) {
     return (
-      <Text style={styles.emptyText}>
-        No matchups yet. Add teams to this field.
-      </Text>
+      <View>
+        {ListHeaderComponent}
+        <Text style={styles.emptyText}>
+          No matchups yet. Add teams to this field.
+        </Text>
+      </View>
     );
   }
 
-  return (
-    <>
-      {matchups.map((matchup, index) => {
-        const teamAName =
-          "teamAName" in matchup ? matchup.teamAName : undefined;
-        const teamBName =
-          "teamBName" in matchup ? matchup.teamBName : undefined;
+  const renderItem = ({
+    item,
+    drag,
+    isActive,
+  }: RenderItemParams<Matchup | TempMatchup>) => {
+    const matchup = item;
+    const teamAName = "teamAName" in matchup ? matchup.teamAName : undefined;
+    const teamBName = (matchup as any).teamBName;
+    const gameModeName = (matchup as any).gameMode?.name;
 
-        return (
-          <View key={matchup.id} style={styles.matchupCard}>
-            <View style={styles.matchupContent}>
-              <Text style={styles.teamName}>
-                {getTeamName(matchup.teamA, teamAName)}
-              </Text>
-              <View style={styles.vsBadge}>
-                <Text style={styles.vsText}>VS</Text>
+    // Find the real game locally
+    const existingGame = games.find((g) => g.matchup.id === matchup.id);
+    const scoreA = existingGame?.score?.teamAScore;
+    const scoreB = existingGame?.score?.teamBScore;
+
+    const fallbackStatus = (matchup as any).status || GameStatus.NOT_STARTED;
+    const gameStatus = existingGame?.gameStateStatus || fallbackStatus;
+    const isStopped = existingGame?.isTimeStopped === 1 || fallbackStatus === "TIME_STOPPED" || fallbackStatus === GameStatus.BREAK;
+    const displayStatus = existingGame?.status === GameStatus.FINISHED ? GameStatus.FINISHED : (isStopped ? "TIME_STOPPED" : gameStatus);
+
+    return (
+      <ScaleDecorator>
+        <TouchableOpacity
+          activeOpacity={1}
+          onLongPress={drag}
+          disabled={isActive}
+          style={[
+            styles.matchupCardWrapper,
+            { backgroundColor: isActive ? Colors.background : "transparent" },
+          ]}
+        >
+          <View
+            style={[
+              styles.matchupCard,
+              { elevation: isActive ? 8 : 3 },
+            ]}
+          >
+            {onDragEnd && (
+              <View style={styles.dragHandle}>
+                <Text style={styles.dragIcon}>☰</Text>
               </View>
-              <Text style={styles.teamName}>
-                {getTeamName(matchup.teamB, teamBName)}
-              </Text>
+            )}
+            <View style={styles.matchupContent}>
+              <View style={styles.teamsContainer}>
+                <View style={styles.teamScoreWrapper}>
+                  <Text style={styles.teamName}>
+                    {getTeamName(matchup.teamA, teamAName)}
+                  </Text>
+                  {scoreA !== undefined && (
+                    <Text style={styles.scoreText}>{scoreA}</Text>
+                  )}
+                </View>
+
+                <View style={styles.vsBadge}>
+                  <Text style={styles.vsText}>VS</Text>
+                </View>
+
+                <View style={styles.teamScoreWrapper}>
+                  <Text style={styles.teamName}>
+                    {getTeamName(matchup.teamB, teamBName)}
+                  </Text>
+                  {scoreB !== undefined && (
+                    <Text style={styles.scoreText}>{scoreB}</Text>
+                  )}
+                </View>
+              </View>
+              {gameModeName && (
+                <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
+              )}
+              <View style={styles.statusContainer}>
+                <MatchStatusBadge status={displayStatus} isTimeStopped={isStopped} />
+              </View>
             </View>
             <View style={styles.actionsContainer}>
-              {onMoveUp && index > 0 && (
+              {onEdit && (
                 <TouchableOpacity
-                  style={styles.reorderButton}
-                  onPress={() => onMoveUp(matchup.id)}
+                  style={styles.deleteMatchupButton}
+                  onPress={() => onEdit(matchup.id)}
                 >
-                  <Text style={styles.reorderIcon}>⬆️</Text>
-                </TouchableOpacity>
-              )}
-              {onMoveDown && index < matchups.length - 1 && (
-                <TouchableOpacity
-                  style={styles.reorderButton}
-                  onPress={() => onMoveDown(matchup.id)}
-                >
-                  <Text style={styles.reorderIcon}>⬇️</Text>
+                  <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
                 </TouchableOpacity>
               )}
               <TouchableOpacity
                 style={styles.deleteMatchupButton}
-                onPress={() => onDelete(matchup.id)}
+                onPress={() => {
+                  Alert.alert(
+                    "Delete Matchup",
+                    "Are you sure you want to delete this matchup?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: () => onDelete(matchup.id)
+                      }
+                    ]
+                  );
+                }}
               >
-                <Text style={styles.deleteIcon}>🗑️</Text>
+                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
               </TouchableOpacity>
             </View>
           </View>
-        );
-      })}
-    </>
+        </TouchableOpacity>
+      </ScaleDecorator>
+    );
+  };
+
+  if (!onDragEnd) {
+    return (
+      <View>
+        {ListHeaderComponent}
+        {matchups.map((matchup) => renderItem({ item: matchup, getIndex: () => 0, drag: () => { }, isActive: false } as any))}
+      </View>
+    );
+  }
+
+  return (
+    <DraggableFlatList
+      data={matchups}
+      onDragEnd={({ data }) => onDragEnd(data)}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      ListHeaderComponent={ListHeaderComponent}
+      contentContainerStyle={{ paddingBottom: Spacing.xxl }}
+    />
   );
 };
 
@@ -93,10 +184,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xxl,
     fontStyle: "italic",
   },
+  matchupCardWrapper: {
+    marginBottom: Spacing.md,
+    borderRadius: BorderRadius.lg,
+  },
   matchupCard: {
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,
@@ -104,19 +198,66 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+  },
+  dragHandle: {
+    paddingRight: Spacing.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dragIcon: {
+    fontSize: 20,
+    color: Colors.secondary,
+    opacity: 0.5,
   },
   matchupContent: {
     flex: 1,
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  teamsContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: Spacing.xs,
   },
   teamName: {
-    flex: 1,
     textAlign: "center",
     fontWeight: "600",
     fontSize: 14,
     color: Colors.text,
+  },
+  teamScoreWrapper: {
+    flex: 1,
+    alignItems: "center",
+  },
+  scoreText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: Colors.primary,
+    marginTop: 4,
+  },
+  gameMode: {
+    fontSize: 12,
+    color: Colors.secondary,
+    textAlign: "center",
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Spacing.sm,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: Spacing.sm,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   vsBadge: {
     backgroundColor: Colors.background,
@@ -134,12 +275,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.xs,
-  },
-  reorderButton: {
-    padding: Spacing.xs,
-  },
-  reorderIcon: {
-    fontSize: 16,
   },
   deleteMatchupButton: {
     padding: Spacing.sm,

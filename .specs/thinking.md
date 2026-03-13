@@ -1,9 +1,16 @@
 
-Je veux que tu sois avant tout fort de proposition.
-Je souhaite utiliser du SCSS si cela te parait pertinant.
-Je ne suis pas très a l'aise avec l'architectur de base de react native, donc je veux que tu me proposes une architecture propre et moderne.
+Accès base de donnée:
+Option 1 : Si tu utilises un Émulateur Android (Android Studio)
+C'est la méthode la plus simple si tu développes sur l'émulateur Android.
 
-Ne prend pas en comptre la suite de ce fichier.
-Je veux que tu sois avant tout fort de proposition
-Je veux que l'on mette en place les regles pour toi en tant qu'agent ia.
-Je veux que tu respecte le clean code, le SOLID, le DDD, je ne veux pas que tu genère du code si je ne te le demande pas explicitement. on fait toujours en fonction de la roadmap et c'est moi qui valide quand on passe à la suite.
+Ouvre Android Studio.
+
+Va dans le menu en bas à droite et clique sur Device File Explorer (ou View > Tool Windows > Device File Explorer).
+
+Navigue dans les dossiers de ton émulateur jusqu'à ce chemin : data/data/host.exp.exponent/databases/ (si tu utilises Expo Go) OU data/data/com.ton.identifiant.app/databases/ (si c'est un build natif/development build).
+
+Trouve le fichier scoreboard_pb.db.
+
+Fais un Clic Droit -> Save As... et enregistre-le sur le bureau de ton PC Windows.
+
+Ouvre le fichier avec DB Browser for SQLite.

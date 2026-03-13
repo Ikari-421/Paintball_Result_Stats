@@ -36,6 +36,7 @@ Cette feuille de route définit les étapes de développement de l'application m
 **Objectif :** Clôturer le cycle de vie d'un match.
 
 - [ ] Écran de fin de match et validation des résultats manuelle par l'arbitre.
+- [ ] Implémentation du tableau récapitulatif chronologique (Temps \| Détails).
 - [ ] Gestions spécifiques du temps (Overtime/Tie-break).
 - [ ] Améliorations visuelles (UI/UX), animations et micro-interactions.
 - [ ] Validation et tests de non-régression du Timer et Event Sourcing.

@@ -1,10 +1,12 @@
 export const Colors = {
   text: "#152b42",
   background: "#EBF2FA",
+  surface: "#ffffff",
   primary: "#2c4b5c",
   secondary: "#95cbbc",
   accent: "#5FC2BA",
   danger: "#FFCDD2",
+  error: "#FF3B30",
   white: "#fff",
   border: "rgba(0, 0, 0, 0.05)",
   shadow: "#000",

@@ -1,14 +1,13 @@
-import { IGameModeRepository } from '../ports/IGameModeRepository';
-import { IEventStore } from '../ports/IEventStore';
-import { GameMode, GameDuration, BreakDuration, OvertimeDuration, TimeoutCount, ScoreLimit } from '../domain/GameMode';
+import { BreakDuration, GameDuration, GameMode, OvertimeDuration, ScoreLimit } from '../domain/GameMode';
 import { DomainGameModeEvent } from '../domain/events/GameModeEvents';
+import { IEventStore } from '../ports/IEventStore';
+import { IGameModeRepository } from '../ports/IGameModeRepository';
 
 export interface CreateGameModeParams {
     id: string;
     name: string;
     gameTimeMinutes: number;
     breakTimeSeconds: number;
-    timeOutsPerTeam: number;
     raceTo: number;
     overtimeMinutes?: number;
 }
@@ -17,7 +16,7 @@ export class CreateGameMode {
     constructor(
         private gameModeRepository: IGameModeRepository,
         private eventStore: IEventStore
-    ) {}
+    ) { }
 
     async execute(params: CreateGameModeParams): Promise<GameMode> {
         const gameMode = GameMode.create(
@@ -25,11 +24,10 @@ export class CreateGameMode {
             params.name,
             new GameDuration(params.gameTimeMinutes),
             new BreakDuration(params.breakTimeSeconds),
-            new TimeoutCount(params.timeOutsPerTeam),
             new ScoreLimit(params.raceTo),
             params.overtimeMinutes !== undefined ? new OvertimeDuration(params.overtimeMinutes) : undefined
         );
-        
+
         await this.gameModeRepository.save(gameMode);
 
         const event: DomainGameModeEvent = {
@@ -41,7 +39,6 @@ export class CreateGameMode {
                 gameTimeMinutes: gameMode.gameTime.minutes,
                 breakTimeSeconds: gameMode.breakTime.seconds,
                 overtimeMinutes: gameMode.overTime?.minutes,
-                timeOutsPerTeam: gameMode.timeOutsPerTeam.quantity,
                 raceTo: gameMode.raceTo.value
             }
         };

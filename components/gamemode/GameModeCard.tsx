@@ -1,6 +1,6 @@
 import { BorderRadius, Colors, Shadows, Spacing } from "@/constants/theme";
 import { GameMode } from "@/src/core/domain/GameMode";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface GameModeCardProps {
@@ -22,8 +22,7 @@ export const GameModeCard = ({
     const parts: string[] = [];
 
     parts.push(`${gameMode.gameTime.minutes}m`);
-    parts.push(`${gameMode.timeOutsPerTeam.quantity} TO`);
-    parts.push(`Race to ${gameMode.raceTo.value}`);
+    parts.push(gameMode.raceTo.value > 0 ? `Race to ${gameMode.raceTo.value}` : `Time Limit Only`);
 
     return parts.join(" • ");
   };
@@ -41,8 +40,8 @@ export const GameModeCard = ({
       </View>
 
       {onSelect && (
-        <Ionicons
-          name={isSelected ? "radio-button-on" : "radio-button-off"}
+        <FontAwesome5
+          name={isSelected ? "dot-circle" : "circle"}
           size={24}
           color={isSelected ? Colors.primary : Colors.secondary}
           style={!isSelected && styles.iconUnselected}
@@ -51,12 +50,12 @@ export const GameModeCard = ({
 
       {onEdit && (
         <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-          <Text style={styles.actionIcon}>✏️</Text>
+          <FontAwesome5 name="pen" size={16} color={Colors.text} />
         </TouchableOpacity>
       )}
       {onDelete && (
         <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-          <Text style={styles.actionIcon}>🗑️</Text>
+          <FontAwesome5 name="trash" size={16} color={Colors.text} />
         </TouchableOpacity>
       )}
     </TouchableOpacity>

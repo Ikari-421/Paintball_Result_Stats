@@ -6,12 +6,13 @@ import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 export default function EditGameModeScreen() {
@@ -23,7 +24,7 @@ export default function EditGameModeScreen() {
   const [gameTimeMinutes, setGameTimeMinutes] = useState("10");
   const [breakTimeSeconds, setBreakTimeSeconds] = useState("30");
   const [overtimeMinutes, setOvertimeMinutes] = useState("5");
-  const [timeOutsPerTeam, setTimeOutsPerTeam] = useState("2");
+  const [isRaceToEnabled, setIsRaceToEnabled] = useState(false);
   const [raceTo, setRaceTo] = useState("5");
 
   const gameMode = gameModes.find((gm) => gm.id === id);
@@ -34,8 +35,12 @@ export default function EditGameModeScreen() {
       setGameTimeMinutes(gameMode.gameTime.minutes.toString());
       setBreakTimeSeconds(gameMode.breakTime.seconds.toString());
       setOvertimeMinutes(gameMode.overTime?.minutes.toString() || "5");
-      setTimeOutsPerTeam(gameMode.timeOutsPerTeam.quantity.toString());
-      setRaceTo(gameMode.raceTo.value.toString());
+
+      setOvertimeMinutes(gameMode.overTime?.minutes.toString() || "5");
+
+      const isRaceEnabled = gameMode.raceTo.value > 0;
+      setIsRaceToEnabled(isRaceEnabled);
+      setRaceTo(isRaceEnabled ? gameMode.raceTo.value.toString() : "5");
     }
   }, [gameMode]);
 
@@ -53,8 +58,7 @@ export default function EditGameModeScreen() {
     const gameTime = parseInt(gameTimeMinutes);
     const breakTime = parseInt(breakTimeSeconds);
     const overtime = parseInt(overtimeMinutes);
-    const timeouts = parseInt(timeOutsPerTeam);
-    const scoreLimit = parseInt(raceTo);
+    const scoreLimit = isRaceToEnabled ? parseInt(raceTo) : 0;
 
     if (isNaN(gameTime) || gameTime <= 0) {
       Alert.alert("Error", "Game time must be a positive number");
@@ -66,12 +70,7 @@ export default function EditGameModeScreen() {
       return;
     }
 
-    if (isNaN(timeouts) || timeouts < 0) {
-      Alert.alert("Error", "Timeouts must be a positive number or zero");
-      return;
-    }
-
-    if (isNaN(scoreLimit) || scoreLimit <= 0) {
+    if (isRaceToEnabled && (isNaN(scoreLimit) || scoreLimit <= 0)) {
       Alert.alert("Error", "Score limit must be a positive number");
       return;
     }
@@ -82,7 +81,6 @@ export default function EditGameModeScreen() {
         name: name.trim(),
         gameTimeMinutes: gameTime,
         breakTimeSeconds: breakTime,
-        timeOutsPerTeam: timeouts,
         raceTo: scoreLimit,
         overtimeMinutes:
           !isNaN(overtime) && overtime > 0 ? overtime : undefined,
@@ -96,7 +94,7 @@ export default function EditGameModeScreen() {
   if (!gameMode) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Edit Game Mod" onBack={() => router.back()} />
+        <ScreenHeader title="Edit Game Mode" onBack={() => router.back()} />
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Game mode not found</Text>
           <PrimaryButton title="Go Back" onPress={() => router.back()} />
@@ -107,11 +105,11 @@ export default function EditGameModeScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Edit Game Mod" onBack={() => router.back()} />
+      <ScreenHeader title="Edit Game Mode" onBack={() => router.back()} />
 
       <ScrollView style={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.label}>Mod Name</Text>
+          <Text style={styles.label}>Mode Name</Text>
           <TextInput
             style={styles.input}
             value={name}
@@ -131,13 +129,6 @@ export default function EditGameModeScreen() {
             placeholder="10"
           />
           <NumberInput
-            label="Time Out"
-            sublabel="Number of timeouts per team"
-            value={timeOutsPerTeam}
-            onChangeText={setTimeOutsPerTeam}
-            placeholder="2"
-          />
-          <NumberInput
             label="Break Time"
             sublabel="Duration between games in seconds"
             value={breakTimeSeconds}
@@ -151,20 +142,35 @@ export default function EditGameModeScreen() {
             onChangeText={setOvertimeMinutes}
             placeholder="5"
           />
-          <NumberInput
-            label="Race To"
-            sublabel="First team to reach this score wins"
-            value={raceTo}
-            onChangeText={setRaceTo}
-            placeholder="5"
-            isHighlighted
-          />
+          <View style={styles.switchRowContainer}>
+            <View style={styles.switchRow}>
+              <View>
+                <Text style={styles.label}>Race To</Text>
+                <Text style={styles.subtext}>Match ends at a score limit</Text>
+              </View>
+              <Switch
+                value={isRaceToEnabled}
+                onValueChange={setIsRaceToEnabled}
+                trackColor={{ false: Colors.border, true: Colors.primary }}
+              />
+            </View>
+            {isRaceToEnabled && (
+              <NumberInput
+                label=""
+                sublabel="First team to reach this score wins"
+                value={raceTo}
+                onChangeText={setRaceTo}
+                placeholder="5"
+                isHighlighted
+              />
+            )}
+          </View>
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <PrimaryButton
-          title="Update Game Mod"
+          title="Update Game Mode"
           onPress={handleSubmit}
           disabled={!name.trim()}
         />
@@ -218,5 +224,22 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+  },
+  switchRowContainer: {
+    marginBottom: Spacing.xl,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+  subtext: {
+    fontSize: 12,
+    color: Colors.secondary,
+    marginTop: 2,
   },
 });

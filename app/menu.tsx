@@ -1,4 +1,3 @@
-import { OutlineButton } from "@/components/common/OutlineButton";
 import { MenuCard } from "@/components/menu/MenuCard";
 import { Colors, Spacing, Typography } from "@/constants/theme";
 import { router } from "expo-router";
@@ -14,21 +13,12 @@ export default function MenuScreen() {
 
       <ScrollView style={styles.content}>
         <MenuCard
-          title="Fields List"
-          subtitle="Manage and monitor active fields"
-          icon="🏟️"
+          title="Tournaments"
+          subtitle="Manage active tournaments and fields"
+          icon="🏆"
           iconColor={Colors.primary}
-          onPress={() => router.push("/field/fields-list")}
+          onPress={() => router.push("/tournament/tournaments-list" as any)}
         />
-
-        <MenuCard
-          title="Create Field"
-          subtitle="Setup a new field with matchups"
-          icon="➕"
-          iconColor={Colors.secondary}
-          onPress={() => router.push("/field/create-field")}
-        />
-
         <MenuCard
           title="Teams"
           subtitle="Manage roster and guest teams"
@@ -38,7 +28,7 @@ export default function MenuScreen() {
         />
 
         <MenuCard
-          title="Game Mods"
+          title="Game Modes"
           subtitle="Configure match rules & timers"
           icon="⚙️"
           iconColor={Colors.primary}
@@ -46,22 +36,16 @@ export default function MenuScreen() {
         />
 
         <MenuCard
-          title="History"
-          subtitle="View past match results"
+          title="Past Tournaments"
+          subtitle="View past tournament results"
           icon="📜"
           iconColor="#ccc"
-          onPress={() => {}}
+          onPress={() => { }}
           disabled
         />
       </ScrollView>
 
-      <View style={styles.footer}>
-        <OutlineButton
-          title="My Profile"
-          icon="👤"
-          onPress={() => router.push("/profile")}
-        />
-      </View>
+
     </View>
   );
 }

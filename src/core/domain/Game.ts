@@ -35,6 +35,7 @@ export class GameTimer {
   constructor(
     public readonly remainingTime: number, // in seconds
     public readonly isRunning: boolean = false,
+    public readonly endTimestamp: number | null = null,
   ) {
     if (remainingTime < 0) {
       throw new Error("Remaining time cannot be negative");
@@ -42,18 +43,27 @@ export class GameTimer {
   }
 
   start(): GameTimer {
-    return new GameTimer(this.remainingTime, true);
+    const endTimestamp = Date.now() + this.remainingTime * 1000;
+    return new GameTimer(this.remainingTime, true, endTimestamp);
   }
 
-  pause(): GameTimer {
-    return new GameTimer(this.remainingTime, false);
+  stop(): GameTimer {
+    if (!this.isRunning || !this.endTimestamp) {
+      return new GameTimer(this.remainingTime, false, null);
+    }
+    const newRemainingTime = Math.max(0, Math.floor((this.endTimestamp - Date.now()) / 1000));
+    return new GameTimer(newRemainingTime, false, null);
   }
 
   updateTime(seconds: number): GameTimer {
     if (seconds < 0) {
       throw new Error("Time cannot be negative");
     }
-    return new GameTimer(seconds, this.isRunning);
+    if (this.isRunning) {
+      const newEndTimestamp = Date.now() + seconds * 1000;
+      return new GameTimer(seconds, this.isRunning, newEndTimestamp);
+    }
+    return new GameTimer(seconds, this.isRunning, null);
   }
 
   isExpired(): boolean {
@@ -70,7 +80,10 @@ export class Game {
     public readonly score: Score,
     public readonly timer: GameTimer,
     public readonly status: GameStatus,
-  ) {}
+    public readonly currentRound: number = 1,
+    public readonly isTimeStopped: number = 0,
+    public readonly gameStateStatus: string = GameStatus.NOT_STARTED,
+  ) { }
 
   static create(
     id: GameId,
@@ -83,7 +96,7 @@ export class Game {
     }
 
     const initialScore = new Score(0, 0);
-    const initialTimer = new GameTimer(gameMode.gameTime.minutes * 60, false);
+    const initialTimer = new GameTimer(gameMode.gameTime.minutes * 60);
 
     return new Game(
       id,
@@ -93,12 +106,15 @@ export class Game {
       initialScore,
       initialTimer,
       GameStatus.NOT_STARTED,
+      1, // currentRound
+      0, // isTimeStopped
+      GameStatus.NOT_STARTED, // gameStateStatus
     );
   }
 
   start(): Game {
-    if (this.status !== GameStatus.NOT_STARTED) {
-      throw new Error("Game can only be started from NOT_STARTED status");
+    if (this.status !== GameStatus.NOT_STARTED && this.status !== GameStatus.BREAK && this.status !== GameStatus.TIME_STOPPED) {
+      throw new Error(`Game can only be started from NOT_STARTED, BREAK, or TIME_STOPPED status. Current: ${this.status}`);
     }
 
     return new Game(
@@ -109,12 +125,38 @@ export class Game {
       this.score,
       this.timer.start(),
       GameStatus.RUNNING,
+      this.currentRound,
+      0, // isTimeStopped
+      GameStatus.RUNNING // gameStateStatus
     );
   }
 
-  pause(): Game {
-    if (this.status !== GameStatus.RUNNING) {
-      throw new Error("Game can only be paused when RUNNING");
+  startOvertime(): Game {
+    if (this.status !== GameStatus.RUNNING && this.status !== GameStatus.TIME_STOPPED && this.status !== GameStatus.OVERTIME) {
+      throw new Error(`Overtime can only be started from RUNNING or STOPPED, current status is ${this.status}`);
+    }
+
+    const overtimeSeconds = this.gameMode.overTime?.minutes ? this.gameMode.overTime.minutes * 60 : 300;
+    // Create the overtime timer, but don't start it. It starts stopped so the referee initiates a break.
+    const initialOvertimeTimer = new GameTimer(overtimeSeconds);
+
+    return new Game(
+      this.id,
+      this.fieldId,
+      this.matchup,
+      this.gameMode,
+      this.score,
+      initialOvertimeTimer,
+      GameStatus.OVERTIME,
+      this.currentRound,
+      1, // isTimeStopped. It requires a break to actually start!
+      GameStatus.OVERTIME // gameStateStatus
+    );
+  }
+
+  stopTime(): Game {
+    if (this.status !== GameStatus.RUNNING && this.status !== GameStatus.OVERTIME) {
+      throw new Error(`Game can only be stopped when RUNNING or OVERTIME, current status is ${this.status}`);
     }
 
     return new Game(
@@ -123,15 +165,22 @@ export class Game {
       this.matchup,
       this.gameMode,
       this.score,
-      this.timer.pause(),
-      GameStatus.BREAK,
+      this.timer.stop(),
+      this.status,
+      this.currentRound,
+      1, // isTimeStopped
+      this.gameStateStatus
     );
   }
 
   resume(): Game {
-    if (this.status !== GameStatus.BREAK) {
-      throw new Error("Game can only be resumed from BREAK status");
+    if (!this.isTimeStopped) {
+      throw new Error("Game can only be resumed when time is stopped");
     }
+
+    const resumedStatus = this.status === GameStatus.BREAK
+      ? (this.gameStateStatus === GameStatus.OVERTIME ? GameStatus.OVERTIME : GameStatus.RUNNING)
+      : this.status;
 
     return new Game(
       this.id,
@@ -140,7 +189,10 @@ export class Game {
       this.gameMode,
       this.score,
       this.timer.start(),
-      GameStatus.RUNNING,
+      resumedStatus,
+      this.currentRound,
+      0, // isTimeStopped
+      this.gameStateStatus
     );
   }
 
@@ -151,14 +203,62 @@ export class Game {
       this.matchup,
       this.gameMode,
       this.score,
-      this.timer.pause(),
+      this.timer.stop(),
       GameStatus.FINISHED,
+      this.currentRound,
+      1, // isTimeStopped
+      GameStatus.FINISHED // gameStateStatus
+    );
+  }
+
+  startBreak(): Game {
+    // If we're not started, keep NOT_STARTED as the underlying state.
+    // If we're already running or stopped, keep that as the underlying state.
+    const previousState = this.status === GameStatus.NOT_STARTED ? GameStatus.NOT_STARTED : this.gameStateStatus;
+
+    return new Game(
+      this.id,
+      this.fieldId,
+      this.matchup,
+      this.gameMode,
+      this.score,
+      this.timer,
+      GameStatus.BREAK,
+      this.currentRound,
+      1, // The main game time is stopped!
+      previousState
+    );
+  }
+
+  endBreak(): Game {
+    // If the game was NOT_STARTED before the break, and the break ends (either manually or timer expires)
+    // The previous gameStateStatus should be NOT_STARTED. We return it to NOT_STARTED, but with isTimeStopped=1
+    // so that the UI can handle the transition.
+    const resolvedStatus = this.gameStateStatus === GameStatus.NOT_STARTED
+      ? GameStatus.NOT_STARTED
+      : this.gameStateStatus === GameStatus.OVERTIME
+        ? GameStatus.OVERTIME
+        : GameStatus.RUNNING;
+
+    return new Game(
+      this.id,
+      this.fieldId,
+      this.matchup,
+      this.gameMode,
+      this.score,
+      this.timer,
+      resolvedStatus,
+      this.currentRound,
+      1,
+      this.gameStateStatus
     );
   }
 
   updateScore(newScore: Score): Game {
-    if (this.status === GameStatus.RUNNING) {
-      throw new Error("Cannot modify score while game is running");
+    if (this.status === GameStatus.RUNNING || this.status === GameStatus.OVERTIME) {
+      if (this.isTimeStopped !== 1 && (this.isTimeStopped as any) !== true) {
+        throw new Error(`Cannot modify score while game timer is running (status: ${this.status})`);
+      }
     }
 
     return new Game(
@@ -169,12 +269,17 @@ export class Game {
       newScore,
       this.timer,
       this.status,
+      this.currentRound,
+      this.isTimeStopped,
+      this.gameStateStatus
     );
   }
 
   updateTimer(newTimer: GameTimer): Game {
-    if (this.status === GameStatus.RUNNING) {
-      throw new Error("Cannot modify timer while game is running");
+    if (this.status === GameStatus.RUNNING || this.status === GameStatus.OVERTIME) {
+      if (this.isTimeStopped !== 1 && (this.isTimeStopped as any) !== true) {
+        throw new Error(`Cannot modify timer while game timer is running (status: ${this.status})`);
+      }
     }
 
     return new Game(
@@ -185,6 +290,9 @@ export class Game {
       this.score,
       newTimer,
       this.status,
+      this.currentRound,
+      this.isTimeStopped,
+      this.gameStateStatus
     );
   }
 }

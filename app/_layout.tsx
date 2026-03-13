@@ -6,6 +6,7 @@ import {
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -50,35 +51,18 @@ export default function RootLayout() {
   }
 
   return (
-    <MatchupCreationProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="menu" />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <MatchupCreationProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="menu" />
 
-          {/* Field Management */}
-          <Stack.Screen name="field" />
-
-          {/* Team Management */}
-          <Stack.Screen name="team" />
-
-          {/* Game Mode Management */}
-          <Stack.Screen name="gamemode" />
-
-          {/* Game Session */}
-          <Stack.Screen name="start-match" />
-          <Stack.Screen name="match" />
-
-          {/* Other */}
-          <Stack.Screen name="history" />
-          <Stack.Screen name="profile" />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </MatchupCreationProvider>
+            {/* Folders auto-routed by Expo Router do not need explicit Stack.Screens here unless they have an _layout.tsx or index.tsx */}
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </MatchupCreationProvider>
+    </GestureHandlerRootView>
   );
 }

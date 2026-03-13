@@ -1,18 +1,25 @@
 import { EmptyState } from "@/components/common/EmptyState";
-import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
-import { SecondaryButton } from "@/components/common/SecondaryButton";
 import { FieldDetailHeader } from "@/components/field/FieldDetailHeader";
 import { MatchupCard } from "@/components/field/MatchupCard";
 import { Colors, Spacing } from "@/constants/theme";
+import { GameStatus } from "@/src/core/domain/GameStatus";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function FieldDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { fields, teams, deleteField } = useCoreStore();
+  const {
+    fields,
+    teams,
+    gameModes,
+    games,
+    createGame,
+    deleteField,
+    loadGames,
+  } = useCoreStore();
 
   const field = fields.find((f) => f.id === id);
 
@@ -27,10 +34,57 @@ export default function FieldDetailScreen() {
     );
   }
 
-  const handleStartGames = () => {
+  const handleStartGames = async () => {
     if (field.matchups.length === 0) return;
     const firstMatchup = field.matchups[0];
-    router.push(`/game?fieldId=${field.id}&matchupId=${firstMatchup.id}`);
+
+    // Check if matchup has a gameMode
+    if (!firstMatchup.gameModeId) {
+      Alert.alert(
+        "Mode de jeu manquant",
+        "Ce matchup n'a pas de mode de jeu associé. Veuillez éditer le terrain pour ajouter un mode de jeu.",
+      );
+      return;
+    }
+
+    try {
+      console.log("[FieldDetails] Matchup:", firstMatchup.id);
+      console.log("[FieldDetails] GameMode:", firstMatchup.gameModeId);
+
+      // Vérifier si un game existe déjà pour ce matchup
+      const existingGame = games.find(
+        (g) => g.matchup.id === firstMatchup.id && g.fieldId === field.id,
+      );
+
+      let gameId: string;
+
+      if (existingGame) {
+        console.log("[FieldDetails] Game existant trouvé:", existingGame.id);
+        gameId = existingGame.id;
+      } else {
+        console.log("[FieldDetails] Création d'un nouveau game");
+        gameId = await createGame({
+          fieldId: field.id,
+          matchupId: firstMatchup.id,
+          teamAId: firstMatchup.teamA,
+          teamBId: firstMatchup.teamB,
+          matchupOrder: firstMatchup.order,
+          gameModeId: firstMatchup.gameModeId,
+        });
+
+        console.log("[FieldDetails] Game créé avec ID:", gameId);
+        console.log("[FieldDetails] Rechargement des games...");
+        await loadGames();
+      }
+
+      console.log("[FieldDetails] Navigation vers:", `/game-session/${gameId}`);
+
+      // Navigate to game session
+      router.push(`/game-session/${gameId}`);
+    } catch (error) {
+      console.error("[FieldDetails] Erreur création game:", error);
+      Alert.alert("Erreur", (error as Error).message);
+    }
   };
 
   const handleEditField = () => {
@@ -56,7 +110,7 @@ export default function FieldDetailScreen() {
           style: "destructive",
           onPress: async () => {
             await deleteField(field.id);
-            router.push("/field/fields-list");
+            router.push(`/tournament/${field.tournamentId}` as any);
           },
         },
       ],
@@ -68,7 +122,7 @@ export default function FieldDetailScreen() {
       <FieldDetailHeader
         fieldName={field.name}
         matchupsCount={field.matchups.length}
-        onBack={() => router.push("/field/fields-list")}
+        onBack={() => router.back()}
       />
 
       <ScrollView style={styles.content}>
@@ -78,19 +132,67 @@ export default function FieldDetailScreen() {
           field.matchups.map((matchup, index) => {
             const teamA = teams.find((t) => t.id === matchup.teamA);
             const teamB = teams.find((t) => t.id === matchup.teamB);
-            const isActive = index === 0;
+            const existingGame = games.find(
+              (g) => g.matchup.id === matchup.id && g.fieldId === field.id,
+            );
+            const gameMode = gameModes.find((mode) => mode.id === matchup.gameModeId);
+            const gameStatus = existingGame?.gameStateStatus || undefined;
+            const isTimeStopped = existingGame?.isTimeStopped === 1;
+            const displayStatus = existingGame?.status === GameStatus.FINISHED
+              ? GameStatus.FINISHED
+              : (isTimeStopped ? "TIME_STOPPED" : gameStatus);
 
             return (
               <MatchupCard
                 key={matchup.id}
                 teamAName={teamA?.name || "Team A"}
                 teamBName={teamB?.name || "Team B"}
-                isActive={isActive}
-                onPress={() =>
-                  router.push(
-                    `/game?fieldId=${field.id}&matchupId=${matchup.id}`,
-                  )
-                }
+                status={displayStatus}
+                scoreA={existingGame?.score?.teamAScore}
+                scoreB={existingGame?.score?.teamBScore}
+                gameModeName={gameMode?.name}
+                onPress={async () => {
+                  if (!matchup.gameModeId) {
+                    Alert.alert(
+                      "Mode de jeu manquant",
+                      "Ce matchup n'a pas de mode de jeu associé.",
+                    );
+                    return;
+                  }
+
+                  try {
+                    // Vérifier si un game existe déjà pour ce matchup
+                    const existingGame = games.find(
+                      (g) =>
+                        g.matchup.id === matchup.id && g.fieldId === field.id,
+                    );
+
+                    let gameId: string;
+
+                    if (existingGame) {
+                      console.log(
+                        "[MatchupCard] Game existant trouvé:",
+                        existingGame.id,
+                      );
+                      gameId = existingGame.id;
+                    } else {
+                      console.log("[MatchupCard] Création d'un nouveau game");
+                      gameId = await createGame({
+                        fieldId: field.id,
+                        matchupId: matchup.id,
+                        teamAId: matchup.teamA,
+                        teamBId: matchup.teamB,
+                        matchupOrder: matchup.order,
+                        gameModeId: matchup.gameModeId,
+                      });
+                      await loadGames();
+                    }
+
+                    router.push(`/game-session/${gameId}`);
+                  } catch (error) {
+                    Alert.alert("Erreur", (error as Error).message);
+                  }
+                }}
               />
             );
           })
@@ -102,20 +204,13 @@ export default function FieldDetailScreen() {
           title="Start Games"
           onPress={handleStartGames}
           disabled={field.matchups.length === 0}
-          style={styles.startButton}
         />
-        <View style={styles.actionButtons}>
-          <OutlineButton
-            title="Edit Field"
-            onPress={handleEditField}
-            style={styles.actionButton}
-          />
-          <SecondaryButton
-            title="Delete Field"
-            onPress={handleDeleteField}
-            style={styles.deleteButton}
-          />
-        </View>
+        <TouchableOpacity style={styles.editLink} onPress={handleEditField}>
+          <Text style={styles.editLinkText}>Edit Field</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteLink} onPress={handleDeleteField}>
+          <Text style={styles.deleteLinkText}>Delete Field</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -139,20 +234,23 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
-    gap: Spacing.md,
   },
-  startButton: {
-    backgroundColor: Colors.accent,
+  editLink: {
+    marginTop: Spacing.xl,
+    alignItems: "center",
   },
-  actionButtons: {
-    flexDirection: "row",
-    gap: Spacing.md,
+  editLinkText: {
+    color: Colors.primary,
+    fontSize: 14,
+    fontWeight: "600",
   },
-  actionButton: {
-    flex: 1,
+  deleteLink: {
+    marginTop: Spacing.md,
+    alignItems: "center",
   },
-  deleteButton: {
-    flex: 1,
-    backgroundColor: Colors.danger,
+  deleteLinkText: {
+    color: "#ff3b30",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

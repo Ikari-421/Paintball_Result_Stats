@@ -1,13 +1,13 @@
-import { Field } from '../domain/Field';
-import { IFieldRepository } from '../ports/IFieldRepository';
-import { IEventStore } from '../ports/IEventStore';
 import { FieldUpdatedEvent } from '../domain/events/FieldEvents';
+import { Field } from '../domain/Field';
+import { IEventStore } from '../ports/IEventStore';
+import { IFieldRepository } from '../ports/IFieldRepository';
 
 export class UpdateField {
   constructor(
     private fieldRepository: IFieldRepository,
     private eventStore: IEventStore
-  ) {}
+  ) { }
 
   async execute(id: string, name: string): Promise<Field> {
     const existingField = await this.fieldRepository.findById(id);
@@ -20,7 +20,7 @@ export class UpdateField {
     }
 
     // Preserve matchups when updating
-    let updatedField = Field.create(id, name.trim());
+    let updatedField = Field.create(id, existingField.tournamentId, name.trim());
     existingField.matchups.forEach(matchup => {
       updatedField = updatedField.addMatchup(matchup);
     });

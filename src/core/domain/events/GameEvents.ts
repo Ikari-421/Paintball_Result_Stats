@@ -22,8 +22,8 @@ export interface GameStartedEvent extends GameEvent {
     };
 }
 
-export interface GamePausedEvent extends GameEvent {
-    type: 'GamePaused';
+export interface GameTimeStoppedEvent extends GameEvent {
+    type: 'GameTimeStopped';
     payload: {
         remainingTime: number;
     };
@@ -79,13 +79,14 @@ export interface GameFinishedEvent extends GameEvent {
         finalScoreTeamB: number;
         winnerTeamId: TeamId | null;
         endReason: 'SCORE_LIMIT' | 'TIME_EXPIRED' | 'MANUAL';
+        note?: string;
     };
 }
 
 export type DomainGameEvent =
     | GameCreatedEvent
     | GameStartedEvent
-    | GamePausedEvent
+    | GameTimeStoppedEvent
     | GameResumedEvent
     | PointScoredEvent
     | ScoreCorrectedEvent

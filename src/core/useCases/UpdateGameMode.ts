@@ -1,11 +1,10 @@
 import { GameModeUpdatedEvent } from "../domain/events/GameModeEvents";
 import {
-    BreakDuration,
-    GameDuration,
-    GameMode,
-    OvertimeDuration,
-    ScoreLimit,
-    TimeoutCount,
+  BreakDuration,
+  GameDuration,
+  GameMode,
+  OvertimeDuration,
+  ScoreLimit
 } from "../domain/GameMode";
 import { IEventStore } from "../ports/IEventStore";
 import { IGameModeRepository } from "../ports/IGameModeRepository";
@@ -14,14 +13,13 @@ export class UpdateGameMode {
   constructor(
     private gameModeRepository: IGameModeRepository,
     private eventStore: IEventStore,
-  ) {}
+  ) { }
 
   async execute(params: {
     id: string;
     name: string;
     gameTimeMinutes: number;
     breakTimeSeconds: number;
-    timeOutsPerTeam: number;
     raceTo: number;
     overtimeMinutes?: number;
   }): Promise<GameMode> {
@@ -32,7 +30,6 @@ export class UpdateGameMode {
 
     const gameTime = new GameDuration(params.gameTimeMinutes);
     const breakTime = new BreakDuration(params.breakTimeSeconds);
-    const timeOuts = new TimeoutCount(params.timeOutsPerTeam);
     const raceTo = new ScoreLimit(params.raceTo);
     const overTime = params.overtimeMinutes
       ? new OvertimeDuration(params.overtimeMinutes)
@@ -43,7 +40,6 @@ export class UpdateGameMode {
       params.name,
       gameTime,
       breakTime,
-      timeOuts,
       raceTo,
       overTime,
     );
@@ -57,7 +53,6 @@ export class UpdateGameMode {
         name: params.name,
         gameTimeMinutes: params.gameTimeMinutes,
         breakTimeSeconds: params.breakTimeSeconds,
-        timeOutsPerTeam: params.timeOutsPerTeam,
         raceTo: params.raceTo,
         overtimeMinutes: params.overtimeMinutes,
       },
