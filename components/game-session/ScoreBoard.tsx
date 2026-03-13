@@ -10,6 +10,7 @@ interface ScoreBoardProps {
     scoreB: number;
     gameModeName?: string;
     status?: GameStatus;
+    areSidesSwapped?: boolean;
 }
 
 export const ScoreBoard = ({
@@ -19,8 +20,14 @@ export const ScoreBoard = ({
     scoreB,
     gameModeName,
     status,
+    areSidesSwapped = false,
 }: ScoreBoardProps) => {
     const isFinished = status === GameStatus.FINISHED;
+    const leftTeamName = areSidesSwapped ? teamBName : teamAName;
+    const rightTeamName = areSidesSwapped ? teamAName : teamBName;
+    const leftScore = areSidesSwapped ? scoreB : scoreA;
+    const rightScore = areSidesSwapped ? scoreA : scoreB;
+
     return (
         <View style={isFinished ? styles.finishedContainer : styles.scoreContainer}>
             {isFinished && (
@@ -28,8 +35,8 @@ export const ScoreBoard = ({
             )}
             <View style={styles.scoreMainRow}>
                 <View style={styles.teamScore}>
-                    <Text style={isFinished ? styles.teamNameDark : styles.teamName}>{teamAName}</Text>
-                    <Text style={isFinished ? styles.scoreTextDark : styles.scoreText}>{scoreA}</Text>
+                    <Text style={isFinished ? styles.teamNameDark : styles.teamName}>{leftTeamName}</Text>
+                    <Text style={isFinished ? styles.scoreTextDark : styles.scoreText}>{leftScore}</Text>
                 </View>
 
                 <View style={styles.centerScoreInfo}>
@@ -39,13 +46,18 @@ export const ScoreBoard = ({
                 </View>
 
                 <View style={styles.teamScore}>
-                    <Text style={isFinished ? styles.teamNameDark : styles.teamName}>{teamBName}</Text>
-                    <Text style={isFinished ? styles.scoreTextDark : styles.scoreText}>{scoreB}</Text>
+                    <Text style={isFinished ? styles.teamNameDark : styles.teamName}>{rightTeamName}</Text>
+                    <Text style={isFinished ? styles.scoreTextDark : styles.scoreText}>{rightScore}</Text>
                 </View>
             </View>
             {gameModeName && (
-                <Text style={[styles.gameModeTextInline, { color: isFinished ? Colors.primary : "#95cbbc" }]}>
-                    {gameModeName}
+                <Text style={styles.gameModeContainer}>
+                    <Text style={[styles.gameModePrefix, { color: isFinished ? Colors.primary : "#95cbbc" }]}>
+                        Game mode :{" "}
+                    </Text>
+                    <Text style={[styles.gameModeValue, { color: isFinished ? Colors.primary : "#95cbbc" }]}>
+                        {gameModeName}
+                    </Text>
                 </Text>
             )}
         </View>
@@ -54,8 +66,8 @@ export const ScoreBoard = ({
 
 const styles = StyleSheet.create({
     scoreContainer: {
-        padding: 16,
-        marginTop: 24,
+        padding: 12,
+        marginTop: 8,
     },
     scoreMainRow: {
         flexDirection: "row",
@@ -75,7 +87,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     scoreText: {
-        fontSize: 54,
+        fontSize: 72,
         fontWeight: "800",
         color: Colors.white,
         fontVariant: ["tabular-nums"],
@@ -102,11 +114,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontStyle: "italic",
     },
-    gameModeTextInline: {
-        fontSize: 14,
-        fontWeight: "700",
+    gameModeContainer: {
         textAlign: "center",
-        marginTop: 8,
+        marginTop: 4,
+    },
+    gameModePrefix: {
+        fontSize: 11,
+        fontWeight: "600",
+        textTransform: "none",
+    },
+    gameModeValue: {
+        fontSize: 14,
+        fontWeight: "800",
         textTransform: "uppercase",
         letterSpacing: 0.5,
     },
@@ -142,7 +161,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     scoreTextDark: {
-        fontSize: 54,
+        fontSize: 72,
         fontWeight: "800",
         color: Colors.text,
         fontVariant: ["tabular-nums"],

@@ -35,6 +35,7 @@ export class AdjustTime {
         const event: DomainGameEvent = {
             aggregateId: updatedGame.id,
             timestamp: Date.now(),
+            gameTime: newTimeSeconds,
             type: 'TimerAdjusted',
             payload: {
                 previousTime,

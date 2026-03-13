@@ -9,7 +9,8 @@ export const initDb = () => {
       aggregateId TEXT NOT NULL,
       type TEXT NOT NULL,
       payload TEXT NOT NULL,
-      timestamp INTEGER NOT NULL
+      timestamp INTEGER NOT NULL,
+      gameTime INTEGER DEFAULT 0
     );
     
     CREATE TABLE IF NOT EXISTS game_modes (
@@ -77,31 +78,43 @@ export const initDb = () => {
       currentRound INTEGER DEFAULT 1,
       isTimeStopped INTEGER DEFAULT 0,
       gameStateStatus TEXT DEFAULT 'NOT_STARTED',
+      areSidesSwapped INTEGER DEFAULT 0,
       FOREIGN KEY (fieldId) REFERENCES fields(id)
     );
   `);
 
   try {
     db.execSync("ALTER TABLE games ADD COLUMN timerEndTimestamp INTEGER;");
-  } catch (e) {
+  } catch {
     console.log("Column timerEndTimestamp already exists or another error occurred during migration.");
   }
 
   try {
     db.execSync("ALTER TABLE games ADD COLUMN isTimeStopped INTEGER DEFAULT 0;");
-  } catch (e) {
+  } catch {
     console.log("Column isTimeStopped already exists or another error occurred during migration.");
   }
 
   try {
     db.execSync("ALTER TABLE games ADD COLUMN gameStateStatus TEXT DEFAULT 'NOT_STARTED';");
-  } catch (e) {
+  } catch {
     console.log("Column gameStateStatus already exists or another error occurred during migration.");
   }
 
   try {
-    db.execSync("ALTER TABLE games ADD COLUMN currentRound INTEGER DEFAULT 1;");
-  } catch (e) {
-    console.log("Column currentRound already exists or another error occurred during migration.");
+    db.execSync("ALTER TABLE games ADD COLUMN areSidesSwapped INTEGER DEFAULT 0;");
+  } catch {
+    console.log("Column areSidesSwapped already exists or another error occurred during migration.");
+  }
+  try {
+    db.execSync("ALTER TABLE games ADD COLUMN pointStartTime INTEGER DEFAULT 0;");
+  } catch {
+    console.log("Column pointStartTime already exists.");
+  }
+
+  try {
+    db.execSync("ALTER TABLE events ADD COLUMN gameTime INTEGER DEFAULT 0;");
+  } catch {
+    console.log("Column gameTime already exists in events.");
   }
 };

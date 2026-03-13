@@ -6,7 +6,8 @@ import { Colors, Spacing } from "@/constants/theme";
 import { GameStatus } from "@/src/core/domain/GameStatus";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function FieldDetailScreen() {
   const router = useRouter();
@@ -23,6 +24,9 @@ export default function FieldDetailScreen() {
 
   const field = fields.find((f) => f.id === id);
 
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+
   if (!field) {
     return (
       <View style={styles.container}>
@@ -36,22 +40,43 @@ export default function FieldDetailScreen() {
 
   const handleStartGames = async () => {
     if (field.matchups.length === 0) return;
-    const firstMatchup = field.matchups[0];
+
+    // Find the first matchup that hasn't been finished yet
+    const firstUnfinishedMatchup = field.matchups.find((matchup) => {
+      const g = games.find((g) => g.matchup.id === matchup.id && g.fieldId === field.id);
+      return !g || g.status !== GameStatus.FINISHED;
+    });
+
+    if (!firstUnfinishedMatchup) {
+      Alert.alert("All Done", "All matchups on this field have been completed.");
+      return;
+    }
+
+    const firstMatchup = firstUnfinishedMatchup;
 
     // Check if matchup has a gameMode
     if (!firstMatchup.gameModeId) {
       Alert.alert(
-        "Mode de jeu manquant",
-        "Ce matchup n'a pas de mode de jeu associé. Veuillez éditer le terrain pour ajouter un mode de jeu.",
+        "Missing game mode",
+        "This matchup has no game mode assigned. Please edit the field to add one.",
+      );
+      return;
+    }
+
+    // Check Concurrency: Is there any game currently active on this field?
+    const hasActiveGameOnField = games.some(
+      (g) => g.fieldId === field.id && (g.status === GameStatus.RUNNING || g.status === GameStatus.BREAK || g.status === GameStatus.OVERTIME)
+    );
+
+    if (hasActiveGameOnField) {
+      Alert.alert(
+        "Field Occupied",
+        "Another match is currently active on this field. Please finish or stop it before starting a new match."
       );
       return;
     }
 
     try {
-      console.log("[FieldDetails] Matchup:", firstMatchup.id);
-      console.log("[FieldDetails] GameMode:", firstMatchup.gameModeId);
-
-      // Vérifier si un game existe déjà pour ce matchup
       const existingGame = games.find(
         (g) => g.matchup.id === firstMatchup.id && g.fieldId === field.id,
       );
@@ -59,10 +84,8 @@ export default function FieldDetailScreen() {
       let gameId: string;
 
       if (existingGame) {
-        console.log("[FieldDetails] Game existant trouvé:", existingGame.id);
         gameId = existingGame.id;
       } else {
-        console.log("[FieldDetails] Création d'un nouveau game");
         gameId = await createGame({
           fieldId: field.id,
           matchupId: firstMatchup.id,
@@ -71,19 +94,13 @@ export default function FieldDetailScreen() {
           matchupOrder: firstMatchup.order,
           gameModeId: firstMatchup.gameModeId,
         });
-
-        console.log("[FieldDetails] Game créé avec ID:", gameId);
-        console.log("[FieldDetails] Rechargement des games...");
         await loadGames();
       }
 
-      console.log("[FieldDetails] Navigation vers:", `/game-session/${gameId}`);
-
       // Navigate to game session
-      router.push(`/game-session/${gameId}`);
+      router.push(`/game-session/${gameId}?autoStartBreak=true`);
     } catch (error) {
-      console.error("[FieldDetails] Erreur création game:", error);
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
@@ -92,29 +109,22 @@ export default function FieldDetailScreen() {
   };
 
   const handleDeleteField = () => {
-    if (field.matchups.length > 0) {
-      Alert.alert(
-        "Cannot Delete Field",
-        `This field has ${field.matchups.length} matchup(s) scheduled. Please remove all matchups before deleting the field.`,
-      );
+    setDeleteText("");
+    setDeleteModalVisible(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteText !== "Delete") {
+      Alert.alert("Error", 'You must type "Delete" to confirm.');
       return;
     }
-
-    Alert.alert(
-      "Delete Field",
-      `Are you sure you want to delete "${field.name}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await deleteField(field.id);
-            router.push(`/tournament/${field.tournamentId}` as any);
-          },
-        },
-      ],
-    );
+    try {
+      await deleteField(field!.id);
+      setDeleteModalVisible(false);
+      router.push(`/tournament/${field!.tournamentId}` as any);
+    } catch (error) {
+      Alert.alert("Error", (error as Error).message);
+    }
   };
 
   return (
@@ -136,11 +146,15 @@ export default function FieldDetailScreen() {
               (g) => g.matchup.id === matchup.id && g.fieldId === field.id,
             );
             const gameMode = gameModes.find((mode) => mode.id === matchup.gameModeId);
-            const gameStatus = existingGame?.gameStateStatus || undefined;
+            const gameStatus = existingGame?.gameStateStatus || existingGame?.status || GameStatus.NOT_STARTED;
             const isTimeStopped = existingGame?.isTimeStopped === 1;
-            const displayStatus = existingGame?.status === GameStatus.FINISHED
-              ? GameStatus.FINISHED
-              : (isTimeStopped ? "TIME_STOPPED" : gameStatus);
+
+            let displayStatus: GameStatus | string = gameStatus;
+            if (existingGame?.status === GameStatus.FINISHED) {
+              displayStatus = GameStatus.FINISHED;
+            } else if (existingGame?.status !== GameStatus.NOT_STARTED && isTimeStopped) {
+              displayStatus = "TIME_STOPPED";
+            }
 
             return (
               <MatchupCard
@@ -160,23 +174,40 @@ export default function FieldDetailScreen() {
                     return;
                   }
 
+                  // Check Concurrency: Is there any game currently active on this field?
+                  const hasActiveGameOnField = games.some(
+                    (g) => g.fieldId === field.id && (g.status === GameStatus.RUNNING || g.status === GameStatus.BREAK || g.status === GameStatus.OVERTIME)
+                  );
+
+                  // If checking a specific match, allow clicking it if it's the one currently running
+                  // Otherwise, block if another match is occupying the field.
+                  const isThisMatchActive = existingGame?.status === GameStatus.RUNNING || existingGame?.status === GameStatus.BREAK || existingGame?.status === GameStatus.OVERTIME;
+
+                  if (hasActiveGameOnField && !isThisMatchActive) {
+                    Alert.alert(
+                      "Field Occupied",
+                      "Another match is currently active on this field. Please finish or stop it before accessing another match."
+                    );
+                    return;
+                  }
+
                   try {
-                    // Vérifier si un game existe déjà pour ce matchup
                     const existingGame = games.find(
                       (g) =>
                         g.matchup.id === matchup.id && g.fieldId === field.id,
                     );
 
+                    // A FINISHED match can only be viewed, not replayed
+                    if (existingGame?.status === GameStatus.FINISHED) {
+                      router.push(`/game-session/${existingGame.id}`);
+                      return;
+                    }
+
                     let gameId: string;
 
                     if (existingGame) {
-                      console.log(
-                        "[MatchupCard] Game existant trouvé:",
-                        existingGame.id,
-                      );
                       gameId = existingGame.id;
                     } else {
-                      console.log("[MatchupCard] Création d'un nouveau game");
                       gameId = await createGame({
                         fieldId: field.id,
                         matchupId: matchup.id,
@@ -212,6 +243,43 @@ export default function FieldDetailScreen() {
           <Text style={styles.deleteLinkText}>Delete Field</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={isDeleteModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Delete Field?</Text>
+            <Text style={styles.modalText}>
+              This will permanently delete &quot;{field.name}&quot; and all its matchups.{"\n"}
+              Type &quot;Delete&quot; to confirm.
+            </Text>
+
+            <TextInput
+              style={styles.modalInput}
+              value={deleteText}
+              onChangeText={setDeleteText}
+              placeholder="Type Delete"
+              autoCapitalize="none"
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => { setDeleteModalVisible(false); setDeleteText(""); }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmButton, deleteText !== "Delete" && styles.disabledButton]}
+                onPress={handleConfirmDelete}
+                disabled={deleteText !== "Delete"}
+              >
+                <Text style={styles.confirmButtonText}>Confirm Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -233,7 +301,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
   editLink: {
     marginTop: Spacing.xl,
@@ -251,6 +319,68 @@ const styles = StyleSheet.create({
   deleteLinkText: {
     color: "#ff3b30",
     fontSize: 14,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: Spacing.xl,
+    width: "100%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: Spacing.sm,
+    color: Colors.text,
+  },
+  modalText: {
+    fontSize: 14,
+    color: Colors.text,
+    opacity: 0.8,
+    marginBottom: Spacing.lg,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: Spacing.md,
+    fontSize: 16,
+    marginBottom: Spacing.xl,
+    color: Colors.text,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: Spacing.md,
+  },
+  cancelButton: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 8,
+  },
+  cancelButtonText: {
+    color: Colors.text,
+    fontWeight: "600",
+  },
+  confirmButton: {
+    backgroundColor: "#ff3b30",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 8,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  confirmButtonText: {
+    color: Colors.white,
     fontWeight: "600",
   },
 });

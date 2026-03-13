@@ -83,6 +83,8 @@ export class Game {
     public readonly currentRound: number = 1,
     public readonly isTimeStopped: number = 0,
     public readonly gameStateStatus: string = GameStatus.NOT_STARTED,
+    public readonly areSidesSwapped: boolean = false,
+    public readonly pointStartTime: number = 0, // Remaining seconds when current point started
   ) { }
 
   static create(
@@ -107,8 +109,27 @@ export class Game {
       initialTimer,
       GameStatus.NOT_STARTED,
       1, // currentRound
-      0, // isTimeStopped
+      1, // isTimeStopped (Match is stopped until started)
       GameStatus.NOT_STARTED, // gameStateStatus
+      false, // areSidesSwapped
+      gameMode.gameTime.minutes * 60, // pointStartTime
+    );
+  }
+
+  swapSides(): Game {
+    return new Game(
+      this.id,
+      this.fieldId,
+      this.matchup,
+      this.gameMode,
+      this.score,
+      this.timer,
+      this.status,
+      this.currentRound,
+      this.isTimeStopped,
+      this.gameStateStatus,
+      !this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 
@@ -127,13 +148,22 @@ export class Game {
       GameStatus.RUNNING,
       this.currentRound,
       0, // isTimeStopped
-      GameStatus.RUNNING // gameStateStatus
+      GameStatus.RUNNING, // gameStateStatus
+      this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 
   startOvertime(): Game {
-    if (this.status !== GameStatus.RUNNING && this.status !== GameStatus.TIME_STOPPED && this.status !== GameStatus.OVERTIME) {
-      throw new Error(`Overtime can only be started from RUNNING or STOPPED, current status is ${this.status}`);
+    if (
+      this.status !== GameStatus.RUNNING &&
+      this.status !== GameStatus.TIME_STOPPED &&
+      this.status !== GameStatus.BREAK &&
+      this.status !== GameStatus.OVERTIME
+    ) {
+      throw new Error(
+        `Overtime can only be started from RUNNING, TIME_STOPPED, BREAK or OVERTIME, current status is ${this.status}`
+      );
     }
 
     const overtimeSeconds = this.gameMode.overTime?.minutes ? this.gameMode.overTime.minutes * 60 : 300;
@@ -150,7 +180,9 @@ export class Game {
       GameStatus.OVERTIME,
       this.currentRound,
       1, // isTimeStopped. It requires a break to actually start!
-      GameStatus.OVERTIME // gameStateStatus
+      GameStatus.OVERTIME, // gameStateStatus
+      this.areSidesSwapped,
+      overtimeSeconds // new point start time for overtime
     );
   }
 
@@ -169,11 +201,17 @@ export class Game {
       this.status,
       this.currentRound,
       1, // isTimeStopped
-      this.gameStateStatus
+      this.gameStateStatus,
+      this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 
   resume(): Game {
+    if (this.status === GameStatus.NOT_STARTED) {
+      throw new Error("Game must be started before it can be resumed");
+    }
+
     if (!this.isTimeStopped) {
       throw new Error("Game can only be resumed when time is stopped");
     }
@@ -192,7 +230,9 @@ export class Game {
       resumedStatus,
       this.currentRound,
       0, // isTimeStopped
-      this.gameStateStatus
+      this.gameStateStatus,
+      this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 
@@ -207,7 +247,9 @@ export class Game {
       GameStatus.FINISHED,
       this.currentRound,
       1, // isTimeStopped
-      GameStatus.FINISHED // gameStateStatus
+      GameStatus.FINISHED, // gameStateStatus
+      this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 
@@ -226,7 +268,9 @@ export class Game {
       GameStatus.BREAK,
       this.currentRound,
       1, // The main game time is stopped!
-      previousState
+      previousState,
+      this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 
@@ -250,7 +294,9 @@ export class Game {
       resolvedStatus,
       this.currentRound,
       1,
-      this.gameStateStatus
+      this.gameStateStatus,
+      this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 
@@ -271,7 +317,26 @@ export class Game {
       this.status,
       this.currentRound,
       this.isTimeStopped,
-      this.gameStateStatus
+      this.gameStateStatus,
+      this.areSidesSwapped,
+      this.pointStartTime
+    );
+  }
+
+  scorePoint(newScore: Score): Game {
+    return new Game(
+      this.id,
+      this.fieldId,
+      this.matchup,
+      this.gameMode,
+      newScore,
+      this.timer,
+      this.status,
+      this.currentRound,
+      this.isTimeStopped,
+      this.gameStateStatus,
+      this.areSidesSwapped,
+      this.timer.remainingTime // Reset pointStartTime for the NEXT point
     );
   }
 
@@ -292,7 +357,9 @@ export class Game {
       this.status,
       this.currentRound,
       this.isTimeStopped,
-      this.gameStateStatus
+      this.gameStateStatus,
+      this.areSidesSwapped,
+      this.pointStartTime
     );
   }
 }

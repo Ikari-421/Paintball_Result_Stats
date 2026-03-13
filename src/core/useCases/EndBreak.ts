@@ -1,3 +1,4 @@
+import { Game } from '../domain/Game';
 import { IEventStore } from '../ports/IEventStore';
 import { IGameRepository } from '../ports/IGameRepository';
 
@@ -7,7 +8,7 @@ export class EndBreak {
         private readonly eventStore: IEventStore,
     ) { }
 
-    async execute(gameId: string): Promise<void> {
+    async execute(gameId: string): Promise<Game> {
         const game = await this.gameRepository.findById(gameId);
         if (!game) {
             throw new Error(`Game with id ${gameId} not found`);
@@ -22,5 +23,7 @@ export class EndBreak {
             type: 'GameResumed', // Or BreakEnded event
             payload: { remainingTime: resumedGame.timer.remainingTime }
         });
+
+        return resumedGame;
     }
 }

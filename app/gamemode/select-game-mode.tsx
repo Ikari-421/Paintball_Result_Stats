@@ -19,7 +19,7 @@ export default function SelectGameModeScreen() {
 
   useEffect(() => {
     loadGameModes();
-  }, []);
+  }, [loadGameModes]);
 
   useEffect(() => {
     if (gameMode) {
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
     gap: Spacing.md,
   },
 });

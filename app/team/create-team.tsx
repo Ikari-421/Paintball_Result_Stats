@@ -1,3 +1,4 @@
+import { Spacing } from "@/constants/theme";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -13,21 +14,21 @@ import {
 
 export default function CreateTeamScreen() {
   const router = useRouter();
-  const { createTeam, error, clearError } = useCoreStore();
+  const { createTeam, error } = useCoreStore();
   const [name, setName] = useState("");
   const [isGuest, setIsGuest] = useState(false);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert("Erreur", "Le nom de l'équipe est requis");
+      Alert.alert("Error", "Team name is required");
       return;
     }
 
     try {
       await createTeam(name.trim(), isGuest);
       router.back();
-    } catch (err) {
-      Alert.alert("Erreur", error || "Impossible de créer l'équipe");
+    } catch {
+      Alert.alert("Error", error || "Unable to create team");
     }
   };
 
@@ -38,30 +39,29 @@ export default function CreateTeamScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Text style={styles.backText}>← Annuler</Text>
+          <Text style={styles.backText}>← Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Nouvelle Équipe</Text>
+        <Text style={styles.title}>New Team</Text>
         <View style={{ width: 80 }} />
       </View>
 
       <View style={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.label}>Nom de l'équipe</Text>
+          <Text style={styles.label}>Team Name</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="Ex: Team Alpha"
+            placeholder="e.g. Team Alpha"
             placeholderTextColor="#95cbbc"
             autoFocus
           />
 
           <View style={styles.switchContainer}>
             <View>
-              <Text style={styles.switchLabel}>Équipe Invitée</Text>
+              <Text style={styles.switchLabel}>Guest Team</Text>
               <Text style={styles.switchSubtext}>
-                Les équipes invitées ne sont pas sauvegardées de manière
-                permanente
+                Guest teams are not saved permanently
               </Text>
             </View>
             <Switch
@@ -81,7 +81,7 @@ export default function CreateTeamScreen() {
           onPress={handleSubmit}
           disabled={!name.trim()}
         >
-          <Text style={styles.submitButtonText}>Créer l'équipe</Text>
+          <Text style={styles.submitButtonText}>Create Team</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+    paddingBottom: Spacing.xxxl,
   },
   card: {
     backgroundColor: "#fff",

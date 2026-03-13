@@ -3,6 +3,7 @@ export interface DomainEvent {
     type: string;
     payload: unknown;
     timestamp: number;
+    gameTime?: number;
 }
 
 export interface IEventStore {

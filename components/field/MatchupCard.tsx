@@ -37,30 +37,41 @@ export const MatchupCard = ({
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.content} onPress={onPress}>
-        <View style={styles.mainContent}>
-          <View style={styles.teamsContainer}>
-            <View style={styles.teamScoreWrapper}>
+        <View style={styles.gridContainer}>
+          {/* Row 1 / Merged Col : Status */}
+          <View style={styles.rowTop}>
+            <MatchStatusBadge status={currentStatus as GameStatus} isTimeStopped={isStopped} />
+          </View>
+
+          {/* Row 2 : Team A - VS - Team B */}
+          <View style={styles.rowMiddle}>
+            <View style={styles.teamCol}>
               <Text style={styles.teamName}>{teamAName}</Text>
               {scoreA !== undefined && (
                 <Text style={styles.scoreText}>{scoreA}</Text>
               )}
             </View>
-            <View style={styles.vsBadge}>
-              <Text style={styles.vsText}>VS</Text>
+
+            <View style={styles.vsCol}>
+              <View style={styles.vsBadge}>
+                <Text style={styles.vsText}>VS</Text>
+              </View>
             </View>
-            <View style={styles.teamScoreWrapper}>
+
+            <View style={styles.teamCol}>
               <Text style={styles.teamName}>{teamBName}</Text>
               {scoreB !== undefined && (
                 <Text style={styles.scoreText}>{scoreB}</Text>
               )}
             </View>
           </View>
+
+          {/* Row 3 / Merged Col : Game Mode */}
           {gameModeName && (
-            <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
+            <View style={styles.rowBottom}>
+              <Text style={styles.gameMode}>Game Mode : <Text style={{ fontWeight: "bold" }}>{gameModeName}</Text></Text>
+            </View>
           )}
-          <View style={styles.badgeContainer}>
-            <MatchStatusBadge status={currentStatus as GameStatus} isTimeStopped={isStopped} />
-          </View>
         </View>
       </TouchableOpacity>
       {onDelete && (
@@ -88,6 +99,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     flexDirection: "row",
     alignItems: "center",
+    borderLeftWidth: 6,
+    borderLeftColor: Colors.error,
+    borderRightWidth: 6,
+    borderRightColor: "#007AFF",
     ...Shadows.card,
   },
   content: {
@@ -96,29 +111,45 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.lg,
   },
-  mainContent: {
+  gridContainer: {
     flex: 1,
+    flexDirection: "column",
+    justifyContent: "center",
   },
-  teamsContainer: {
+  rowTop: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.md,
+  },
+  rowMiddle: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: Spacing.xs,
+    justifyContent: "space-between",
+  },
+  teamCol: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  vsCol: {
+    paddingHorizontal: Spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rowBottom: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Spacing.md,
   },
   gameMode: {
     fontSize: 12,
     color: Colors.secondary,
     textAlign: "center",
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.sm,
   },
   teamName: {
     textAlign: "center",
     ...Typography.subtitle,
     color: Colors.text,
-  },
-  teamScoreWrapper: {
-    flex: 1,
-    alignItems: "center",
   },
   scoreText: {
     fontSize: 24,
@@ -131,17 +162,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: BorderRadius.lg,
-    marginHorizontal: Spacing.md,
   },
   vsText: {
     fontSize: 12,
     fontWeight: "800",
     color: Colors.text,
-  },
-  badgeContainer: {
-    marginTop: Spacing.sm,
-    alignItems: "center",
-    justifyContent: "center",
   },
   deleteButton: {
     width: 50,

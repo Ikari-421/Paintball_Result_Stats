@@ -1,4 +1,5 @@
-import { GameTimeStoppedEvent } from '../domain/events/GameEvents';
+import { Game } from '../domain/Game';
+import { DomainGameEvent } from '../domain/events/GameEvents';
 import { IEventStore } from '../ports/IEventStore';
 import { IGameRepository } from '../ports/IGameRepository';
 
@@ -8,25 +9,28 @@ export class StopGameTime {
         private readonly eventStore: IEventStore,
     ) { }
 
-    async execute(gameId: string): Promise<void> {
+    async execute(gameId: string): Promise<Game> {
         const game = await this.gameRepository.findById(gameId);
         if (!game) {
             throw new Error(`Game with id ${gameId} not found`);
         }
 
-        const stoppedGame = game.stopTime();
+        const updatedGame = game.stopTime();
 
-        await this.gameRepository.save(stoppedGame);
+        await this.gameRepository.save(updatedGame);
 
-        const event: GameTimeStoppedEvent = {
-            aggregateId: stoppedGame.id,
+        const event: DomainGameEvent = {
+            aggregateId: updatedGame.id,
             timestamp: Date.now(),
+            gameTime: updatedGame.timer.remainingTime,
             type: 'GameTimeStopped',
             payload: {
-                remainingTime: stoppedGame.timer.remainingTime
+                remainingTime: updatedGame.timer.remainingTime
             }
         };
 
         await this.eventStore.append(event);
+
+        return updatedGame;
     }
 }

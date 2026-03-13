@@ -2,7 +2,8 @@ import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { MatchupList } from "@/components/field/MatchupList";
-import { BorderRadius, Colors, Spacing } from "@/constants/theme";
+import { FieldNameModal } from "@/components/field/modals/FieldNameModal";
+import { Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -11,7 +12,7 @@ import {
   Alert,
   StyleSheet,
   Text,
-  TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -28,11 +29,12 @@ export default function CreateFieldScreen() {
     clearTempMatchups,
   } = useMatchupCreation();
   const [name, setName] = useState("");
+  const [isNameModalVisible, setIsNameModalVisible] = useState(true); // Open natively on creation
 
   useEffect(() => {
     loadTeams();
     clearTempMatchups();
-  }, []);
+  }, [clearTempMatchups, loadTeams]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -99,6 +101,15 @@ export default function CreateFieldScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
+      <FieldNameModal
+        visible={isNameModalVisible}
+        initialName={name}
+        onSave={(newName) => {
+          setName(newName);
+          setIsNameModalVisible(false);
+        }}
+        onClose={() => setIsNameModalVisible(false)}
+      />
       <ScreenHeader title="Create Field" onBack={handleBack} />
 
       <View style={styles.content}>
@@ -109,15 +120,14 @@ export default function CreateFieldScreen() {
           onDragEnd={handleDragEnd}
           ListHeaderComponent={
             <>
-              <Text style={styles.label}>Field Name</Text>
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="e.g. Main Arena"
-                placeholderTextColor={Colors.secondary}
-                autoFocus
-              />
+              <View style={styles.titleContainer}>
+                <Text style={styles.fieldTitle}>
+                  {name || "Unnamed Field"}
+                </Text>
+                <TouchableOpacity onPress={() => setIsNameModalVisible(true)}>
+                  <Text style={styles.editNameLink}>Edit Field Name</Text>
+                </TouchableOpacity>
+              </View>
 
               <View style={styles.matchupsHeader}>
                 <Text style={styles.matchupsTitle}>MatchUps</Text>
@@ -157,21 +167,22 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.lg,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.text,
+  titleContainer: {
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+    paddingTop: Spacing.lg,
+  },
+  fieldTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.primary,
+    textAlign: "center",
     marginBottom: Spacing.sm,
   },
-  input: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    fontSize: 16,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.05)",
-    marginBottom: Spacing.xl,
+  editNameLink: {
+    fontSize: 14,
+    color: Colors.secondary,
+    textDecorationLine: "underline",
   },
   matchupsHeader: {
     flexDirection: "row",
@@ -191,7 +202,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
     gap: Spacing.lg,
   },
   actionButtons: {

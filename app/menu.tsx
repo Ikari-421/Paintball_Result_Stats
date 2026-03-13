@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: Spacing.lg,
+    paddingBottom: Spacing.xxxl,
   },
   footer: {
     padding: Spacing.lg,

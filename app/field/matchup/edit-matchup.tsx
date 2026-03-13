@@ -25,7 +25,7 @@ export default function EditMatchupScreen() {
     useEffect(() => {
         loadTeams();
         loadGameModes();
-    }, []);
+    }, [loadTeams, loadGameModes]);
 
     useFocusEffect(
         useCallback(() => {
@@ -50,7 +50,7 @@ export default function EditMatchupScreen() {
                     }
                 }
             }
-        }, [isInitialized, fields, teams, gameModes, teamA, teamB, gameMode, fieldId, matchupId])
+        }, [isInitialized, fields, teams, gameModes, teamA, teamB, gameMode, fieldId, matchupId, setTeamA, setTeamB, setGameMode])
     );
 
     const handleSelectTeamA = () => {
@@ -90,7 +90,7 @@ export default function EditMatchupScreen() {
             await updateMatchupInField(fieldId, matchupId, teamA.id, teamB.id, gameMode.id);
             reset();
             router.back();
-        } catch (e) {
+        } catch {
             Alert.alert("Error", "Failed to update matchup");
         }
     };
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         padding: Spacing.lg,
-        paddingBottom: Spacing.xxl,
+        paddingBottom: Spacing.xxxl,
     },
     selectedContainer: {
         alignItems: "center",

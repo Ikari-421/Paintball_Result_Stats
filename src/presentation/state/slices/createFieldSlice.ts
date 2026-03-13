@@ -53,6 +53,7 @@ export const createFieldSlice: StateCreator<CoreState, [], [], Pick<CoreState, '
             await get().loadFields();
         } catch (error) {
             set({ error: (error as Error).message, isLoading: false });
+            throw error;
         }
     },
 

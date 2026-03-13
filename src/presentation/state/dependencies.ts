@@ -30,6 +30,7 @@ import {
     StartGame,
     StartOvertime,
     StopGameTime,
+    SwapSides,
     UpdateField,
     UpdateGameMode,
     UpdateTeam,
@@ -83,3 +84,4 @@ export const adjustScoreUseCase = new AdjustScore(gameRepository, eventStore);
 export const createTournamentUseCase = new CreateTournament(tournamentRepository, eventStore);
 export const deleteTournamentUseCase = new DeleteTournament(tournamentRepository, eventStore);
 export const updateTournamentUseCase = new UpdateTournament(tournamentRepository, eventStore);
+export const swapSidesUseCase = new SwapSides(gameRepository, eventStore);

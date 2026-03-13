@@ -1,9 +1,9 @@
 import { StateCreator } from "zustand";
 import { Game } from "../../../core/domain/Game";
-import { adjustScoreUseCase, adjustTimeUseCase, createGameUseCase, endBreakUseCase, eventStore, finishGameUseCase, gameRepository, resumeGameUseCase, scorePointUseCase, startBreakUseCase, startGameUseCase, startOvertimeUseCase, stopGameTimeUseCase } from "../dependencies";
+import { adjustScoreUseCase, adjustTimeUseCase, createGameUseCase, endBreakUseCase, eventStore, finishGameUseCase, gameRepository, resumeGameUseCase, scorePointUseCase, startBreakUseCase, startGameUseCase, startOvertimeUseCase, stopGameTimeUseCase, swapSidesUseCase } from "../dependencies";
 import { CoreState } from "../storeTypes";
 
-export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'games' | 'loadGames' | 'loadGameEvents' | 'createGame' | 'startGame' | 'startOvertime' | 'stopGameTime' | 'resumeGame' | 'startBreak' | 'endBreak' | 'finishGame' | 'scorePoint' | 'adjustTime' | 'adjustScore' | 'updateGameState'>> = (set, get) => ({
+export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'games' | 'loadGames' | 'loadGameEvents' | 'createGame' | 'startGame' | 'startOvertime' | 'stopGameTime' | 'resumeGame' | 'startBreak' | 'endBreak' | 'swapSides' | 'finishGame' | 'scorePoint' | 'adjustTime' | 'adjustScore' | 'updateGameState'>> = (set, get) => ({
     games: [],
 
     loadGames: async () => {
@@ -102,6 +102,17 @@ export const createGameSlice: StateCreator<CoreState, [], [], Pick<CoreState, 'g
         try {
             set({ isLoading: true, error: null });
             await endBreakUseCase.execute(gameId);
+            await get().loadGames();
+        } catch (error) {
+            set({ error: (error as Error).message, isLoading: false });
+            throw error;
+        }
+    },
+
+    swapSides: async (gameId: string) => {
+        try {
+            set({ isLoading: true, error: null });
+            await swapSidesUseCase.execute(gameId);
             await get().loadGames();
         } catch (error) {
             set({ error: (error as Error).message, isLoading: false });

@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 import { ActionButton } from "@/src/presentation/state/GameStateMachine";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -45,7 +45,7 @@ export const RefereeControls = ({
 const styles = StyleSheet.create({
     controlsContainer: {
         paddingHorizontal: 16,
-        paddingBottom: 24,
+        paddingBottom: Spacing.xxxl,
     },
     controlRow: {
         flexDirection: "row",

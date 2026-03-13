@@ -18,6 +18,7 @@ export { StartBreak } from "./StartBreak";
 export { StartGame } from "./StartGame";
 export { StartOvertime } from "./StartOvertime";
 export { StopGameTime } from "./StopGameTime";
+export { SwapSides } from "./SwapSides";
 export { UpdateField } from "./UpdateField";
 export { UpdateGameMode } from "./UpdateGameMode";
 export { UpdateTeam } from "./UpdateTeam";

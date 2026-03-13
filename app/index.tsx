@@ -59,6 +59,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     width: "100%",
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
 });

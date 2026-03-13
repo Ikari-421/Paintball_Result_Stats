@@ -44,7 +44,7 @@ export default function RootLayout() {
     };
 
     initializeApp();
-  }, []);
+  }, [loadFields, loadGameModes, loadGames, loadTeams]);
 
   if (!isDbReady) {
     return null; // Or a loading screen

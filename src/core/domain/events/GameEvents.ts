@@ -4,6 +4,7 @@ import { TeamId } from '../Team';
 export interface GameEvent {
     aggregateId: GameId;
     timestamp: number;
+    gameTime: number; // Remaining seconds on the match clock when event occurred
 }
 
 export interface GameCreatedEvent extends GameEvent {
@@ -42,6 +43,8 @@ export interface PointScoredEvent extends GameEvent {
         teamId: TeamId;
         newScoreTeamA: number;
         newScoreTeamB: number;
+        pointStartTime: number; // Clock time (seconds) when the point started
+        pointEndTime: number;   // Clock time (seconds) when the point ended
     };
 }
 
@@ -83,6 +86,13 @@ export interface GameFinishedEvent extends GameEvent {
     };
 }
 
+export interface SidesSwappedEvent extends GameEvent {
+    type: 'SidesSwapped';
+    payload: {
+        areSidesSwapped: boolean;
+    };
+}
+
 export type DomainGameEvent =
     | GameCreatedEvent
     | GameStartedEvent
@@ -92,4 +102,5 @@ export type DomainGameEvent =
     | ScoreCorrectedEvent
     | TimerAdjustedEvent
     | OvertimeStartedEvent
-    | GameFinishedEvent;
+    | GameFinishedEvent
+    | SidesSwappedEvent;

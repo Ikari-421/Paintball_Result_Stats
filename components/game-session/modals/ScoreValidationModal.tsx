@@ -2,34 +2,60 @@ import { Colors } from "@/constants/theme";
 import React from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+export interface NextMatchDetails {
+    matchupId: string;
+    teamAName: string;
+    teamBName: string;
+    scoreA: number;
+    scoreB: number;
+    gameModeName: string;
+    breakTimeSeconds: number;
+}
+
 interface ScoreValidationModalProps {
     visible: boolean;
     scoreA: number;
     scoreB: number;
-    currentScoreA: number;
-    currentScoreB: number;
+    previousScoreA: number;
+    previousScoreB: number;
     teamAName: string;
     teamBName: string;
-    onConfirm: () => void;
-    onCancel: () => void;
+    isMatchOver: boolean;
+    nextMatchDetails: NextMatchDetails | null;
+    onStartBreak: () => void;
+    onTechnicalTimeout: () => void;
+    onUndo: () => void;
 }
 
 export const ScoreValidationModal = ({
     visible,
     scoreA,
     scoreB,
-    currentScoreA,
-    currentScoreB,
+    previousScoreA,
+    previousScoreB,
     teamAName,
     teamBName,
-    onConfirm,
-    onCancel,
+    isMatchOver,
+    nextMatchDetails,
+    onStartBreak,
+    onTechnicalTimeout,
+    onUndo,
 }: ScoreValidationModalProps) => {
-    const diffA = scoreA - currentScoreA;
-    const diffB = scoreB - currentScoreB;
+    const diffA = scoreA - previousScoreA;
+    const diffB = scoreB - previousScoreB;
     const winnerName = (diffA === 1 && diffB === 0) ? teamAName : ((diffA === 0 && diffB === 1) ? teamBName : "");
-    const actionText = winnerName ? "wins the point!" : "Confirm Adjustments";
-    const subtitle = winnerName ? `Confirm this point for the ${diffA === 1 ? 'home' : 'away'} team.` : "Are you sure you want to apply these scores?";
+
+    let actionText = winnerName ? "wins the point!" : "Score Adjusted";
+    if (winnerName && isMatchOver) {
+        actionText = "wins the point & the match!";
+    }
+
+    let primaryButtonText = "Start Break time to next round";
+    if (nextMatchDetails) {
+        primaryButtonText = "Start Break time to next matchup";
+    } else if (isMatchOver) {
+        primaryButtonText = "Finish match & Exit to field";
+    }
 
     return (
         <Modal visible={visible} transparent animationType="fade">
@@ -45,30 +71,35 @@ export const ScoreValidationModal = ({
                             <Text style={styles.modalTitle}>{actionText}</Text>
                         )}
                     </View>
-                    <Text style={styles.modalDescription}>{subtitle}</Text>
 
-                    <View style={styles.scoreReviewContainer}>
-                        <View style={styles.teamScoreReview}>
-                            <Text style={styles.teamNameReview}>{teamAName}</Text>
-                            <View style={styles.scoreBox}>
-                                <Text style={styles.scoreTextReview}>{scoreA}</Text>
+                    {nextMatchDetails && (
+                        <View style={styles.nextMatchContainer}>
+                            <Text style={styles.nextMatchTitle}>Next Match</Text>
+                            <View style={styles.nextMatchTeams}>
+                                <Text style={styles.nextMatchTeamName}>{nextMatchDetails.teamAName}</Text>
+                                <Text style={styles.nextMatchScore}>{nextMatchDetails.scoreA} - {nextMatchDetails.scoreB}</Text>
+                                <Text style={styles.nextMatchTeamName}>{nextMatchDetails.teamBName}</Text>
+                            </View>
+                            <View style={styles.nextMatchInfo}>
+                                <Text style={styles.nextMatchInfoText}>
+                                    Game Mode: <Text style={{ fontWeight: "bold" }}>{nextMatchDetails.gameModeName}</Text>
+                                </Text>
+                                <Text style={styles.nextMatchInfoText}>
+                                    Break Time: <Text style={{ fontWeight: "bold" }}>{nextMatchDetails.breakTimeSeconds}</Text> sec
+                                </Text>
                             </View>
                         </View>
-                        <Text style={styles.vsTextReview}>VS</Text>
-                        <View style={styles.teamScoreReview}>
-                            <Text style={styles.teamNameReview}>{teamBName}</Text>
-                            <View style={styles.scoreBox}>
-                                <Text style={styles.scoreTextReview}>{scoreB}</Text>
-                            </View>
-                        </View>
-                    </View>
+                    )}
 
                     <View style={styles.modalButtons}>
-                        <TouchableOpacity style={styles.modalSecondaryButton} onPress={onCancel}>
-                            <Text style={styles.modalSecondaryButtonText}>Cancel</Text>
+                        <TouchableOpacity style={styles.modalSecondaryButton} onPress={onUndo}>
+                            <Text style={styles.modalSecondaryButtonText}>Cancel (Undo)</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.modalPrimaryButton} onPress={onConfirm}>
-                            <Text style={styles.modalPrimaryButtonText}>Confirm & Save</Text>
+                        <TouchableOpacity style={styles.modalPrimaryButton} onPress={onStartBreak}>
+                            <Text style={styles.modalPrimaryButtonText}>{primaryButtonText}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.modalTertiaryButton} onPress={onTechnicalTimeout}>
+                            <Text style={styles.modalTertiaryButtonText}>Technical Timeout</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -99,107 +130,123 @@ const styles = StyleSheet.create({
         fontWeight: "800",
         color: Colors.primary,
         textAlign: "center",
+        marginBottom: 16,
     },
     titleContainer: {
         alignItems: "center",
-        marginBottom: 8,
+        marginBottom: 16,
     },
     winnerTeamName: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: "900",
         color: Colors.primary,
         textAlign: "center",
         textTransform: "uppercase",
     },
     actionText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "600",
-        color: Colors.text,
-        textAlign: "center",
-        marginTop: -4,
-    },
-    modalDescription: {
-        fontSize: 15,
         color: Colors.secondary,
-        marginBottom: 24,
         textAlign: "center",
+        marginTop: 4,
+        marginBottom: 16,
     },
-    scoreReviewContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-around",
+    nextMatchContainer: {
         backgroundColor: Colors.background,
-        padding: 24,
+        padding: 20,
         borderRadius: 20,
         marginBottom: 24,
         borderWidth: 1,
         borderColor: "rgba(0,0,0,0.05)",
-    },
-    teamScoreReview: {
         alignItems: "center",
-        flex: 1,
     },
-    teamNameReview: {
-        fontSize: 11,
-        fontWeight: "700",
-        color: Colors.secondary,
-        marginBottom: 8,
+    nextMatchTitle: {
+        fontSize: 16,
+        fontWeight: "800",
+        color: Colors.primary,
+        marginBottom: 12,
         textTransform: "uppercase",
         letterSpacing: 1,
     },
-    scoreBox: {
+    nextMatchTeams: {
         flexDirection: "row",
-        alignItems: "flex-end",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 12,
+        gap: 12,
     },
-    scoreTextReview: {
-        fontSize: 48,
+    nextMatchTeamName: {
+        fontSize: 18,
+        fontWeight: "700",
+        color: Colors.text,
+        flex: 1,
+        textAlign: "center",
+    },
+    nextMatchScore: {
+        fontSize: 24,
         fontWeight: "900",
         color: Colors.text,
+        backgroundColor: Colors.surface,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 8,
     },
-    diffText: {
-        fontSize: 16,
-        fontWeight: "700",
-        marginLeft: 4,
-        marginBottom: 8,
+    nextMatchInfo: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        borderTopWidth: 1,
+        borderTopColor: "rgba(0,0,0,0.05)",
+        paddingTop: 12,
     },
-    positiveDiff: {
-        color: "#34C759",
-    },
-    negativeDiff: {
-        color: "#FF3B30",
-    },
-    vsTextReview: {
-        fontSize: 18,
-        fontWeight: "900",
-        color: "rgba(0,0,0,0.1)",
-        marginHorizontal: 10,
+    nextMatchInfoText: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: Colors.secondary,
     },
     modalButtons: {
-        flexDirection: "row",
+        flexDirection: "column",
         gap: 12,
     },
     modalSecondaryButton: {
-        flex: 1,
-        paddingVertical: 16,
+        paddingVertical: 14,
         borderRadius: 12,
         backgroundColor: Colors.surface,
         alignItems: "center",
+        width: '100%',
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.05)",
     },
     modalSecondaryButtonText: {
-        color: Colors.secondary,
+        color: Colors.text,
         fontWeight: "700",
         fontSize: 16,
     },
     modalPrimaryButton: {
-        flex: 2,
         paddingVertical: 16,
         borderRadius: 12,
         backgroundColor: Colors.primary,
         alignItems: "center",
+        width: '100%',
     },
     modalPrimaryButtonText: {
         color: Colors.white,
         fontWeight: "700",
         fontSize: 16,
+    },
+    modalTertiaryButton: {
+        paddingVertical: 14,
+        borderRadius: 12,
+        backgroundColor: "transparent",
+        alignItems: "center",
+        width: '100%',
+        marginTop: -4,
+    },
+    modalTertiaryButtonText: {
+        color: Colors.primary,
+        fontWeight: "700",
+        fontSize: 15,
+        textDecorationLine: "underline",
     },
 });

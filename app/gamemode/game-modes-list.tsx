@@ -29,12 +29,7 @@ export default function GameModsListScreen() {
     );
   };
 
-  const handleUseDefault = () => {
-    Alert.alert(
-      "Use Default Mod",
-      "This will use the field's default game mode.",
-    );
-  };
+
 
   return (
     <View style={styles.container}>
@@ -112,7 +107,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
     gap: Spacing.md,
   },
 });

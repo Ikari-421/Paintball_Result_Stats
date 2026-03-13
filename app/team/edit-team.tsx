@@ -44,7 +44,7 @@ export default function EditTeamScreen() {
     try {
       await updateTeam(team.id, name.trim(), isGuest);
       router.back();
-    } catch (err) {
+    } catch {
       Alert.alert("Error", error || "Unable to update team");
     }
   };
@@ -170,6 +170,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
 });

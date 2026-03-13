@@ -14,7 +14,7 @@ export default function TournamentsListScreen() {
 
     useEffect(() => {
         loadTournaments();
-    }, []);
+    }, [loadTournaments]);
 
     const getIconColor = (index: number) => {
         return index % 2 === 0 ? Colors.accent : Colors.secondary;
@@ -60,6 +60,6 @@ const styles = StyleSheet.create({
     },
     footer: {
         padding: Spacing.lg,
-        paddingBottom: Spacing.xxl,
+        paddingBottom: Spacing.xxxl,
     },
 });

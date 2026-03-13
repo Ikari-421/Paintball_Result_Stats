@@ -148,7 +148,7 @@ describe("Game", () => {
       const started = game.start();
 
       expect(() => started.start()).toThrow(
-        "Game can only be started from NOT_STARTED status",
+        /Game can only be started from NOT_STARTED, BREAK, or TIME_STOPPED status/
       );
     });
   });
@@ -159,7 +159,7 @@ describe("Game", () => {
       const started = game.start();
       const stopped = started.stopTime();
 
-      expect(stopped.status).toBe(GameStatus.BREAK);
+      expect(stopped.status).toBe(GameStatus.RUNNING);
       expect(stopped.timer.isRunning).toBe(false);
     });
 
@@ -167,7 +167,7 @@ describe("Game", () => {
       const game = Game.create("game-1", "field-1", matchup, gameMode);
 
       expect(() => game.stopTime()).toThrow(
-        "Game can only be stopped when RUNNING",
+        /Game can only be stopped when RUNNING or OVERTIME/
       );
     });
   });
@@ -177,17 +177,27 @@ describe("Game", () => {
       const game = Game.create("game-1", "field-1", matchup, gameMode);
       const started = game.start();
       const stopped = started.stopTime();
+      // Resume should work if time is stopped, regardless of status being BREAK or RUNNING
       const resumed = stopped.resume();
 
       expect(resumed.status).toBe(GameStatus.RUNNING);
       expect(resumed.timer.isRunning).toBe(true);
     });
 
-    it("should throw error if game is not in BREAK status", () => {
+    it("should throw error if game is NOT_STARTED", () => {
       const game = Game.create("game-1", "field-1", matchup, gameMode);
 
       expect(() => game.resume()).toThrow(
-        "Game can only be resumed from BREAK status",
+        "Game must be started before it can be resumed"
+      );
+    });
+
+    it("should throw error if time is NOT stopped", () => {
+      const game = Game.create("game-1", "field-1", matchup, gameMode);
+      const started = game.start();
+
+      expect(() => started.resume()).toThrow(
+        "Game can only be resumed when time is stopped"
       );
     });
   });
@@ -218,7 +228,7 @@ describe("Game", () => {
       const newScore = new Score(3, 2);
 
       expect(() => started.updateScore(newScore)).toThrow(
-        "Cannot modify score while game is running",
+        /Cannot modify score while game timer is running/
       );
     });
   });
@@ -238,7 +248,7 @@ describe("Game", () => {
       const newTimer = new GameTimer(300, false);
 
       expect(() => started.updateTimer(newTimer)).toThrow(
-        "Cannot modify timer while game is running",
+        /Cannot modify timer while game timer is running/
       );
     });
   });

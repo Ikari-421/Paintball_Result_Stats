@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface TimerState {
   remainingSeconds: number;
@@ -12,53 +12,53 @@ export const useGameTimer = (initialSeconds: number) => {
   const [endTimestamp, setEndTimestamp] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const start = () => {
+  const start = useCallback(() => {
     if (remainingSeconds > 0) {
       setIsRunning(true);
       setEndTimestamp(Date.now() + remainingSeconds * 1000);
     }
-  };
+  }, [remainingSeconds]);
 
-  const stop = () => {
+  const stop = useCallback(() => {
     setIsRunning(false);
     setRemainingSeconds((prev) => {
       if (endTimestamp) return Math.max(0, Math.ceil((endTimestamp - Date.now()) / 1000));
       return prev;
     });
     setEndTimestamp(null);
-  };
+  }, [endTimestamp]);
 
-  const startNew = (seconds: number) => {
+  const startNew = useCallback((seconds: number) => {
     setIsRunning(true);
     setRemainingSeconds(seconds);
     setEndTimestamp(Date.now() + seconds * 1000);
-  };
+  }, []);
 
-  const resume = () => {
+  const resume = useCallback(() => {
     if (remainingSeconds > 0) {
       setIsRunning(true);
       setEndTimestamp(Date.now() + remainingSeconds * 1000);
     }
-  };
+  }, [remainingSeconds]);
 
-  const reset = (seconds?: number) => {
+  const reset = useCallback((seconds?: number) => {
     setIsRunning(false);
     setEndTimestamp(null);
     setRemainingSeconds(seconds ?? initialSeconds);
-  };
+  }, [initialSeconds]);
 
-  const addTime = (seconds: number) => {
+  const addTime = useCallback((seconds: number) => {
     setRemainingSeconds((prev) => Math.max(0, prev + seconds));
-  };
+  }, []);
 
-  const setTime = (seconds: number) => {
+  const setTime = useCallback((seconds: number) => {
     setRemainingSeconds(Math.max(0, seconds));
     if (isRunning) {
       setEndTimestamp(Date.now() + Math.max(0, seconds) * 1000);
     }
-  };
+  }, [isRunning]);
 
-  const syncWithDB = (seconds: number, running: boolean, endTs: number | null) => {
+  const syncWithDB = useCallback((seconds: number, running: boolean, endTs: number | null) => {
     setIsRunning(running);
     setEndTimestamp(endTs);
     if (running && endTs) {
@@ -66,7 +66,7 @@ export const useGameTimer = (initialSeconds: number) => {
     } else {
       setRemainingSeconds(Math.max(0, seconds));
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isRunning && remainingSeconds > 0) {

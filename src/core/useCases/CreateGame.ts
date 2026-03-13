@@ -22,7 +22,7 @@ export class CreateGame {
     private gameModeRepository: IGameModeRepository,
     private fieldRepository: IFieldRepository,
     private eventStore: IEventStore,
-  ) {}
+  ) { }
 
   async execute(params: CreateGameParams): Promise<Game> {
     console.log("[CreateGame] Début - params:", params);
@@ -59,6 +59,7 @@ export class CreateGame {
     const event: DomainGameEvent = {
       aggregateId: game.id,
       timestamp: Date.now(),
+      gameTime: game.timer.remainingTime,
       type: "GameCreated",
       payload: {
         fieldId: game.fieldId,

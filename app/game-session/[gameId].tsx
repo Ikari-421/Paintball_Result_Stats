@@ -1,24 +1,27 @@
-import { RefereeControls } from "@/components/game-session/RefereeControls";
 import { ScoreBoard } from "@/components/game-session/ScoreBoard";
 import { TimerDisplay } from "@/components/game-session/TimerDisplay";
 import { AdjustModal } from "@/components/game-session/modals/AdjustModal";
 import { FinishMatchModal } from "@/components/game-session/modals/FinishMatchModal";
-import { ScoreValidationModal } from "@/components/game-session/modals/ScoreValidationModal";
+import { OvertimePromptModal } from "@/components/game-session/modals/OvertimePromptModal";
+import { NextMatchDetails, ScoreValidationModal } from "@/components/game-session/modals/ScoreValidationModal";
 import { Colors } from "@/constants/theme";
 import { useGameStateMachine } from "@/hooks/useGameStateMachine";
+import { useMatchEndEvaluator } from "@/hooks/useMatchEndEvaluator";
 import { GameStatus } from "@/src/core/domain/GameStatus";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function MatchScreen() {
   const router = useRouter();
-  const { gameId } = useLocalSearchParams<{ gameId: string }>();
+  const { gameId, autoStartBreak } = useLocalSearchParams<{ gameId: string, autoStartBreak?: string }>();
   const {
     games,
+    createGame,
     teams,
     fields,
+    gameModes,
     loadGames,
     loadGameEvents,
     startGame,
@@ -27,6 +30,7 @@ export default function MatchScreen() {
     finishGame,
     startBreak,
     endBreak,
+    swapSides,
     scorePoint,
     adjustTime,
     adjustScore,
@@ -44,70 +48,29 @@ export default function MatchScreen() {
   // Local state purely for Modals and temporary referee overrides
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
+  const [previousScoreA, setPreviousScoreA] = useState(0);
+  const [previousScoreB, setPreviousScoreB] = useState(0);
+  // Events state
   const [events, setEvents] = useState<any[]>([]);
 
   // Modals Visibility
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showScoreValidationModal, setShowScoreValidationModal] = useState(false);
   const [showFinishMatchModal, setShowFinishMatchModal] = useState(false);
+  const [showOvertimePrompt, setShowOvertimePrompt] = useState(false);
+  const [hasAutoStartedBreak, setHasAutoStartedBreak] = useState(false);
 
-  // 1. Initial Load
-  useEffect(() => {
-    loadGames();
-  }, []);
+  // Centralised rule engine — replaces hasPromptedOvertime + effet 4.5
+  const { modalToShow, resetEvaluator } = useMatchEndEvaluator(game, activeTimer, fsmView);
 
-  // 2. Sync Modals local state with DB Score when not actively editing
-  useEffect(() => {
-    if (game && !showScoreValidationModal) {
-      setScoreA(game.score.teamAScore);
-      setScoreB(game.score.teamBScore);
-    }
-  }, [game?.score.teamAScore, game?.score.teamBScore, showScoreValidationModal]);
-
-  // 3. Auto-resume or Auto-start when Break timer finishes
-  useEffect(() => {
-    if (game?.status === GameStatus.BREAK && controllers.breakTimer.isFinished) {
-      // If the game was never effectively started yet, we START_MATCH
-      const isGameNotStartedYet = game.gameStateStatus === GameStatus.NOT_STARTED ||
-        (game.timer.remainingTime === game.gameMode.gameTime.minutes * 60 &&
-          game.score.teamAScore === 0 &&
-          game.score.teamBScore === 0);
-
-      // If the game regulation time is fully finished and we are NOT in overtime yet
-      const isRegulationFinished = game.timer.remainingTime === 0 && game.gameStateStatus !== GameStatus.OVERTIME;
-
-      if (isGameNotStartedYet) {
-        handleAction("START_MATCH");
-      } else if (isRegulationFinished) {
-        // According to user request, we DO NOT auto-start overtime.
-        // The break simply finishes. The user must click "Go to Overtime".
-      } else {
-        handleAction("RESUME_MATCH");
-      }
-    }
-  }, [game?.status, controllers.breakTimer.isFinished]);
-
-  // 4. Auto-stop when primary game/overtime timer finishes
-  useEffect(() => {
-    const isActuallyRunning = (game?.status === GameStatus.RUNNING || game?.status === GameStatus.OVERTIME) &&
-      !(game?.isTimeStopped === 1 || (game?.isTimeStopped as any) === true);
-
-    if (isActuallyRunning && activeTimer.isFinished) {
-      handleAction("STOP_MATCH");
-    }
-  }, [game?.status, game?.isTimeStopped, activeTimer.isFinished]);
-
-  // 5. Fetch events if finished
-  useEffect(() => {
-    if (game?.status === GameStatus.FINISHED && events.length === 0) {
-      loadGameEvents(game.id).then((fetchedEvents: any[]) => {
-        setEvents(fetchedEvents);
-      });
-    }
-  }, [game?.status]);
+  const formatSeconds = (totalSeconds: number) => {
+    const mins = Math.floor(Math.abs(totalSeconds) / 60);
+    const secs = Math.abs(totalSeconds) % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   // Command handlers - Mapped from State Machine Action IDs
-  const handleAction = async (actionId: string, subType?: string) => {
+  const handleAction = useCallback(async (actionId: string, subType?: string) => {
     try {
       if (!game) return;
 
@@ -115,6 +78,7 @@ export default function MatchScreen() {
         case "START_MATCH":
           await startGame(game.id);
           controllers.gameTimer.start();
+          controllers.breakTimer.reset(game.gameMode.breakTime.seconds);
           break;
         case "STOP_MATCH":
           await stopGameTime(game.id);
@@ -122,7 +86,7 @@ export default function MatchScreen() {
           break;
         case "RESUME_MATCH":
           await resumeGame(game.id);
-          if (game.status === GameStatus.OVERTIME) {
+          if (game.gameStateStatus === GameStatus.OVERTIME || game.status === GameStatus.OVERTIME) {
             controllers.overtimeTimer.resume();
           } else {
             controllers.gameTimer.resume();
@@ -143,6 +107,9 @@ export default function MatchScreen() {
           await startOvertime(game.id);
           // Overtime timer should not start directly; it requires a break first.
           break;
+        case "SWAP_SIDES":
+          await swapSides(game.id);
+          break;
         default:
           console.warn("Unknown action", actionId);
       }
@@ -152,7 +119,94 @@ export default function MatchScreen() {
     } catch (error) {
       Alert.alert("Error", (error as Error).message);
     }
-  };
+  }, [game, startGame, controllers, stopGameTime, activeTimer, resumeGame, startBreak, endBreak, startOvertime, swapSides, loadGames]);
+
+  // 1. Initial Load
+  useEffect(() => {
+    loadGames();
+  }, [loadGames]);
+
+  // 2. Sync Modals local state with DB Score when not actively editing
+  useEffect(() => {
+    if (game && !showScoreValidationModal) {
+      setScoreA(game.score.teamAScore);
+      setScoreB(game.score.teamBScore);
+    }
+  }, [game, showScoreValidationModal]);
+
+  // 3. Auto-resume or Auto-start when Break timer finishes
+  useEffect(() => {
+    if (game?.status === GameStatus.BREAK && controllers.breakTimer.isFinished) {
+      // If the game was never effectively started yet, we START_MATCH
+      const isGameNotStartedYet = game.gameStateStatus === GameStatus.NOT_STARTED ||
+        (game.gameStateStatus !== GameStatus.OVERTIME &&
+          game.timer.remainingTime === game.gameMode.gameTime.minutes * 60 &&
+          game.score.teamAScore === 0 &&
+          game.score.teamBScore === 0);
+
+      // If the game regulation time is fully finished and we are NOT in overtime yet
+      const isRegulationFinished = game.timer.remainingTime === 0 && game.gameStateStatus !== GameStatus.OVERTIME;
+
+      if (isGameNotStartedYet) {
+        handleAction("START_MATCH");
+      } else if (isRegulationFinished) {
+        // According to user request, we DO NOT auto-start overtime.
+        // The break simply finishes. The user must click "Go to Overtime".
+      } else {
+        handleAction("RESUME_MATCH");
+      }
+    }
+  }, [game, controllers.breakTimer.isFinished, handleAction]);
+
+  // 4. Auto-stop when primary game/overtime timer finishes
+  useEffect(() => {
+    const isActuallyRunning = (game?.status === GameStatus.RUNNING || game?.status === GameStatus.OVERTIME) &&
+      !(game?.isTimeStopped === 1 || (game?.isTimeStopped as any) === true);
+
+    if (isActuallyRunning && activeTimer.isFinished) {
+      handleAction("STOP_MATCH");
+    }
+  }, [game, activeTimer.isFinished, handleAction]);
+
+  // 4.5. Consume the centralised rule engine decision → open the right modal
+  useEffect(() => {
+    if (modalToShow === "OVERTIME_PROMPT") {
+      setShowOvertimePrompt(true);
+    } else if (modalToShow === "FINISH_MATCH") {
+      setShowFinishMatchModal(true);
+    }
+  }, [modalToShow]);
+
+  // 5. Fetch events if finished
+  useEffect(() => {
+    if (game?.status === GameStatus.FINISHED && events.length === 0) {
+      loadGameEvents(game.id).then((fetchedEvents: any[]) => {
+        // Sort events chronologically based on timestamp
+        setEvents(fetchedEvents.sort((a, b) => a.timestamp - b.timestamp));
+      });
+    }
+  }, [game, events.length, loadGameEvents]);
+
+  // 6. Auto-start break when navigating to a new matchup
+  // Reset boolean when game id changes
+  useEffect(() => {
+    setHasAutoStartedBreak(false);
+    setShowOvertimePrompt(false);
+    // resetEvaluator is called automatically by its own gameId effect inside the hook
+  }, [gameId]);
+
+  useEffect(() => {
+    if (autoStartBreak === 'true' && game?.status !== GameStatus.FINISHED && fsmView && !hasAutoStartedBreak) {
+      setHasAutoStartedBreak(true);
+      // Give it a tiny delay to ensure everything is mounted and timer states are clean
+      setTimeout(() => {
+        handleAction("START_BREAK", "long-break");
+      }, 100);
+      router.setParams({ autoStartBreak: "" });
+    }
+  }, [autoStartBreak, game?.status, fsmView, handleAction, hasAutoStartedBreak, router, gameId]);
+
+
 
   // Referee Explicit Controls
   const handleScorePointLocally = (team: "A" | "B") => {
@@ -187,36 +241,131 @@ export default function MatchScreen() {
     }
   };
 
-  const confirmScoreValidation = async () => {
+  const getNextMatchDetails = useCallback((): NextMatchDetails | null => {
+    if (!field || !games) return null;
+
+    const fieldMatchups = field.matchups || [];
+    const currentIndex = fieldMatchups.findIndex(m => m.id === game?.matchup.id);
+    if (currentIndex === -1) return null;
+
+    // Find the next matchup in the field's queue that hasn't been finished
+    // Loop through the whole array starting from the next index
+    for (let offset = 1; offset < fieldMatchups.length; offset++) {
+      const i = (currentIndex + offset) % fieldMatchups.length;
+      const m = fieldMatchups[i];
+      const existingGame = games.find(g => g.matchup.id === m.id);
+
+      // If there's no game yet, it's pending. If there is a game, make sure it's not finished.
+      if (!existingGame || existingGame.status !== GameStatus.FINISHED) {
+        const tA = teams.find(t => t.id === m.teamA)?.name || "Team A";
+        const tB = teams.find(t => t.id === m.teamB)?.name || "Team B";
+        const mode = gameModes.find(md => md.id === m.gameModeId);
+
+        return {
+          matchupId: m.id,
+          teamAName: tA,
+          teamBName: tB,
+          scoreA: existingGame ? existingGame.score.teamAScore : 0,
+          scoreB: existingGame ? existingGame.score.teamBScore : 0,
+          gameModeName: mode?.name || "Unknown Mode",
+          breakTimeSeconds: mode?.breakTime.seconds || 0,
+        };
+      }
+    }
+
+    return null;
+  }, [field, games, game?.matchup.id, teams, gameModes]);
+
+  const handleValidateScore = async () => {
     try {
       if (!game) return;
 
       const currentScoreA = game.score.teamAScore;
       const currentScoreB = game.score.teamBScore;
+
+      setPreviousScoreA(currentScoreA);
+      setPreviousScoreB(currentScoreB);
+
       const diffA = scoreA - currentScoreA;
       const diffB = scoreB - currentScoreB;
 
-      // Determine which action to take for a "clean" event recording
       if (diffA === 1 && diffB === 0) {
-        // Simple +1 for Team A
         await scorePoint(game.id, game.matchup.teamA);
       } else if (diffA === 0 && diffB === 1) {
-        // Simple +1 for Team B
         await scorePoint(game.id, game.matchup.teamB);
       } else if (diffA !== 0 || diffB !== 0) {
-        // Complex modification or correction
         await adjustScore(game.id, scoreA, scoreB, "Manual validation");
       }
 
       await loadGames();
-      setShowScoreValidationModal(false);
+      setShowScoreValidationModal(true);
+    } catch (error) {
+      Alert.alert("Error", (error as Error).message);
+    }
+  };
 
-      if (game && (scoreA >= game.gameMode.raceTo.value || scoreB >= game.gameMode.raceTo.value)) {
-        Alert.alert(
-          "Target Score Reached!",
-          `${scoreA > scoreB ? teamA?.name : teamB?.name} has reached the target score!`,
-          [{ text: "OK", onPress: () => handleAction("STOP_MATCH") }]
-        );
+  const handleUndoValidation = async () => {
+    try {
+      if (!game) return;
+      await adjustScore(game.id, previousScoreA, previousScoreB, "Undo validation");
+      await loadGames();
+      setScoreA(previousScoreA);
+      setScoreB(previousScoreB);
+      setShowScoreValidationModal(false);
+    } catch (error) {
+      Alert.alert("Error", (error as Error).message);
+    }
+  };
+
+  const handleStartNextPhase = async (isOvertimeBreak: boolean = false) => {
+    try {
+      if (!game) return;
+      setShowScoreValidationModal(false);
+      setShowOvertimePrompt(false);
+      resetEvaluator();
+
+      const raceTo = game.gameMode.raceTo.value;
+      // En Overtime (Golden Point), tout point marqué = fin du match
+      const isOvertimePoint = game.status === GameStatus.OVERTIME || game.gameStateStatus === GameStatus.OVERTIME;
+      // Si le match est déjà FINISHED (ex: appelé depuis confirmFinishMatch), on force isMatchOver à true
+      const isAlreadyFinished = game.status === GameStatus.FINISHED;
+      const isMatchOver = isAlreadyFinished || isOvertimePoint || (raceTo > 0 && (scoreA >= raceTo || scoreB >= raceTo));
+      const nextMatchDetails = getNextMatchDetails();
+      const nextMatchupId = nextMatchDetails?.matchupId;
+
+      if (isMatchOver && !isOvertimeBreak && !isAlreadyFinished) {
+        await finishGame(game.id, "SCORE_LIMIT", "Target score reached");
+        await loadGames();
+      } else if (!isMatchOver && !nextMatchupId) {
+        await handleAction("START_BREAK", "long-break");
+      }
+
+      if (nextMatchupId) {
+        const nextGame = games.find(g => g.matchup.id === nextMatchupId);
+        if (nextGame) {
+          router.replace({ pathname: "/game-session/[gameId]", params: { gameId: nextGame.id, autoStartBreak: "true" } });
+          return;
+        } else if (field) {
+          // If the game doesn't exist yet but the matchup does, we create it dynamically just like in [id].tsx
+          const nextMatchup = field.matchups.find(m => m.id === nextMatchupId);
+          if (nextMatchup && nextMatchup.gameModeId) {
+            const newGameId = await createGame({
+              fieldId: field.id,
+              matchupId: nextMatchup.id,
+              teamAId: nextMatchup.teamA,
+              teamBId: nextMatchup.teamB,
+              matchupOrder: nextMatchup.order,
+              gameModeId: nextMatchup.gameModeId,
+            });
+            await loadGames();
+            router.replace({ pathname: "/game-session/[gameId]", params: { gameId: newGameId, autoStartBreak: "true" } });
+            return;
+          }
+        }
+      }
+
+      if (isMatchOver) {
+        router.replace(`/field/${field?.id}`);
       }
     } catch (error) {
       Alert.alert("Error", (error as Error).message);
@@ -228,12 +377,28 @@ export default function MatchScreen() {
       if (game) {
         await finishGame(game.id, "MANUAL", note);
         setShowFinishMatchModal(false);
+        resetEvaluator();
         await loadGames();
-        router.back();
+        // Navigate to next matchup or back to field
+        await handleStartNextPhase();
       }
     } catch (error) {
       Alert.alert("Error ending match", (error as Error).message);
     }
+  };
+
+  const handleBackNavigation = () => {
+    const isActuallyRunning = game && (game.status === GameStatus.RUNNING || game.status === GameStatus.OVERTIME || game.status === GameStatus.BREAK) &&
+      !(game.isTimeStopped === 1 || (game.isTimeStopped as any) === true);
+
+    if (isActuallyRunning) {
+      Alert.alert(
+        "Match Active",
+        "You cannot leave this screen while the match or break timer is running. Please stop the timer first."
+      );
+      return;
+    }
+    router.back();
   };
 
   // Render Loading Fallback
@@ -258,7 +423,7 @@ export default function MatchScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: Colors.primary }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={handleBackNavigation} style={styles.backButton}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.statusText}>{field?.name || "Match"}</Text>
@@ -274,6 +439,7 @@ export default function MatchScreen() {
           scoreB={scoreB}
           gameModeName={game.gameMode.name}
           status={game.status}
+          areSidesSwapped={game.areSidesSwapped}
         />
 
         {/* Extracted Timer Display */}
@@ -286,83 +452,124 @@ export default function MatchScreen() {
           />
         )}
 
-        {/* Adjust Time Link */}
-        {canShowRefereeTools && (
-          <View style={{ alignItems: "center", marginBottom: 16 }}>
-            <TouchableOpacity onPress={handleOpenAdjustModal} style={styles.adjustLink}>
-              <Text style={styles.adjustLinkText}>Adjust time</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Referee Direct Scoring Buttons (shown only when stopped/break) */}
-        {canShowRefereeTools && (
-          <View style={styles.scoreButtons}>
-            <View style={styles.teamControls}>
-              <TouchableOpacity style={styles.scoreButton} onPress={() => handleScorePointLocally("A")}>
-                <Text style={styles.scoreButtonText}>+1</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.undoButton} onPress={() => handleUndoPointLocally("A")}>
-                <Text style={styles.undoButtonText}>-1</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.teamControls}>
-              <TouchableOpacity style={styles.scoreButton} onPress={() => handleScorePointLocally("B")}>
-                <Text style={styles.scoreButtonText}>+1</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.undoButton} onPress={() => handleUndoPointLocally("B")}>
-                <Text style={styles.undoButtonText}>-1</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* Main Interaction Buttons (Start, Stop, Validate...) */}
-        <View style={{ paddingHorizontal: 16 }}>
+        {/* Referee Grid Controls */}
+        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
           {game.status !== GameStatus.FINISHED && (
             <>
               {hasPendingScore ? (
-                <View style={{ gap: 12, marginBottom: 24 }}>
+                <View style={{ gap: 12 }}>
                   <TouchableOpacity
-                    style={[styles.primaryButton, { backgroundColor: "#34C759" }]}
-                    onPress={() => setShowScoreValidationModal(true)}
+                    style={[styles.primaryButton, { backgroundColor: "#34C759", marginBottom: 0 }]}
+                    onPress={handleValidateScore}
                   >
                     <Text style={styles.primaryButtonText}>Validate Score</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.primaryButton, { backgroundColor: "#FF3B30" }]}
+                    style={[styles.primaryButton, { backgroundColor: "#FF3B30", marginBottom: 0 }]}
                     onPress={() => { setScoreA(game.score.teamAScore); setScoreB(game.score.teamBScore); }}
                   >
                     <Text style={styles.primaryButtonText}>Cancel Changes</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
-                <RefereeControls
-                  actions={fsmView.actions}
-                  onAction={handleAction}
-                />
-              )}
-
-              {/* Explicit Overtime / Finish Game Buttons */}
-              {canShowRefereeTools && (
-                <>
-                  {game.timer.remainingTime === 0 && game.score.isTied() && (
+                <View style={{ gap: 8 }}>
+                  {/* Top Row: Simple Link */}
+                  {canShowRefereeTools && (
                     <TouchableOpacity
-                      style={[styles.primaryButton, { backgroundColor: Colors.primary, marginTop: 12, marginHorizontal: 16 }]}
-                      onPress={() => handleAction("START_OVERTIME")}
+                      onPress={handleOpenAdjustModal}
+                      style={styles.adjustTimerLink}
                     >
-                      <Text style={styles.primaryButtonText}>Go to Overtime</Text>
+                      <Text style={styles.adjustTimerLinkText}>Adjust timer</Text>
                     </TouchableOpacity>
                   )}
 
-                  <TouchableOpacity
-                    style={[styles.primaryButton, { backgroundColor: Colors.error, marginTop: 12, marginHorizontal: 16 }]}
-                    onPress={() => setShowFinishMatchModal(true)}
-                  >
-                    <Text style={styles.primaryButtonText}>Finish Match</Text>
-                  </TouchableOpacity>
-                </>
+                  {canShowRefereeTools && (
+                    <View style={[styles.refereeGrid, { marginTop: 4 }]}>
+                      {/* Left Column (Team according to swap) */}
+                      <View style={styles.gridColumn}>
+                        <Text style={styles.teamSideLabel} numberOfLines={1}>
+                          {game.areSidesSwapped ? teamB?.name : teamA?.name}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.gridButtonMain}
+                          onPress={() => handleScorePointLocally(game.areSidesSwapped ? "B" : "A")}
+                        >
+                          <Text style={styles.gridButtonTextMain}>+1</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.gridButtonSecondary}
+                          onPress={() => handleUndoPointLocally(game.areSidesSwapped ? "B" : "A")}
+                        >
+                          <Text style={styles.gridButtonTextSecondary}>-1</Text>
+                        </TouchableOpacity>
+                        {fsmView.actions.length === 2 && (
+                          <TouchableOpacity
+                            style={[styles.gridButtonAction, { backgroundColor: "#FF9500" }]}
+                            onPress={() => handleAction(fsmView.actions[0].actionId, fsmView.actions[0].subType)}
+                          >
+                            <Text style={styles.gridButtonTextAction}>{fsmView.actions[0].label}</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+
+                      {/* Right Column (Team according to swap) */}
+                      <View style={styles.gridColumn}>
+                        <Text style={styles.teamSideLabel} numberOfLines={1}>
+                          {game.areSidesSwapped ? teamA?.name : teamB?.name}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.gridButtonMain}
+                          onPress={() => handleScorePointLocally(game.areSidesSwapped ? "A" : "B")}
+                        >
+                          <Text style={styles.gridButtonTextMain}>+1</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.gridButtonSecondary}
+                          onPress={() => handleUndoPointLocally(game.areSidesSwapped ? "A" : "B")}
+                        >
+                          <Text style={styles.gridButtonTextSecondary}>-1</Text>
+                        </TouchableOpacity>
+                        {fsmView.actions.length === 2 && (
+                          <TouchableOpacity
+                            style={[styles.gridButtonAction, { backgroundColor: "#FF9500" }]}
+                            onPress={() => handleAction(fsmView.actions[1].actionId, fsmView.actions[1].subType)}
+                          >
+                            <Text style={styles.gridButtonTextAction}>{fsmView.actions[1].label}</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Single Actions (like Stop Match) */}
+                  {fsmView.actions.length === 1 && (
+                    <TouchableOpacity
+                      style={[styles.primaryButton, { backgroundColor: fsmView.actions[0].styleType === "danger" ? Colors.error : Colors.primary, marginTop: 12 }]}
+                      onPress={() => handleAction(fsmView.actions[0].actionId, fsmView.actions[0].subType)}
+                    >
+                      <Text style={styles.primaryButtonText}>{fsmView.actions[0].label}</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Operational Settings (Switch Sides / Overtime) */}
+                  {canShowRefereeTools && (
+                    <View style={{ marginTop: 12 }}>
+                      <TouchableOpacity
+                        style={[styles.primaryButton, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: "rgba(0,0,0,0.1)" }]}
+                        onPress={() => handleAction("SWAP_SIDES")}
+                      >
+                        <Text style={[styles.primaryButtonText, { color: Colors.text }]}>Switch Sides</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.primaryButton, { backgroundColor: Colors.error }]}
+                        onPress={() => setShowFinishMatchModal(true)}
+                      >
+                        <Text style={styles.primaryButtonText}>Finish Match</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
               )}
             </>
           )}
@@ -377,26 +584,63 @@ export default function MatchScreen() {
                 {events.length === 0 ? (
                   <Text style={styles.summaryText}>No events recorded.</Text>
                 ) : (
-                  events.map((evt: any, i: number) => {
-                    const dateStr = new Date(evt.timestamp).toLocaleTimeString();
-                    let desc = evt.type;
-                    if (evt.type === "GameCreated") desc = "Game Initialized";
-                    if (evt.type === "PointScored") {
-                      const scorer = evt.payload.teamId === teamA?.id ? teamA?.name : teamB?.name;
-                      desc = `Point Scored by ${scorer}`;
-                    }
-                    if (evt.type === "GameFinished") {
-                      const note = evt.payload.note ? `\nNote: ${evt.payload.note}` : "";
-                      desc = `Match Ended (${evt.payload.endReason})${note}`;
-                    }
+                  events
+                    .filter((evt) => !["GameCreated", "GameStarted", "GameResumed", "GameTimeStopped"].includes(evt.type))
+                    .map((evt: any, i: number) => {
+                      let timePrefix = `[${formatSeconds(evt.gameTime || 0)}]`;
+                      let desc = "";
 
-                    return (
-                      <View key={i} style={styles.eventRow}>
-                        <Text style={styles.eventTime}>{dateStr}</Text>
-                        <Text style={styles.eventDesc}>{desc}</Text>
-                      </View>
-                    );
-                  })
+                      switch (evt.type) {
+                        case "PointScored":
+                          const pointEnd = evt.payload.pointEndTime ?? evt.gameTime;
+                          const pointStart = evt.payload.pointStartTime ?? pointEnd;
+
+                          const s = formatSeconds(pointStart ?? 0);
+                          const e = formatSeconds(pointEnd ?? 0);
+                          const scorerName = evt.payload.teamId === teamA?.id ? teamA?.name : teamB?.name;
+
+                          timePrefix = `[${e}]`;
+                          if (pointStart !== pointEnd && pointStart !== undefined) {
+                            timePrefix = `[${s} - ${e}]`;
+                          }
+                          desc = `Point ${scorerName} (${evt.payload.newScoreTeamA} - ${evt.payload.newScoreTeamB})`;
+                          break;
+
+                        case "SidesSwapped":
+                          desc = "Sides Swapped";
+                          break;
+
+                        case "OvertimeStarted":
+                          desc = "Golden Point Starting";
+                          break;
+
+                        case "TimerAdjusted":
+                          desc = `Timer updated to ${formatSeconds(evt.payload.newTime ?? 0)}`;
+                          break;
+
+                        case "ScoreCorrected":
+                          desc = `Score updated to ${evt.payload.newScoreTeamA} - ${evt.payload.newScoreTeamB}`;
+                          break;
+
+                        case "GameFinished":
+                          desc = "Match Finished";
+                          break;
+
+                        default:
+                          return null; // Skip unknown or technical events
+                      }
+
+                      const isCorrection = evt.type === "TimerAdjusted" || evt.type === "ScoreCorrected";
+
+                      return (
+                        <View key={i} style={styles.eventRow}>
+                          <Text style={styles.eventTime}>{timePrefix}</Text>
+                          <Text style={[styles.eventDesc, isCorrection && { fontStyle: "italic", opacity: 0.7 }]}>
+                            {desc}
+                          </Text>
+                        </View>
+                      );
+                    })
                 )}
               </View>
             </View>
@@ -408,12 +652,47 @@ export default function MatchScreen() {
           visible={showScoreValidationModal}
           scoreA={scoreA}
           scoreB={scoreB}
-          currentScoreA={game?.score.teamAScore ?? 0}
-          currentScoreB={game?.score.teamBScore ?? 0}
+          previousScoreA={previousScoreA}
+          previousScoreB={previousScoreB}
           teamAName={teamA?.name || "Team A"}
           teamBName={teamB?.name || "Team B"}
-          onConfirm={confirmScoreValidation}
-          onCancel={() => setShowScoreValidationModal(false)}
+          isMatchOver={
+            !!game && (
+              // Cas Race to : une équipe atteint le score limite
+              (game.gameMode.raceTo.value > 0 && (scoreA >= game.gameMode.raceTo.value || scoreB >= game.gameMode.raceTo.value))
+              ||
+              // Cas Overtime : tout point marqué en Golden Point = victoire
+              (game.status === GameStatus.OVERTIME || game.gameStateStatus === GameStatus.OVERTIME)
+            )
+          }
+          nextMatchDetails={getNextMatchDetails()}
+          onStartBreak={handleStartNextPhase}
+          onTechnicalTimeout={() => { setShowScoreValidationModal(false); resetEvaluator(); }}
+          onUndo={handleUndoValidation}
+        />
+
+        <OvertimePromptModal
+          visible={showOvertimePrompt}
+          scoreA={scoreA}
+          scoreB={scoreB}
+          teamAName={teamA?.name || "Team A"}
+          teamBName={teamB?.name || "Team B"}
+          nextMatchDetails={getNextMatchDetails()}
+          onStartOvertime={async () => {
+            // Will queue the task
+            if (game) {
+              await startOvertime(game.id);
+              await loadGames();
+            }
+          }}
+          onFinishWithTie={async () => {
+            if (game) {
+              await finishGame(game.id, "SCORE_LIMIT", "Match ended in a tie");
+              await loadGames();
+            }
+          }}
+          onStartNextMatchup={() => handleStartNextPhase(true)}
+          onTechnicalTimeout={() => { setShowOvertimePrompt(false); resetEvaluator(); }}
         />
 
         <FinishMatchModal
@@ -423,7 +702,7 @@ export default function MatchScreen() {
           teamAName={teamA?.name || "Team A"}
           teamBName={teamB?.name || "Team B"}
           onConfirm={confirmFinishMatch}
-          onCancel={() => setShowFinishMatchModal(false)}
+          onCancel={() => { setShowFinishMatchModal(false); resetEvaluator(); }}
         />
 
         {showAdjustModal && (
@@ -446,8 +725,8 @@ const styles = StyleSheet.create({
   fallbackButton: { backgroundColor: Colors.primary, padding: 16, borderRadius: 12 },
   fallbackButtonText: { color: Colors.white, fontWeight: "700" },
   header: {
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 48, // Spacing.xxxl to match ScreenHeader
+    paddingBottom: 10,
     paddingHorizontal: 16,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -457,27 +736,79 @@ const styles = StyleSheet.create({
   backText: { color: Colors.white, fontSize: 16, fontWeight: "600" },
   statusText: { color: Colors.white, fontSize: 18, fontWeight: "700" },
   content: { flex: 1 },
-  scoreButtons: {
+  refereeGrid: {
     flexDirection: "row",
-    paddingHorizontal: 16,
     gap: 12,
-    marginBottom: 24,
   },
-  teamControls: { flex: 1, gap: 8 },
-  scoreButton: {
+  gridColumn: {
+    flex: 1,
+    gap: 10,
+  },
+  gridButtonMain: {
     backgroundColor: Colors.primary,
     borderRadius: 16,
-    padding: 24,
+    paddingVertical: 20,
     alignItems: "center",
+    justifyContent: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  scoreButtonText: { color: Colors.white, fontSize: 32, fontWeight: "800" },
-  undoButton: {
+  gridButtonTextMain: {
+    color: Colors.white,
+    fontSize: 28,
+    fontWeight: "800",
+  },
+  gridButtonSecondary: {
     backgroundColor: Colors.surface,
     borderRadius: 12,
-    padding: 12,
+    paddingVertical: 12,
     alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
   },
-  undoButtonText: { color: Colors.text, fontSize: 16, fontWeight: "700" },
+  gridButtonTextSecondary: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  gridButtonAction: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gridButtonTextAction: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  teamSideLabel: {
+    color: Colors.white,
+    fontSize: 11,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 4,
+    opacity: 0.8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  scoreText: {
+    fontSize: 72,
+    fontWeight: "800",
+    color: Colors.white,
+    fontVariant: ["tabular-nums"],
+  },
+  scoreTextDark: {
+    fontSize: 72,
+    fontWeight: "800",
+    color: Colors.text,
+    fontVariant: ["tabular-nums"],
+  },
   primaryButton: {
     borderRadius: 16,
     padding: 16,
@@ -485,14 +816,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryButtonText: { color: Colors.white, fontSize: 18, fontWeight: "700" },
-  adjustLink: {
-    padding: 8,
+  adjustTimerLink: {
+    alignItems: "center",
+    paddingVertical: 4,
+    marginBottom: 8,
   },
-  adjustLinkText: {
+  adjustTimerLinkText: {
     color: Colors.white,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     textDecorationLine: "underline",
+    opacity: 0.9,
   },
   summaryContainer: { marginTop: 24, marginHorizontal: 16, marginBottom: 40 },
   summaryTitle: { color: Colors.white, fontSize: 20, fontWeight: "700", marginBottom: 16 },

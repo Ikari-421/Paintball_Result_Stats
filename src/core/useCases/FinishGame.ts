@@ -30,6 +30,7 @@ export class FinishGame {
         const event: DomainGameEvent = {
             aggregateId: finishedGame.id,
             timestamp: Date.now(),
+            gameTime: finishedGame.timer.remainingTime,
             type: 'GameFinished',
             payload: {
                 finalScoreTeamA: finishedGame.score.teamAScore,

@@ -40,6 +40,7 @@ export class AdjustScore {
         const event: DomainGameEvent = {
             aggregateId: updatedGame.id,
             timestamp: Date.now(),
+            gameTime: game.timer.remainingTime,
             type: 'ScoreCorrected',
             payload: {
                 previousScoreTeamA: previousScore.teamAScore,

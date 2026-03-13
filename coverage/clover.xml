@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1772868140329" clover="3.2.0">
+  <project timestamp="1772868140329" name="All files">
+    <metrics statements="252" coveredstatements="227" conditionals="211" coveredconditionals="168" methods="74" coveredmethods="72" elements="537" coveredelements="467" complexity="0" loc="252" ncloc="252" packages="3" files="18" classes="18"/>
+    <package name="core.domain">
+      <metrics statements="98" coveredstatements="90" conditionals="135" coveredconditionals="111" methods="40" coveredmethods="38"/>
+      <file name="Field.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\domain\Field.ts">
+        <metrics statements="26" coveredstatements="22" conditionals="35" coveredconditionals="32" methods="9" coveredmethods="7"/>
+        <line num="23" count="47" type="cond" truecount="4" falsecount="0"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="26" count="46" type="cond" truecount="4" falsecount="0"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="29" count="45" type="cond" truecount="4" falsecount="0"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="32" count="44" type="cond" truecount="2" falsecount="0"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="35" count="43" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="38" count="42" type="cond" truecount="4" falsecount="0"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="42" count="41" type="stmt"/>
+        <line num="55" count="11" type="cond" truecount="4" falsecount="0"/>
+        <line num="56" count="1" type="stmt"/>
+        <line num="58" count="10" type="cond" truecount="3" falsecount="1"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="61" count="10" type="cond" truecount="4" falsecount="0"/>
+        <line num="62" count="1" type="stmt"/>
+        <line num="65" count="9" type="stmt"/>
+        <line num="69" count="2" type="stmt"/>
+        <line num="73" count="3" type="stmt"/>
+        <line num="74" count="2" type="stmt"/>
+        <line num="78" count="0" type="stmt"/>
+        <line num="79" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="81" count="0" type="stmt"/>
+      </file>
+      <file name="Game.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\domain\Game.ts">
+        <metrics statements="58" coveredstatements="54" conditionals="75" coveredconditionals="55" methods="23" coveredmethods="23"/>
+        <line num="12" count="50" type="cond" truecount="4" falsecount="0"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="26" count="2" type="stmt"/>
+        <line num="30" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="40" count="93" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="46" count="27" type="stmt"/>
+        <line num="47" count="27" type="stmt"/>
+        <line num="51" count="17" type="cond" truecount="4" falsecount="0"/>
+        <line num="52" count="5" type="stmt"/>
+        <line num="54" count="12" type="stmt"/>
+        <line num="55" count="12" type="stmt"/>
+        <line num="59" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="60" count="0" type="stmt"/>
+        <line num="62" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="63" count="0" type="stmt"/>
+        <line num="64" count="0" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="70" count="2" type="stmt"/>
+        <line num="96" count="36" type="cond" truecount="4" falsecount="0"/>
+        <line num="97" count="1" type="stmt"/>
+        <line num="100" count="35" type="stmt"/>
+        <line num="101" count="35" type="stmt"/>
+        <line num="103" count="35" type="stmt"/>
+        <line num="120" count="2" type="stmt"/>
+        <line num="137" count="24" type="cond" truecount="5" falsecount="0"/>
+        <line num="138" count="1" type="stmt"/>
+        <line num="141" count="23" type="stmt"/>
+        <line num="158" count="3" type="cond" truecount="2" falsecount="3"/>
+        <line num="159" count="0" type="stmt"/>
+        <line num="162" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="164" count="3" type="stmt"/>
+        <line num="166" count="3" type="stmt"/>
+        <line num="183" count="13" type="cond" truecount="4" falsecount="0"/>
+        <line num="184" count="1" type="stmt"/>
+        <line num="187" count="12" type="stmt"/>
+        <line num="204" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="205" count="1" type="stmt"/>
+        <line num="208" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="209" count="1" type="stmt"/>
+        <line num="212" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="216" count="3" type="stmt"/>
+        <line num="233" count="4" type="stmt"/>
+        <line num="252" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="254" count="3" type="stmt"/>
+        <line num="274" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="280" count="1" type="stmt"/>
+        <line num="297" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="298" count="1" type="cond" truecount="3" falsecount="1"/>
+        <line num="299" count="1" type="stmt"/>
+        <line num="303" count="1" type="stmt"/>
+        <line num="320" count="2" type="stmt"/>
+        <line num="337" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="338" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="339" count="1" type="stmt"/>
+        <line num="343" count="2" type="stmt"/>
+      </file>
+      <file name="GameMode.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\domain\GameMode.ts">
+        <metrics statements="9" coveredstatements="9" conditionals="16" coveredconditionals="16" methods="6" coveredmethods="6"/>
+        <line num="5" count="42" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="42" type="cond" truecount="2" falsecount="0"/>
+        <line num="17" count="42" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="45" count="40" type="cond" truecount="4" falsecount="0"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="48" count="39" type="cond" truecount="4" falsecount="0"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="52" count="38" type="stmt"/>
+      </file>
+      <file name="GameStatus.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\domain\GameStatus.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="Team.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\domain\Team.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="9" coveredconditionals="8" methods="2" coveredmethods="2"/>
+        <line num="11" count="6" type="cond" truecount="4" falsecount="0"/>
+        <line num="12" count="2" type="stmt"/>
+        <line num="14" count="4" type="cond" truecount="4" falsecount="0"/>
+        <line num="15" count="2" type="stmt"/>
+        <line num="18" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="core.useCases">
+      <metrics statements="132" coveredstatements="116" conditionals="58" coveredconditionals="40" methods="26" coveredmethods="26"/>
+      <file name="AdjustTime.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\AdjustTime.ts">
+        <metrics statements="15" coveredstatements="14" conditionals="12" coveredconditionals="9" methods="2" coveredmethods="2"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="19" count="3" type="cond" truecount="2" falsecount="2"/>
+        <line num="20" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="25" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+      </file>
+      <file name="CreateGame.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\CreateGame.ts">
+        <metrics statements="20" coveredstatements="18" conditionals="4" coveredconditionals="3" methods="2" coveredmethods="2"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="30" count="2" type="stmt"/>
+        <line num="31" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="39" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="44" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="53" count="1" type="stmt"/>
+        <line num="54" count="1" type="stmt"/>
+        <line num="56" count="1" type="stmt"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="73" count="1" type="stmt"/>
+      </file>
+      <file name="EndBreak.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\EndBreak.ts">
+        <metrics statements="7" coveredstatements="6" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+      </file>
+      <file name="FinishGame.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\FinishGame.ts">
+        <metrics statements="13" coveredstatements="11" conditionals="6" coveredconditionals="4" methods="2" coveredmethods="2"/>
+        <line num="14" count="2" type="stmt"/>
+        <line num="15" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="19" count="2" type="stmt"/>
+        <line num="21" count="2" type="stmt"/>
+        <line num="23" count="2" type="stmt"/>
+        <line num="24" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="26" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="30" count="2" type="stmt"/>
+        <line num="44" count="2" type="stmt"/>
+        <line num="46" count="2" type="stmt"/>
+      </file>
+      <file name="ReorderMatchupsUseCase.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\ReorderMatchupsUseCase.ts">
+        <metrics statements="17" coveredstatements="14" conditionals="14" coveredconditionals="11" methods="4" coveredmethods="4"/>
+        <line num="8" count="3" type="cond" truecount="3" falsecount="1"/>
+        <line num="9" count="0" type="stmt"/>
+        <line num="11" count="3" type="cond" truecount="3" falsecount="1"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="20" count="2" type="stmt"/>
+        <line num="21" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="27" count="3" type="stmt"/>
+        <line num="28" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+      </file>
+      <file name="ResumeGame.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\ResumeGame.ts">
+        <metrics statements="8" coveredstatements="7" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+      </file>
+      <file name="ScorePoint.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\ScorePoint.ts">
+        <metrics statements="13" coveredstatements="12" conditionals="6" coveredconditionals="5" methods="2" coveredmethods="2"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="20" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="22" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="48" count="1" type="stmt"/>
+      </file>
+      <file name="StartBreak.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\StartBreak.ts">
+        <metrics statements="7" coveredstatements="6" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+      </file>
+      <file name="StartGame.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\StartGame.ts">
+        <metrics statements="8" coveredstatements="7" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+      </file>
+      <file name="StartOvertime.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\StartOvertime.ts">
+        <metrics statements="8" coveredstatements="7" conditionals="4" coveredconditionals="2" methods="2" coveredmethods="2"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+      </file>
+      <file name="StopGameTime.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\StopGameTime.ts">
+        <metrics statements="8" coveredstatements="7" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+      </file>
+      <file name="SwapSides.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\core\useCases\SwapSides.ts">
+        <metrics statements="8" coveredstatements="7" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="14" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="2" type="stmt"/>
+        <line num="20" count="2" type="stmt"/>
+        <line num="22" count="2" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
+        <line num="34" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="presentation.state">
+      <metrics statements="22" coveredstatements="21" conditionals="18" coveredconditionals="17" methods="8" coveredmethods="8"/>
+      <file name="GameStateMachine.ts" path="C:\Users\pilep\Documents\Ynov\ScoreBoard_PB\src\presentation\state\GameStateMachine.ts">
+        <metrics statements="22" coveredstatements="21" conditionals="18" coveredconditionals="17" methods="8" coveredmethods="8"/>
+        <line num="25" count="7" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="48" count="1" type="stmt"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="72" count="2" type="stmt"/>
+        <line num="77" count="2" type="stmt"/>
+        <line num="89" count="1" type="stmt"/>
+        <line num="101" count="1" type="stmt"/>
+        <line num="113" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="115" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="116" count="1" type="stmt"/>
+        <line num="119" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="120" count="1" type="stmt"/>
+        <line num="123" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="124" count="1" type="stmt"/>
+        <line num="127" count="4" type="cond" truecount="4" falsecount="0"/>
+        <line num="128" count="2" type="stmt"/>
+        <line num="131" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="132" count="1" type="stmt"/>
+        <line num="135" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="136" count="1" type="stmt"/>
+        <line num="139" count="0" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

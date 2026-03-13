@@ -33,6 +33,8 @@ interface GameRow {
   currentRound: number;
   isTimeStopped: number;
   gameStateStatus: string;
+  areSidesSwapped: number;
+  pointStartTime: number;
 }
 
 export class GameRepository implements IGameRepository {
@@ -51,8 +53,8 @@ export class GameRepository implements IGameRepository {
                 id, fieldId, matchupId, matchupTeamA, matchupTeamB, matchupOrder,
                 gameModeId, gameModeName, gameTimeMinutes, breakTimeSeconds, overtimeMinutes,
                 raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, timerEndTimestamp, status,
-                currentRound, isTimeStopped, gameStateStatus
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                currentRound, isTimeStopped, gameStateStatus, areSidesSwapped, pointStartTime
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         game.id,
         game.fieldId,
@@ -75,6 +77,8 @@ export class GameRepository implements IGameRepository {
         game.currentRound,
         game.isTimeStopped,
         game.gameStateStatus,
+        game.areSidesSwapped ? 1 : 0,
+        game.pointStartTime,
       ],
     );
     console.log("[GameRepository] save - Game inséré en DB");
@@ -161,6 +165,8 @@ export class GameRepository implements IGameRepository {
       row.currentRound,
       row.isTimeStopped,
       row.gameStateStatus,
+      row.areSidesSwapped === 1,
+      row.pointStartTime,
     );
   }
 }

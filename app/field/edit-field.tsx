@@ -2,16 +2,18 @@ import { OutlineButton } from "@/components/common/OutlineButton";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { MatchupList } from "@/components/field/MatchupList";
-import { BorderRadius, Colors, Spacing } from "@/constants/theme";
+import { FieldNameModal } from "@/components/field/modals/FieldNameModal";
+import { Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
 import { useCoreStore } from "@/src/presentation/state/useCoreStore";
+import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   StyleSheet,
   Text,
-  TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -31,20 +33,25 @@ export default function EditFieldScreen() {
     addMatchupToField,
     removeMatchupFromField,
     loadTeams,
+    loadFields,
     error,
     reorderMatchupsInField,
     games,
   } = useCoreStore();
-  const { tempMatchups, clearTempMatchups, addTempMatchup } =
+  const { tempMatchups, clearTempMatchups } =
     useMatchupCreation();
 
   const [name, setName] = useState("");
+  const [isNameModalVisible, setIsNameModalVisible] = useState(false);
 
   const field = fields.find((f) => f.id === id);
 
-  useEffect(() => {
-    loadTeams();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadTeams();
+      loadFields();
+    }, [loadTeams, loadFields])
+  );
 
   useEffect(() => {
     if (field) {
@@ -64,10 +71,11 @@ export default function EditFieldScreen() {
     }
 
     try {
+      // Commit the name change of the field
       await updateField(field.id, name.trim());
-      clearTempMatchups();
+
       router.push(`/field/${field.id}`);
-    } catch (err) {
+    } catch {
       Alert.alert("Error", error || "Unable to update field");
     }
   };
@@ -79,24 +87,6 @@ export default function EditFieldScreen() {
       `/field/matchup/create-matchup?returnTo=/field/edit-field&fieldId=${id}`,
     );
   };
-
-  useEffect(() => {
-    const addTempMatchups = async () => {
-      if (field && tempMatchups.length > 0) {
-        for (const matchup of tempMatchups) {
-          await addMatchupToField(
-            field.id,
-            matchup.teamA,
-            matchup.teamB,
-            matchup.gameModeId,
-          );
-        }
-        // Clear tempMatchups after adding to avoid duplicates
-        clearTempMatchups();
-      }
-    };
-    addTempMatchups();
-  }, [tempMatchups]);
 
   const handleEditMatchup = (matchupId: string) => {
     if (!field) return;
@@ -110,7 +100,7 @@ export default function EditFieldScreen() {
 
     try {
       await removeMatchupFromField(field.id, matchupId);
-    } catch (err) {
+    } catch {
       Alert.alert("Error", "Unable to delete matchup");
     }
   };
@@ -122,8 +112,8 @@ export default function EditFieldScreen() {
       // Create a list of matchup IDs in the new order
       const newOrderIds = newOrder.map((m) => m.id);
       await reorderMatchupsInField(field.id, newOrderIds);
-    } catch (err) {
-      console.error("Failed to reorder matchups:", err);
+    } catch (error) {
+      console.error("Failed to reorder matchups:", error);
       Alert.alert("Error", "Unable to save new order");
     }
   };
@@ -148,6 +138,15 @@ export default function EditFieldScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
+      <FieldNameModal
+        visible={isNameModalVisible}
+        initialName={name}
+        onSave={(newName) => {
+          setName(newName);
+          setIsNameModalVisible(false);
+        }}
+        onClose={() => setIsNameModalVisible(false)}
+      />
       <ScreenHeader
         title="Edit Field"
         onBack={() => {
@@ -166,15 +165,14 @@ export default function EditFieldScreen() {
           onDragEnd={handleDragEnd}
           ListHeaderComponent={
             <>
-              <Text style={styles.label}>Field Name</Text>
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="e.g. Main Arena"
-                placeholderTextColor={Colors.secondary}
-                autoFocus
-              />
+              <View style={styles.titleContainer}>
+                <Text style={styles.fieldTitle}>
+                  {name || "Unnamed Field"}
+                </Text>
+                <TouchableOpacity onPress={() => setIsNameModalVisible(true)}>
+                  <Text style={styles.editNameLink}>Edit Field Name</Text>
+                </TouchableOpacity>
+              </View>
 
               <View style={styles.matchupsHeader}>
                 <Text style={styles.matchupsTitle}>MatchUps</Text>
@@ -226,21 +224,22 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.lg,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.text,
+  titleContainer: {
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+    paddingTop: Spacing.lg,
+  },
+  fieldTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.primary,
+    textAlign: "center",
     marginBottom: Spacing.sm,
   },
-  input: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    fontSize: 16,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.05)",
-    marginBottom: Spacing.xl,
+  editNameLink: {
+    fontSize: 14,
+    color: Colors.secondary,
+    textDecorationLine: "underline",
   },
   matchupsHeader: {
     flexDirection: "row",
@@ -260,7 +259,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
     gap: Spacing.lg,
   },
   actionButtons: {

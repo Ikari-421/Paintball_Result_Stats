@@ -3,18 +3,19 @@ import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useMatchupCreation } from "@/contexts/MatchupCreationContext";
+import { useCoreStore } from "@/src/presentation/state/useCoreStore";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function CreateMatchupScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    returnTo?: string;
-    fieldId?: string;
-  }>();
+  const { fieldId } = useLocalSearchParams<{ fieldId?: string }>();
   const { teamA, teamB, gameMode, tempMatchups, addTempMatchup, reset } =
     useMatchupCreation();
+  const { addMatchupToField } = useCoreStore();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSelectTeamA = () => {
     router.push("/team/select-team?role=teamA");
@@ -28,7 +29,7 @@ export default function CreateMatchupScreen() {
     router.push("/gamemode/select-game-mode");
   };
 
-  const handleAddMatchup = () => {
+  const handleAddMatchup = async () => {
     if (!teamA || !teamB) {
       Alert.alert("Error", "Please select both teams");
       return;
@@ -44,19 +45,33 @@ export default function CreateMatchupScreen() {
       return;
     }
 
-    const newMatchup = {
-      id: `matchup-${Date.now()}`,
-      teamA: teamA.id,
-      teamB: teamB.id,
-      teamAName: teamA.name,
-      teamBName: teamB.name,
-      gameModeId: gameMode.id,
-      order: tempMatchups.length + 1,
-    };
+    setIsProcessing(true);
 
-    addTempMatchup(newMatchup);
-    reset();
-    router.back();
+    try {
+      if (fieldId) {
+        // We are editing an existing field. Save directly to DB.
+        await addMatchupToField(fieldId, teamA.id, teamB.id, gameMode.id);
+      } else {
+        // We are creating a new field. Add to temp matchups.
+        const newMatchup = {
+          id: `matchup-${Date.now()}`,
+          teamA: teamA.id,
+          teamB: teamB.id,
+          teamAName: teamA.name,
+          teamBName: teamB.name,
+          gameModeId: gameMode.id,
+          order: tempMatchups.length + 1,
+        };
+        addTempMatchup(newMatchup);
+      }
+
+      reset();
+      router.back();
+    } catch (error) {
+      Alert.alert("Error", "Failed to add matchup");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -70,7 +85,7 @@ export default function CreateMatchupScreen() {
       />
 
       <View style={styles.content}>
-        <View style={styles.card}>
+        <View style={[styles.card, styles.teamACard]}>
           <Text style={styles.cardTitle}>Team A</Text>
           {teamA ? (
             <View style={styles.selectedContainer}>
@@ -79,7 +94,7 @@ export default function CreateMatchupScreen() {
                 <FontAwesome5
                   name="check-circle"
                   size={24}
-                  color={Colors.primary}
+                  color="#34C759"
                 />
               </View>
               <TouchableOpacity onPress={handleSelectTeamA} style={styles.changeButton}>
@@ -95,7 +110,7 @@ export default function CreateMatchupScreen() {
           <Text style={styles.vsText}>VS</Text>
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, styles.teamBCard]}>
           <Text style={styles.cardTitle}>Team B</Text>
           {teamB ? (
             <View style={styles.selectedContainer}>
@@ -104,7 +119,7 @@ export default function CreateMatchupScreen() {
                 <FontAwesome5
                   name="check-circle"
                   size={24}
-                  color={Colors.primary}
+                  color="#34C759"
                 />
               </View>
               <TouchableOpacity onPress={handleSelectTeamB} style={styles.changeButton}>
@@ -125,7 +140,7 @@ export default function CreateMatchupScreen() {
                 <FontAwesome5
                   name="check-circle"
                   size={24}
-                  color={Colors.primary}
+                  color="#34C759"
                 />
               </View>
               <TouchableOpacity onPress={handleSelectGameMode} style={styles.changeButton}>
@@ -142,7 +157,7 @@ export default function CreateMatchupScreen() {
         <PrimaryButton
           title="Add MatchUp"
           onPress={handleAddMatchup}
-          disabled={!teamA || !teamB || !gameMode}
+          disabled={!teamA || !teamB || !gameMode || isProcessing}
         />
       </View>
     </View >
@@ -169,6 +184,22 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  teamACard: {
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderColor: Colors.error,
+  },
+  teamBCard: {
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderColor: "#007AFF",
+  },
+  gameModeCard: {
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderColor: Colors.secondary,
+    marginTop: Spacing.xl,
+  },
   cardTitle: {
     fontSize: 18,
     fontWeight: "600",
@@ -181,7 +212,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   selectedTeamName: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: "600",
     color: Colors.primary,
   },
@@ -202,12 +233,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  gameModeCard: {
-    marginTop: Spacing.xl,
-  },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
   selectedContainer: {
     alignItems: "center",

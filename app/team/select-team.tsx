@@ -36,7 +36,7 @@ export default function SelectTeamScreen() {
 
   useEffect(() => {
     loadTeams();
-  }, []);
+  }, [loadTeams]);
 
   useEffect(() => {
     if (params.role === "teamA" && teamA) {
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
   // Modal Styles
   modalOverlay: {

@@ -1,8 +1,6 @@
-import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { TempMatchup } from "@/contexts/MatchupCreationContext";
 import { Matchup } from "@/src/core/domain/Field";
-import { GameStatus } from "@/src/core/domain/GameStatus";
 import { Team } from "@/src/core/domain/Team";
 import { Ionicons } from "@expo/vector-icons";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -61,11 +59,6 @@ export const MatchupList = ({
     const scoreA = existingGame?.score?.teamAScore;
     const scoreB = existingGame?.score?.teamBScore;
 
-    const fallbackStatus = (matchup as any).status || GameStatus.NOT_STARTED;
-    const gameStatus = existingGame?.gameStateStatus || fallbackStatus;
-    const isStopped = existingGame?.isTimeStopped === 1 || fallbackStatus === "TIME_STOPPED" || fallbackStatus === GameStatus.BREAK;
-    const displayStatus = existingGame?.status === GameStatus.FINISHED ? GameStatus.FINISHED : (isStopped ? "TIME_STOPPED" : gameStatus);
-
     return (
       <ScaleDecorator>
         <TouchableOpacity
@@ -113,11 +106,10 @@ export const MatchupList = ({
                 </View>
               </View>
               {gameModeName && (
-                <Text style={styles.gameMode}>🎮 {gameModeName}</Text>
+                <Text style={styles.gameMode}>
+                  Game Mode : <Text style={{ fontWeight: "bold" }}>{gameModeName}</Text>
+                </Text>
               )}
-              <View style={styles.statusContainer}>
-                <MatchStatusBadge status={displayStatus} isTimeStopped={isStopped} />
-              </View>
             </View>
             <View style={styles.actionsContainer}>
               {onEdit && (
@@ -170,7 +162,7 @@ export const MatchupList = ({
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       ListHeaderComponent={ListHeaderComponent}
-      contentContainerStyle={{ paddingBottom: Spacing.xxl }}
+      contentContainerStyle={{ paddingBottom: Spacing.xxxl }}
     />
   );
 };
@@ -241,23 +233,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: Spacing.xs,
     marginBottom: Spacing.sm,
-  },
-  statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: Spacing.sm,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: Spacing.sm,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
   },
   vsBadge: {
     backgroundColor: Colors.background,

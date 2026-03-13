@@ -59,10 +59,11 @@ export const TimerDisplay = ({
 const styles = StyleSheet.create({
     timerContainer: {
         backgroundColor: Colors.white,
-        padding: 24,
+        paddingVertical: 10,
+        paddingHorizontal: 24,
         borderRadius: 24,
         alignItems: "center",
-        marginBottom: 24,
+        marginBottom: 10,
         marginHorizontal: 16,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },

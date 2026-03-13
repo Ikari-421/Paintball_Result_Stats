@@ -36,8 +36,8 @@ export default function StartMatchScreen() {
   const handleStartMatch = async () => {
     if (!canStart || !selectedMatchup) {
       Alert.alert(
-        "Erreur",
-        "Veuillez sélectionner un terrain, un matchup et un mode de jeu",
+        "Error",
+        "Please select a field, a matchup and a game mode",
       );
       return;
     }
@@ -54,11 +54,11 @@ export default function StartMatchScreen() {
 
       // Navigate to the match screen
       // Note: We need to get the created game ID - for now we'll just go back
-      Alert.alert("Succès", "Match créé avec succès", [
+      Alert.alert("Success", "Match created successfully", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error) {
-      Alert.alert("Erreur", (error as Error).message);
+      Alert.alert("Error", (error as Error).message);
     }
   };
 
@@ -69,18 +69,18 @@ export default function StartMatchScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Text style={styles.backText}>← Retour</Text>
+          <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Nouveau Match</Text>
+        <Text style={styles.title}>New Match</Text>
         <View style={{ width: 80 }} />
       </View>
 
       <ScrollView style={styles.content}>
         {/* Field Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Sélectionner un Terrain</Text>
+          <Text style={styles.sectionTitle}>1. Select a Field</Text>
           {fields.length === 0 ? (
-            <Text style={styles.emptyText}>Aucun terrain disponible</Text>
+            <Text style={styles.emptyText}>No fields available</Text>
           ) : (
             fields.map((field) => (
               <TouchableOpacity
@@ -91,12 +91,12 @@ export default function StartMatchScreen() {
                 ]}
                 onPress={() => {
                   setSelectedFieldId(field.id);
-                  setSelectedMatchupId(null); // Reset matchup when field changes
+                  setSelectedMatchupId(null);
                 }}
               >
                 <Text style={styles.cardTitle}>{field.name}</Text>
                 <Text style={styles.cardSubtitle}>
-                  {field.matchups.length} confrontation
+                  {field.matchups.length} matchup
                   {field.matchups.length > 1 ? "s" : ""}
                 </Text>
               </TouchableOpacity>
@@ -108,18 +108,18 @@ export default function StartMatchScreen() {
         {selectedField && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              2. Sélectionner une Confrontation
+              2. Select a Matchup
             </Text>
             {selectedField.matchups.length === 0 ? (
               <Text style={styles.emptyText}>
-                Aucune confrontation sur ce terrain
+                No matchups on this field
               </Text>
             ) : (
               selectedField.matchups.map((matchup) => {
                 const teamAName =
-                  teams.find((t) => t.id === matchup.teamA)?.name || "Équipe A";
+                  teams.find((t) => t.id === matchup.teamA)?.name || "Team A";
                 const teamBName =
-                  teams.find((t) => t.id === matchup.teamB)?.name || "Équipe B";
+                  teams.find((t) => t.id === matchup.teamB)?.name || "Team B";
 
                 return (
                   <TouchableOpacity
@@ -146,10 +146,10 @@ export default function StartMatchScreen() {
         {/* Game Mode Selection */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            3. Sélectionner un Mode de Jeu
+            3. Select a Game Mode
           </Text>
           {gameModes.length === 0 ? (
-            <Text style={styles.emptyText}>Aucun mode de jeu disponible</Text>
+            <Text style={styles.emptyText}>No game modes available</Text>
           ) : (
             gameModes.map((mode) => (
               <TouchableOpacity
@@ -177,9 +177,9 @@ export default function StartMatchScreen() {
         {/* Summary */}
         {canStart && (
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>Récapitulatif</Text>
+            <Text style={styles.summaryTitle}>Summary</Text>
             <Text style={styles.summaryText}>
-              Terrain: {selectedField?.name}
+              Field: {selectedField?.name}
             </Text>
             <Text style={styles.summaryText}>
               Match: {teamA?.name} vs {teamB?.name}
@@ -198,8 +198,8 @@ export default function StartMatchScreen() {
         >
           <Text style={styles.startButtonText}>
             {canStart
-              ? "▶ Démarrer le Match"
-              : "Sélectionnez toutes les options"}
+              ? "▶ Start Match"
+              : "Select all options to continue"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 60,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,

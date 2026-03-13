@@ -86,7 +86,7 @@ export default function EditGameModeScreen() {
           !isNaN(overtime) && overtime > 0 ? overtime : undefined,
       });
       router.back();
-    } catch (err) {
+    } catch {
       Alert.alert("Error", error || "Unable to update game mode");
     }
   };
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
   switchRowContainer: {
     marginBottom: Spacing.xl,

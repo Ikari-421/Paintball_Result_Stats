@@ -80,6 +80,7 @@ export interface GameState {
     resumeGame: (gameId: string) => Promise<void>;
     startBreak: (gameId: string) => Promise<void>;
     endBreak: (gameId: string) => Promise<void>;
+    swapSides: (gameId: string) => Promise<void>;
     finishGame: (
         gameId: string,
         endReason: "SCORE_LIMIT" | "TIME_EXPIRED" | "MANUAL",

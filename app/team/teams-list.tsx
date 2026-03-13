@@ -36,7 +36,7 @@ export default function TeamsListScreen() {
   useEffect(() => {
     loadTeams();
     loadFields();
-  }, []);
+  }, [loadTeams, loadFields]);
 
   const handleAddTeamSubmit = async () => {
     if (!newTeamName.trim()) return;
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
   },
   // Modal Styles
   modalOverlay: {

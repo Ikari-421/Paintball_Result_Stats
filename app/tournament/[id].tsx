@@ -20,7 +20,7 @@ export default function TournamentDetailsScreen() {
     useEffect(() => {
         loadTournaments();
         loadFields();
-    }, []);
+    }, [loadTournaments, loadFields]);
 
     const tournament = tournaments.find((t) => t.id === id);
     const tournamentFields = fields.filter((f) => f.tournamentId === id);
@@ -100,8 +100,8 @@ export default function TournamentDetailsScreen() {
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Delete Tournament?</Text>
                         <Text style={styles.modalText}>
-                            This will permanently delete "{tournament.name}" and all its fields and matchups.
-                            Type "Delete" to confirm.
+                            This will permanently delete &quot;{tournament.name}&quot; and all its fields and matchups.
+                            Type &quot;Delete&quot; to confirm.
                         </Text>
 
                         <TextInput
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         padding: Spacing.lg,
-        paddingBottom: Spacing.xxl,
+        paddingBottom: Spacing.xxxl,
     },
     tournamentInfo: {
         paddingHorizontal: Spacing.lg,

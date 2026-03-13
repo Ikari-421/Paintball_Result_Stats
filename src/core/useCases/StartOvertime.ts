@@ -22,6 +22,7 @@ export class StartOvertime {
         const event: DomainGameEvent = {
             aggregateId: overtimeGame.id,
             timestamp: Date.now(),
+            gameTime: game.timer.remainingTime,
             type: 'OvertimeStarted',
             payload: {
                 overtimeDuration: overtimeGame.gameMode.overTime?.minutes || 5

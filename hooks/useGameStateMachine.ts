@@ -6,8 +6,7 @@ import { useGameTimer } from "./useGameTimer";
 
 export function useGameStateMachine(game: Game | undefined) {
     // We re-evaluate the state machine purely based on the current Game instance
-    const uiState = useMemo(() => GameStateMachine.getUIState(game), [game]);
-    const view: GameStateView | null = uiState ? uiState.getView() : null;
+    const rawUiState = useMemo(() => GameStateMachine.getUIState(game), [game]);
 
     // Initialize timers based on game rules
     const gameTimeSeconds = game?.gameMode.gameTime?.minutes ? game.gameMode.gameTime.minutes * 60 : 600;
@@ -18,6 +17,19 @@ export function useGameStateMachine(game: Game | undefined) {
     const gameTimer = useGameTimer(gameTimeSeconds);
     const breakTimer = useGameTimer(breakTimeSeconds);
     const overtimeTimer = useGameTimer(overtimeSeconds);
+
+    // Validate if the UI State is BREAK but the local break timer is dead/expired.
+    // If so, we override the UI View to act as StoppedState instead to fix technical debt.
+    const uiState = useMemo(() => {
+        if (game?.status === GameStatus.BREAK && !breakTimer.isRunning && breakTimer.remainingSeconds <= 0) {
+            // Restore the underlying game status along with isTimeStopped so it falls into StoppedState but retains OVERTIME knowledge.
+            return GameStateMachine.getUIState({ ...game, isTimeStopped: 1, status: game.gameStateStatus as GameStatus } as Game);
+        }
+        return rawUiState;
+    }, [game, rawUiState, breakTimer.isRunning, breakTimer.remainingSeconds]);
+
+    const view: GameStateView | null = uiState ? uiState.getView() : null;
+
 
     // Sync the timers silently whenever DB game changes
     // MUST be a useEffect to avoid triggering state updates during render (infinite loop).
