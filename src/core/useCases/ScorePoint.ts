@@ -36,7 +36,7 @@ export class ScorePoint {
             hasReachedScoreLimit &&
             // In Overtime (golden point), the flow is handled separately.
             game.status !== GameStatus.OVERTIME &&
-            game.gameStateStatus !== GameStatus.OVERTIME;
+            !game.isOvertime;
 
         if (shouldFinishFromScoreLimit) {
             updatedGame = updatedGame.finish();

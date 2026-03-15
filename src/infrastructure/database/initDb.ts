@@ -77,7 +77,7 @@ export const initDb = () => {
       status TEXT NOT NULL,
       currentRound INTEGER DEFAULT 1,
       isTimeStopped INTEGER DEFAULT 0,
-      gameStateStatus TEXT DEFAULT 'NOT_STARTED',
+      isOvertime INTEGER NOT NULL DEFAULT 0,
       areSidesSwapped INTEGER DEFAULT 0,
       FOREIGN KEY (fieldId) REFERENCES fields(id)
     );
@@ -96,9 +96,9 @@ export const initDb = () => {
   }
 
   try {
-    db.execSync("ALTER TABLE games ADD COLUMN gameStateStatus TEXT DEFAULT 'NOT_STARTED';");
+    db.execSync("ALTER TABLE games ADD COLUMN isOvertime INTEGER NOT NULL DEFAULT 0;");
   } catch {
-    console.log("Column gameStateStatus already exists or another error occurred during migration.");
+    console.log("Column isOvertime already exists or another error occurred during migration.");
   }
 
   try {

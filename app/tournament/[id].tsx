@@ -85,7 +85,7 @@ export default function TournamentDetailsScreen() {
             <View style={styles.footer}>
                 <PrimaryButton
                     title="+ Create New Field"
-                    onPress={() => router.push({ pathname: "/field/create-field", params: { tournamentId: id } } as any)}
+                    onPress={() => router.push({ pathname: "/field/manage-field", params: { tournamentId: id } } as any)}
                 />
                 <TouchableOpacity style={styles.editLink} onPress={() => router.push({ pathname: "/tournament/edit-tournament", params: { id } } as any)}>
                     <Text style={styles.editLinkText}>Edit Tournament</Text>

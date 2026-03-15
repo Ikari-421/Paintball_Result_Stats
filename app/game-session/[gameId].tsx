@@ -42,7 +42,7 @@ export default function MatchScreen() {
   const teamB = teams.find((t) => t.id === game?.matchup.teamB);
   const field = fields.find((f) => f.id === game?.fieldId);
 
-  // Use our new State Machine Hook! No more local duplicate state!
+  // Use our new State Machine Hook!
   const { view: fsmView, activeTimer, controllers } = useGameStateMachine(game);
 
   // Local state purely for Modals and temporary referee overrides
@@ -86,7 +86,7 @@ export default function MatchScreen() {
           break;
         case "RESUME_MATCH":
           await resumeGame(game.id);
-          if (game.gameStateStatus === GameStatus.OVERTIME || game.status === GameStatus.OVERTIME) {
+          if (game.isOvertime || game.status === GameStatus.OVERTIME) {
             controllers.overtimeTimer.resume();
           } else {
             controllers.gameTimer.resume();
@@ -138,14 +138,13 @@ export default function MatchScreen() {
   useEffect(() => {
     if (game?.status === GameStatus.BREAK && controllers.breakTimer.isFinished) {
       // If the game was never effectively started yet, we START_MATCH
-      const isGameNotStartedYet = game.gameStateStatus === GameStatus.NOT_STARTED ||
-        (game.gameStateStatus !== GameStatus.OVERTIME &&
-          game.timer.remainingTime === game.gameMode.gameTime.minutes * 60 &&
-          game.score.teamAScore === 0 &&
-          game.score.teamBScore === 0);
+      const isGameNotStartedYet = !game.isOvertime &&
+        game.timer.remainingTime === game.gameMode.gameTime.minutes * 60 &&
+        game.score.teamAScore === 0 &&
+        game.score.teamBScore === 0;
 
       // If the game regulation time is fully finished and we are NOT in overtime yet
-      const isRegulationFinished = game.timer.remainingTime === 0 && game.gameStateStatus !== GameStatus.OVERTIME;
+      const isRegulationFinished = game.timer.remainingTime === 0 && !game.isOvertime;
 
       if (isGameNotStartedYet) {
         handleAction("START_MATCH");
@@ -325,28 +324,29 @@ export default function MatchScreen() {
       resetEvaluator();
 
       const raceTo = game.gameMode.raceTo.value;
-      // En Overtime (Golden Point), tout point marqué = fin du match
-      const isOvertimePoint = game.status === GameStatus.OVERTIME || game.gameStateStatus === GameStatus.OVERTIME;
-      // Si le match est déjà FINISHED (ex: appelé depuis confirmFinishMatch), on force isMatchOver à true
+      const isOvertimePhase = game.status === GameStatus.OVERTIME || game.isOvertime;
+      // En Overtime (Golden Point), tout point qui brise l'égalité = fin du match
+      const isOvertimeWinner = isOvertimePhase && scoreA !== scoreB;
+      const isRaceToWinner = raceTo > 0 && (scoreA >= raceTo || scoreB >= raceTo);
       const isAlreadyFinished = game.status === GameStatus.FINISHED;
-      const isMatchOver = isAlreadyFinished || isOvertimePoint || (raceTo > 0 && (scoreA >= raceTo || scoreB >= raceTo));
+
+      const isMatchOver = isAlreadyFinished || isOvertimeWinner || isRaceToWinner;
       const nextMatchDetails = getNextMatchDetails();
       const nextMatchupId = nextMatchDetails?.matchupId;
 
-      if (isMatchOver && !isOvertimeBreak && !isAlreadyFinished) {
-        await finishGame(game.id, "SCORE_LIMIT", "Target score reached");
+      // Persistance de la fin du match si nécessaire
+      if (isMatchOver && !isAlreadyFinished) {
+        await finishGame(game.id, "SCORE_LIMIT", isOvertimeWinner ? "Overtime Golden Point reached" : "Target score reached");
         await loadGames();
-      } else if (!isMatchOver && !nextMatchupId) {
-        await handleAction("START_BREAK", "long-break");
       }
 
+      // Logique de Rotation Automatique (Priorité au match suivant s'il existe)
       if (nextMatchupId) {
         const nextGame = games.find(g => g.matchup.id === nextMatchupId);
         if (nextGame) {
           router.replace({ pathname: "/game-session/[gameId]", params: { gameId: nextGame.id, autoStartBreak: "true" } });
           return;
         } else if (field) {
-          // If the game doesn't exist yet but the matchup does, we create it dynamically just like in [id].tsx
           const nextMatchup = field.matchups.find(m => m.id === nextMatchupId);
           if (nextMatchup && nextMatchup.gameModeId) {
             const newGameId = await createGame({
@@ -364,8 +364,13 @@ export default function MatchScreen() {
         }
       }
 
+      // Si pas de match suivant :
+      // - Si le match est fini -> Retour au terrain
+      // - Sinon -> Lancement d'un break sur le match actuel
       if (isMatchOver) {
         router.replace(`/field/${field?.id}`);
+      } else {
+        await handleAction("START_BREAK", "long-break");
       }
     } catch (error) {
       Alert.alert("Error", (error as Error).message);
@@ -658,11 +663,11 @@ export default function MatchScreen() {
           teamBName={teamB?.name || "Team B"}
           isMatchOver={
             !!game && (
-              // Cas Race to : une équipe atteint le score limite
+              // Match over if race to reached
               (game.gameMode.raceTo.value > 0 && (scoreA >= game.gameMode.raceTo.value || scoreB >= game.gameMode.raceTo.value))
               ||
-              // Cas Overtime : tout point marqué en Golden Point = victoire
-              (game.status === GameStatus.OVERTIME || game.gameStateStatus === GameStatus.OVERTIME)
+              // Match over if it's the overtime golden point (score no longer tied)
+              ((game.status === GameStatus.OVERTIME || game.isOvertime) && scoreA !== scoreB)
             )
           }
           nextMatchDetails={getNextMatchDetails()}
@@ -679,19 +684,17 @@ export default function MatchScreen() {
           teamBName={teamB?.name || "Team B"}
           nextMatchDetails={getNextMatchDetails()}
           onStartOvertime={async () => {
-            // Will queue the task
             if (game) {
               await startOvertime(game.id);
-              await loadGames();
+              await handleStartNextPhase(true);
             }
           }}
           onFinishWithTie={async () => {
             if (game) {
               await finishGame(game.id, "SCORE_LIMIT", "Match ended in a tie");
-              await loadGames();
+              await handleStartNextPhase(true);
             }
           }}
-          onStartNextMatchup={() => handleStartNextPhase(true)}
           onTechnicalTimeout={() => { setShowOvertimePrompt(false); resetEvaluator(); }}
         />
 

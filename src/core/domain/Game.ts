@@ -82,7 +82,7 @@ export class Game {
     public readonly status: GameStatus,
     public readonly currentRound: number = 1,
     public readonly isTimeStopped: number = 0,
-    public readonly gameStateStatus: string = GameStatus.NOT_STARTED,
+    public readonly isOvertime: boolean = false,
     public readonly areSidesSwapped: boolean = false,
     public readonly pointStartTime: number = 0, // Remaining seconds when current point started
   ) { }
@@ -110,7 +110,7 @@ export class Game {
       GameStatus.NOT_STARTED,
       1, // currentRound
       1, // isTimeStopped (Match is stopped until started)
-      GameStatus.NOT_STARTED, // gameStateStatus
+      false, // isOvertime
       false, // areSidesSwapped
       gameMode.gameTime.minutes * 60, // pointStartTime
     );
@@ -127,7 +127,7 @@ export class Game {
       this.status,
       this.currentRound,
       this.isTimeStopped,
-      this.gameStateStatus,
+      this.isOvertime,
       !this.areSidesSwapped,
       this.pointStartTime
     );
@@ -148,7 +148,7 @@ export class Game {
       GameStatus.RUNNING,
       this.currentRound,
       0, // isTimeStopped
-      GameStatus.RUNNING, // gameStateStatus
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );
@@ -180,7 +180,7 @@ export class Game {
       GameStatus.OVERTIME,
       this.currentRound,
       1, // isTimeStopped. It requires a break to actually start!
-      GameStatus.OVERTIME, // gameStateStatus
+      true, // isOvertime
       this.areSidesSwapped,
       overtimeSeconds // new point start time for overtime
     );
@@ -201,7 +201,7 @@ export class Game {
       this.status,
       this.currentRound,
       1, // isTimeStopped
-      this.gameStateStatus,
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );
@@ -217,7 +217,7 @@ export class Game {
     }
 
     const resumedStatus = this.status === GameStatus.BREAK
-      ? (this.gameStateStatus === GameStatus.OVERTIME ? GameStatus.OVERTIME : GameStatus.RUNNING)
+      ? (this.isOvertime ? GameStatus.OVERTIME : GameStatus.RUNNING)
       : this.status;
 
     return new Game(
@@ -230,7 +230,7 @@ export class Game {
       resumedStatus,
       this.currentRound,
       0, // isTimeStopped
-      this.gameStateStatus,
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );
@@ -247,17 +247,13 @@ export class Game {
       GameStatus.FINISHED,
       this.currentRound,
       1, // isTimeStopped
-      GameStatus.FINISHED, // gameStateStatus
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );
   }
 
   startBreak(): Game {
-    // If we're not started, keep NOT_STARTED as the underlying state.
-    // If we're already running or stopped, keep that as the underlying state.
-    const previousState = this.status === GameStatus.NOT_STARTED ? GameStatus.NOT_STARTED : this.gameStateStatus;
-
     return new Game(
       this.id,
       this.fieldId,
@@ -268,19 +264,23 @@ export class Game {
       GameStatus.BREAK,
       this.currentRound,
       1, // The main game time is stopped!
-      previousState,
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );
   }
 
   endBreak(): Game {
-    // If the game was NOT_STARTED before the break, and the break ends (either manually or timer expires)
-    // The previous gameStateStatus should be NOT_STARTED. We return it to NOT_STARTED, but with isTimeStopped=1
-    // so that the UI can handle the transition.
-    const resolvedStatus = this.gameStateStatus === GameStatus.NOT_STARTED
+    // After a break, return to the appropriate status based on whether we're in overtime or not.
+    // If the game hasn't actually started yet (timer full, no score), stay NOT_STARTED.
+    const hasStarted = this.timer.remainingTime < this.gameMode.gameTime.minutes * 60
+      || this.score.teamAScore > 0
+      || this.score.teamBScore > 0
+      || this.isOvertime;
+
+    const resolvedStatus = !hasStarted
       ? GameStatus.NOT_STARTED
-      : this.gameStateStatus === GameStatus.OVERTIME
+      : this.isOvertime
         ? GameStatus.OVERTIME
         : GameStatus.RUNNING;
 
@@ -294,7 +294,7 @@ export class Game {
       resolvedStatus,
       this.currentRound,
       1,
-      this.gameStateStatus,
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );
@@ -317,7 +317,7 @@ export class Game {
       this.status,
       this.currentRound,
       this.isTimeStopped,
-      this.gameStateStatus,
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );
@@ -334,7 +334,7 @@ export class Game {
       this.status,
       this.currentRound,
       this.isTimeStopped,
-      this.gameStateStatus,
+      this.isOvertime,
       this.areSidesSwapped,
       this.timer.remainingTime // Reset pointStartTime for the NEXT point
     );
@@ -357,7 +357,7 @@ export class Game {
       this.status,
       this.currentRound,
       this.isTimeStopped,
-      this.gameStateStatus,
+      this.isOvertime,
       this.areSidesSwapped,
       this.pointStartTime
     );

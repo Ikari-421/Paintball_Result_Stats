@@ -23,7 +23,7 @@ export function useGameStateMachine(game: Game | undefined) {
     const uiState = useMemo(() => {
         if (game?.status === GameStatus.BREAK && !breakTimer.isRunning && breakTimer.remainingSeconds <= 0) {
             // Restore the underlying game status along with isTimeStopped so it falls into StoppedState but retains OVERTIME knowledge.
-            return GameStateMachine.getUIState({ ...game, isTimeStopped: 1, status: game.gameStateStatus as GameStatus } as Game);
+            return GameStateMachine.getUIState({ ...game, isTimeStopped: 1, status: game.isOvertime ? GameStatus.OVERTIME : GameStatus.RUNNING } as Game);
         }
         return rawUiState;
     }, [game, rawUiState, breakTimer.isRunning, breakTimer.remainingSeconds]);

@@ -50,11 +50,11 @@ export const ScoreValidationModal = ({
         actionText = "wins the point & the match!";
     }
 
-    let primaryButtonText = "Start Break time to next round";
+    let primaryButtonText = "Validate & Start break to next round";
     if (nextMatchDetails) {
-        primaryButtonText = "Start Break time to next matchup";
+        primaryButtonText = "Validate & Start next matchup";
     } else if (isMatchOver) {
-        primaryButtonText = "Finish match & Exit to field";
+        primaryButtonText = "Validate & Exit to Field";
     }
 
     return (

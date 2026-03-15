@@ -41,7 +41,7 @@ describe("StartOvertime UseCase", () => {
         const result = await useCase.execute("g-1");
 
         expect(result.status).toBe(GameStatus.OVERTIME);
-        expect(result.gameStateStatus).toBe(GameStatus.OVERTIME);
+        expect(result.isOvertime).toBe(true);
         expect(mockEventStore.append).toHaveBeenCalledWith(expect.objectContaining({ type: "OvertimeStarted" }));
     });
 
@@ -52,7 +52,7 @@ describe("StartOvertime UseCase", () => {
         const result = await useCase.execute("g-1");
 
         expect(result.status).toBe(GameStatus.OVERTIME);
-        expect(result.gameStateStatus).toBe(GameStatus.OVERTIME);
+        expect(result.isOvertime).toBe(true);
         expect(mockEventStore.append).toHaveBeenCalledWith(expect.objectContaining({ type: "OvertimeStarted" }));
     });
 });

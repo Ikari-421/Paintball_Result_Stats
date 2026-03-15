@@ -78,7 +78,7 @@ export class StoppedState extends GameUIState {
             badgeLabel: "TIME STOPPED",
             badgeColor: "#FF9500",
             showDot: true,
-            activeTimerType: (this.game.status === GameStatus.OVERTIME || this.game.gameStateStatus === GameStatus.OVERTIME) ? "overtime" : "game",
+            activeTimerType: (this.game.status === GameStatus.OVERTIME || this.game.isOvertime) ? "overtime" : "game",
             actions,
         };
     }

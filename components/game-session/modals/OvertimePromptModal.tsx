@@ -13,7 +13,6 @@ interface OvertimePromptModalProps {
     nextMatchDetails: NextMatchDetails | null;
     onStartOvertime: () => Promise<void>;
     onFinishWithTie: () => Promise<void>;
-    onStartNextMatchup: () => void;
     onTechnicalTimeout: () => void;
 }
 
@@ -26,108 +25,107 @@ export const OvertimePromptModal = ({
     nextMatchDetails,
     onStartOvertime,
     onFinishWithTie,
-    onStartNextMatchup,
     onTechnicalTimeout,
 }: OvertimePromptModalProps) => {
     const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedOption, setSelectedOption] = useState<"TIE" | "OVERTIME">("OVERTIME");
 
-    // Reset processing when modal opens/closes
+    // Reset state when modal opens
     React.useEffect(() => {
         if (visible) {
             setIsProcessing(false);
+            setSelectedOption("OVERTIME");
         }
     }, [visible]);
 
-    const handleSelectOvertime = async () => {
+    const handleConfirm = async () => {
         setIsProcessing(true);
-        await onStartOvertime();
-        if (nextMatchDetails) {
-            onStartNextMatchup();
-        } else {
-            onTechnicalTimeout(); // Close if no next match since there's nowhere to go
+        try {
+            if (selectedOption === "OVERTIME") {
+                await onStartOvertime();
+            } else {
+                await onFinishWithTie();
+            }
+        } finally {
+            setIsProcessing(false);
         }
-        setIsProcessing(false);
     };
-
-    const handleSelectTie = async () => {
-        setIsProcessing(true);
-        await onFinishWithTie();
-        if (nextMatchDetails) {
-            onStartNextMatchup();
-        } else {
-            onTechnicalTimeout();
-        }
-        setIsProcessing(false);
-    };
-
-    const handleTechnicalTimeout = () => {
-        if (isProcessing) return;
-        onTechnicalTimeout();
-    };
-
-    const renderSelectionPhase = () => (
-        <>
-            <View style={styles.titleContainer}>
-                <Text style={styles.modalTitle}>Time's up - Tie Game</Text>
-                <Text style={styles.actionText}>Regulation time ended with a tied score.</Text>
-            </View>
-
-            {nextMatchDetails && (
-                <View style={styles.nextMatchContainer}>
-                    <Text style={styles.nextMatchTitle}>Next Match</Text>
-                    <View style={styles.nextMatchTeams}>
-                        <Text style={styles.nextMatchTeamName}>{nextMatchDetails.teamAName}</Text>
-                        <Text style={styles.nextMatchScore}>{nextMatchDetails.scoreA} - {nextMatchDetails.scoreB}</Text>
-                        <Text style={styles.nextMatchTeamName}>{nextMatchDetails.teamBName}</Text>
-                    </View>
-                    <View style={styles.nextMatchInfo}>
-                        <Text style={styles.nextMatchInfoText}>
-                            Game Mode: <Text style={{ fontWeight: "bold" }}>{nextMatchDetails.gameModeName}</Text>
-                        </Text>
-                        <Text style={styles.nextMatchInfoText}>
-                            Break Time: <Text style={{ fontWeight: "bold" }}>{nextMatchDetails.breakTimeSeconds}</Text> sec
-                        </Text>
-                    </View>
-                </View>
-            )}
-
-            <View style={styles.modalButtons}>
-                <TouchableOpacity
-                    style={[styles.modalPrimaryButton, isProcessing && { opacity: 0.5 }]}
-                    onPress={handleSelectOvertime}
-                    disabled={isProcessing}
-                >
-                    <Text style={styles.modalPrimaryButtonText}>
-                        {isProcessing ? "Processing..." : "Go to Overtime"}
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.modalSecondaryButton, isProcessing && { opacity: 0.5 }]}
-                    onPress={handleSelectTie}
-                    disabled={isProcessing}
-                >
-                    <Text style={styles.modalSecondaryButtonText}>
-                        {isProcessing ? "Processing..." : "Finish with a Tie & Start the next match"}
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.modalTertiaryButton}
-                    onPress={handleTechnicalTimeout}
-                    disabled={isProcessing}
-                >
-                    <Text style={styles.modalTertiaryButtonText}>Technical Timeout</Text>
-                </TouchableOpacity>
-            </View>
-        </>
-    );
 
     return (
         <Modal visible={visible} transparent animationType="fade">
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                    {renderSelectionPhase()}
+                    <View style={styles.titleContainer}>
+                        <Text style={styles.modalTitle}>Regulation Time Over</Text>
+                        <View style={styles.scoreRow}>
+                            <Text style={styles.scoreText}>{teamAName} {scoreA} - {scoreB} {teamBName}</Text>
+                        </View>
+                        <Text style={styles.actionText}>The match ended in a tie. What's next?</Text>
+                    </View>
+
+                    <View style={styles.selectionContainer}>
+                        <TouchableOpacity
+                            style={[styles.optionCard, selectedOption === "OVERTIME" && styles.optionCardSelected]}
+                            onPress={() => setSelectedOption("OVERTIME")}
+                        >
+                            <View style={[styles.radio, selectedOption === "OVERTIME" && styles.radioSelected]}>
+                                {selectedOption === "OVERTIME" && <View style={styles.radioInner} />}
+                            </View>
+                            <View style={styles.optionTextContainer}>
+                                <Text style={styles.optionTitle}>Enable Overtime</Text>
+                                <Text style={styles.optionDescription}>A Golden Point will be played later</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.optionCard, selectedOption === "TIE" && styles.optionCardSelected]}
+                            onPress={() => setSelectedOption("TIE")}
+                        >
+                            <View style={[styles.radio, selectedOption === "TIE" && styles.radioSelected]}>
+                                {selectedOption === "TIE" && <View style={styles.radioInner} />}
+                            </View>
+                            <View style={styles.optionTextContainer}>
+                                <Text style={styles.optionTitle}>End as Tie</Text>
+                                <Text style={styles.optionDescription}>Finish match with current scores</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+
+                    {nextMatchDetails && (
+                        <View style={styles.nextMatchContainer}>
+                            <Text style={styles.nextMatchTitle}>Next Matchup</Text>
+                            <View style={styles.nextMatchTeams}>
+                                <Text style={styles.nextMatchTeamName}>{nextMatchDetails.teamAName}</Text>
+                                <Text style={styles.nextMatchScore}>{nextMatchDetails.scoreA} - {nextMatchDetails.scoreB}</Text>
+                                <Text style={styles.nextMatchTeamName}>{nextMatchDetails.teamBName}</Text>
+                            </View>
+                            <View style={styles.nextMatchInfo}>
+                                <Text style={styles.nextMatchInfoText}>
+                                    Break Time: <Text style={{ fontWeight: "bold" }}>{nextMatchDetails.breakTimeSeconds}</Text> sec
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                    <View style={styles.modalButtons}>
+                        <TouchableOpacity
+                            style={[styles.modalPrimaryButton, isProcessing && { opacity: 0.7 }]}
+                            onPress={handleConfirm}
+                            disabled={isProcessing}
+                        >
+                            <Text style={styles.modalPrimaryButtonText}>
+                                {isProcessing ? "Processing..." : (nextMatchDetails ? "Validate & Start Next Break" : "Validate Result")}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.modalTertiaryButton}
+                            onPress={onTechnicalTimeout}
+                            disabled={isProcessing}
+                        >
+                            <Text style={styles.modalTertiaryButtonText}>Technical Timeout (Wait)</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </Modal>
@@ -151,39 +149,97 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
     },
+    titleContainer: {
+        alignItems: "center",
+        marginBottom: 20,
+    },
     modalTitle: {
         fontSize: 22,
         fontWeight: "800",
-        color: Colors.error, // Red for Time's up attention in selection phase
+        color: Colors.error,
         textAlign: "center",
-        marginBottom: 16,
+        marginBottom: 8,
     },
-    titleContainer: {
-        alignItems: "center",
-        marginBottom: 16,
+    scoreRow: {
+        paddingVertical: 4,
+        paddingHorizontal: 12,
+        backgroundColor: Colors.surface,
+        borderRadius: 8,
+        marginBottom: 8,
+    },
+    scoreText: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: Colors.text,
     },
     actionText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: "600",
         color: Colors.secondary,
         textAlign: "center",
-        marginTop: 4,
-        marginBottom: 16,
+    },
+    selectionContainer: {
+        gap: 12,
+        marginBottom: 24,
+    },
+    optionCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 16,
+        borderRadius: 16,
+        backgroundColor: Colors.surface,
+        borderWidth: 2,
+        borderColor: "transparent",
+    },
+    optionCardSelected: {
+        borderColor: Colors.primary,
+        backgroundColor: Colors.white,
+    },
+    radio: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: Colors.secondary,
+        marginRight: 16,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    radioSelected: {
+        borderColor: Colors.primary,
+    },
+    radioInner: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: Colors.primary,
+    },
+    optionTextContainer: {
+        flex: 1,
+    },
+    optionTitle: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: Colors.text,
+    },
+    optionDescription: {
+        fontSize: 12,
+        color: Colors.secondary,
     },
     nextMatchContainer: {
         backgroundColor: Colors.background,
-        padding: 20,
-        borderRadius: 20,
+        padding: 16,
+        borderRadius: 16,
         marginBottom: 24,
         borderWidth: 1,
         borderColor: "rgba(0,0,0,0.05)",
         alignItems: "center",
     },
     nextMatchTitle: {
-        fontSize: 16,
+        fontSize: 13,
         fontWeight: "800",
         color: Colors.primary,
-        marginBottom: 12,
+        marginBottom: 8,
         textTransform: "uppercase",
         letterSpacing: 1,
     },
@@ -191,82 +247,59 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 12,
-        gap: 12,
+        marginBottom: 8,
+        gap: 8,
     },
     nextMatchTeamName: {
-        fontSize: 18,
+        fontSize: 14,
         fontWeight: "700",
         color: Colors.text,
         flex: 1,
         textAlign: "center",
     },
     nextMatchScore: {
-        fontSize: 24,
+        fontSize: 16,
         fontWeight: "900",
         color: Colors.text,
         backgroundColor: Colors.surface,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
     },
     nextMatchInfo: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
         width: "100%",
         borderTopWidth: 1,
         borderTopColor: "rgba(0,0,0,0.05)",
-        paddingTop: 12,
+        paddingTop: 8,
+        alignItems: "center",
     },
     nextMatchInfoText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: "600",
         color: Colors.secondary,
     },
     modalButtons: {
-        flexDirection: "column",
         gap: 12,
-    },
-    modalSecondaryButton: {
-        paddingVertical: 14,
-        borderRadius: 12,
-        backgroundColor: Colors.surface,
-        alignItems: "center",
-        width: '100%',
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.05)",
-    },
-    modalSecondaryButtonText: {
-        color: Colors.text,
-        fontWeight: "700",
-        fontSize: 16,
     },
     modalPrimaryButton: {
         paddingVertical: 16,
         borderRadius: 12,
-        backgroundColor: "#FF9500", // Default orange/warning for OT
+        backgroundColor: Colors.primary,
         alignItems: "center",
-        width: '100%',
     },
     modalPrimaryButtonText: {
         color: Colors.white,
         fontWeight: "700",
         fontSize: 16,
-        textAlign: "center",
     },
     modalTertiaryButton: {
-        paddingVertical: 14,
-        borderRadius: 12,
-        backgroundColor: "transparent",
+        paddingVertical: 12,
         alignItems: "center",
-        width: '100%',
-        marginTop: 4,
     },
     modalTertiaryButtonText: {
         color: Colors.primary,
         fontWeight: "700",
-        fontSize: 15,
+        fontSize: 14,
         textDecorationLine: "underline",
     },
 });

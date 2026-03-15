@@ -29,6 +29,7 @@ interface MatchupCreationContextType {
   setTeamB: (team: TeamSelection | null) => void;
   setGameMode: (mode: GameModeSelection | null) => void;
   addTempMatchup: (matchup: TempMatchup) => void;
+  updateTempMatchup: (matchupId: string, updates: Partial<Omit<TempMatchup, "id" | "order">>) => void;
   removeTempMatchup: (matchupId: string) => void;
   reorderTempMatchups: (matchups: TempMatchup[]) => void;
   clearTempMatchups: () => void;
@@ -53,6 +54,10 @@ export const MatchupCreationProvider = ({
 
   const addTempMatchup = (matchup: TempMatchup) => {
     setTempMatchups((prev) => [...prev, matchup]);
+  };
+
+  const updateTempMatchup = (matchupId: string, updates: Partial<Omit<TempMatchup, "id" | "order">>) => {
+    setTempMatchups((prev) => prev.map((m) => (m.id === matchupId ? { ...m, ...updates } : m)));
   };
 
   const removeTempMatchup = (matchupId: string) => {
@@ -84,6 +89,7 @@ export const MatchupCreationProvider = ({
         setTeamB,
         setGameMode,
         addTempMatchup,
+        updateTempMatchup,
         removeTempMatchup,
         reorderTempMatchups,
         clearTempMatchups,

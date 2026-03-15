@@ -105,7 +105,7 @@ export default function FieldDetailScreen() {
   };
 
   const handleEditField = () => {
-    router.push(`/field/edit-field?id=${field.id}`);
+    router.push(`/field/manage-field?id=${field.id}`);
   };
 
   const handleDeleteField = () => {
@@ -146,7 +146,7 @@ export default function FieldDetailScreen() {
               (g) => g.matchup.id === matchup.id && g.fieldId === field.id,
             );
             const gameMode = gameModes.find((mode) => mode.id === matchup.gameModeId);
-            const gameStatus = existingGame?.gameStateStatus || existingGame?.status || GameStatus.NOT_STARTED;
+            const gameStatus = existingGame?.status || GameStatus.NOT_STARTED;
             const isTimeStopped = existingGame?.isTimeStopped === 1;
 
             let displayStatus: GameStatus | string = gameStatus;

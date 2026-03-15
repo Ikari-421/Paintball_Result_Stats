@@ -32,7 +32,8 @@ interface GameRow {
   status: string;
   currentRound: number;
   isTimeStopped: number;
-  gameStateStatus: string;
+  gameStateStatus?: string; // kept for backwards compat, ignored
+  isOvertime: number;
   areSidesSwapped: number;
   pointStartTime: number;
 }
@@ -53,7 +54,7 @@ export class GameRepository implements IGameRepository {
                 id, fieldId, matchupId, matchupTeamA, matchupTeamB, matchupOrder,
                 gameModeId, gameModeName, gameTimeMinutes, breakTimeSeconds, overtimeMinutes,
                 raceTo, teamAScore, teamBScore, remainingTime, timerIsRunning, timerEndTimestamp, status,
-                currentRound, isTimeStopped, gameStateStatus, areSidesSwapped, pointStartTime
+                currentRound, isTimeStopped, isOvertime, areSidesSwapped, pointStartTime
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         game.id,
@@ -76,7 +77,7 @@ export class GameRepository implements IGameRepository {
         game.status,
         game.currentRound,
         game.isTimeStopped,
-        game.gameStateStatus,
+        game.isOvertime ? 1 : 0,
         game.areSidesSwapped ? 1 : 0,
         game.pointStartTime,
       ],
@@ -117,12 +118,11 @@ export class GameRepository implements IGameRepository {
     console.log("[GameRepository] updateGameState - Début:", id, stateData);
     db.runSync(
       `UPDATE games 
-       SET currentRound = ?, isTimeStopped = ?, gameStateStatus = ? 
+       SET currentRound = ?, isTimeStopped = ?
        WHERE id = ?`,
       [
         stateData.currentRound,
         stateData.isTimeStopped ? 1 : 0,
-        stateData.status,
         id,
       ],
     );
@@ -164,7 +164,7 @@ export class GameRepository implements IGameRepository {
       row.status as GameStatus,
       row.currentRound,
       row.isTimeStopped,
-      row.gameStateStatus,
+      row.isOvertime === 1,
       row.areSidesSwapped === 1,
       row.pointStartTime,
     );

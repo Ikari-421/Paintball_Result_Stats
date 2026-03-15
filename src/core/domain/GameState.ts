@@ -20,12 +20,12 @@ export class GameState {
   }
 
   static fromDB(data: {
-    gameStateStatus: string;
+    isOvertime: boolean;
     currentRound: number;
     isTimeStopped: boolean;
+    status: GameStatus;
   }): GameState {
-    const status = data.gameStateStatus as GameStatus;
-    return new GameState(status, data.currentRound, data.isTimeStopped);
+    return new GameState(data.status, data.currentRound, data.isTimeStopped);
   }
 
   canStart(): boolean {
